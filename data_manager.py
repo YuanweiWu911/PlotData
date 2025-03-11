@@ -8,32 +8,33 @@ class DataManager:
         self.file_path = None
         self.file_name = None
     
-    def load_data(self, file_path):
-        """从文件加载数据"""
-        self.file_path = file_path
-        self.file_name = os.path.basename(file_path)
-        
-        # 根据文件扩展名选择不同的加载方法
-        ext = os.path.splitext(file_path)[1].lower()
-        
+    def load_data(self, file_path, sep=None):
         try:
-            if ext == '.csv':
-                self.data = pd.read_csv(file_path)
-            elif ext == '.txt':
-                # 尝试检测分隔符
-                self.data = pd.read_csv(file_path, sep=None, engine='python')
-            elif ext in ['.xlsx', '.xls']:
-                # 添加对Excel文件的支持
+            if file_path.endswith('.csv') or file_path.endswith('.txt'):
+                # 修改这里：使用self.data而不是self._data
+                self.data = pd.read_csv(file_path, sep=sep)
+            elif file_path.endswith(('.xlsx', '.xls')):
                 self.data = pd.read_excel(file_path)
-            elif ext == '.json':
-                # 添加对JSON文件的支持
+            elif file_path.endswith('.json'):
                 self.data = pd.read_json(file_path)
             else:
-                raise ValueError(f"不支持的文件类型: {ext}")
+                return False, "不支持的格式"
             
-            return True, "数据加载成功"
+            # 保存文件信息
+            self.file_path = file_path
+            self.file_name = os.path.basename(file_path)
+            
+            # 创建文件信息字典
+            self.file_info = {
+                'file_name': self.file_name,
+                'file_path': self.file_path,
+                'rows': len(self.data) if self.data is not None else 0,
+                'columns': len(self.data.columns) if self.data is not None else 0
+            }
+            
+            return True, "加载成功"
         except Exception as e:
-            return False, f"数据加载失败: {str(e)}"
+            return False, str(e)
     
     def get_data(self):
         """获取当前数据"""
@@ -61,7 +62,9 @@ class DataManager:
     
     def get_file_info(self):
         """获取当前文件信息"""
-        if self.file_name:
+        if hasattr(self, 'file_info'):  # 修改这行，检查file_info是否存在
+            return self.file_info
+        elif self.file_name:  # 保留原有逻辑作为备选
             return {
                 'file_name': self.file_name,
                 'file_path': self.file_path,

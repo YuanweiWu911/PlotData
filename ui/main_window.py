@@ -1,8 +1,9 @@
+from PyQt6 import sip  # 新增导入
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
                             QSplitter, QFileDialog, QMessageBox, QToolBar, 
-                            QStatusBar, QLabel, QAction, QDialog, QApplication)
-from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtGui import QIcon, QPalette, QColor
+                            QStatusBar, QLabel, QDialog, QApplication, QInputDialog)
+from PyQt6.QtCore import Qt, QSize  # 添加 QSize 导入
+from PyQt6.QtGui import QIcon, QPalette, QColor, QAction  # 从 QtGui 导入 QAction
 import os
 
 from .data_view import DataView
@@ -21,7 +22,7 @@ class MainWindow(QMainWindow):
         
         # 设置窗口标题
         self.setWindowTitle("PlotData - 数据可视化工具")
-
+         
     def init_ui(self):
         """初始化用户界面"""
         # 创建操作
@@ -64,17 +65,19 @@ class MainWindow(QMainWindow):
         if self.config_manager:
             window_size = self.config_manager.get("window_size", [800, 600])
             self.resize(window_size[0], window_size[1])
-            
             window_position = self.config_manager.get("window_position", [100, 100])
             self.move(window_position[0], window_position[1])
         else:
             self.resize(1000, 700)
 
+        # 在初始化DataView后添加信号连接
+        self.data_view.plot_requested.connect(self.plot_view.draw_plot) 
+
     def create_actions(self):
         # 文件操作
         self.open_action = QAction("打开", self)
         self.open_action.setShortcut("Ctrl+O")
-        self.open_action.triggered.connect(self.open_file)
+        self.open_action.triggered.connect(lambda: self.open_file())  # 确保使用lambda传递空参数
         
         # 添加导出功能
         self.export_action = QAction("导出数据", self)
@@ -195,42 +198,57 @@ class MainWindow(QMainWindow):
         self.recent_menu.setEnabled(num_recent_files > 0)
 
     def open_file(self, file_path=None):
-        """打开文件"""
         if file_path is None:
-            # 打开文件对话框
             file_path, _ = QFileDialog.getOpenFileName(
-                self, "打开数据文件", "", 
-                "CSV文件 (*.csv);;Excel文件 (*.xlsx *.xls);;JSON文件 (*.json);;所有文件 (*.*)"
+                self, 
+                "打开数据文件", 
+                "", 
+                "文本文件 (*.txt);;CSV文件 (*.csv);;Excel文件 (*.xlsx *.xls);;JSON文件 (*.json);;所有文件 (*.*)"
             )
         
         if file_path:
             try:
-                # 加载数据
-                success, message = self.data_manager.load_data(file_path)
+                # 修正类名拼写（注意Q大写）
+                sep, ok = QInputDialog.getText(  # 修正为QInputDialog
+                    self,
+                    "分隔符设置",
+                    "请输入列分隔符（留空使用默认）:", 
+                    text=","
+                )
+                sep = sep.strip() if sep.strip() else None
                 
-                if success:
-                    # 更新数据视图
-                    self.data_view.update_data_view()
+                # 加载数据前检查视图对象
+                if not sip.isdeleted(self.data_view):
+                    # 修改加载方法调用，添加分隔符参数
+                    success, message = self.data_manager.load_data(file_path, sep=sep)
                     
-                    # 更新状态栏
-                    file_info = self.data_manager.get_file_info()
-                    if file_info:
-                        self.status_label.setText(
-                            f"当前文件: {file_info['file_name']} | "
-                            f"行数: {file_info['rows']} | "
-                            f"列数: {file_info['columns']}"
-                        )
-                    
-                    # 添加到最近文件列表
-                    if self.config_manager is not None:
-                        self.config_manager.add_recent_file(file_path)
-                        self.update_recent_file_actions()
-                    
-                    QMessageBox.information(self, "成功", message)
+                    if success:
+                        # 更新数据视图
+                        self.data_view.update_data_view()
+                        
+                        # 更新状态栏
+                        file_info = self.data_manager.get_file_info()
+                        if file_info:
+                            self.status_label.setText(
+                                f"当前文件: {file_info['file_name']} | "
+                                f"行数: {file_info['rows']} | "
+                                f"列数: {file_info['columns']}"
+                            )
+                        
+                        # 添加到最近文件列表
+                        if self.config_manager is not None:
+                            self.config_manager.add_recent_file(file_path)
+                            self.update_recent_file_actions()
+                        
+                        QMessageBox.information(self, "成功", message)
+                    else:
+                        QMessageBox.critical(self, "错误", message)
                 else:
-                    QMessageBox.critical(self, "错误", message)
+                    QMessageBox.critical(self, "错误", "视图组件已失效，请重启应用")
             except Exception as e:
                 QMessageBox.critical(self, "错误", f"加载文件失败: {str(e)}")
+        else:
+            QMessageBox.information(self, "提示", "已取消文件选择")
 
     def open_recent_file(self):
         """打开最近文件"""

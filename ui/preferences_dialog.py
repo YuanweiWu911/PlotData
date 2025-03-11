@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QPushButton, 
-                            QLabel, QCheckBox, QComboBox, QSpinBox, QFormLayout,
-                            QGroupBox, QTabWidget, QColorDialog, QMessageBox)
+                            QLabel, QTabWidget, QWidget, QCheckBox, 
+                            QComboBox, QSpinBox, QFormLayout, QGroupBox,
+                            QMessageBox, QColorDialog)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 
