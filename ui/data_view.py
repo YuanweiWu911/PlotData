@@ -95,17 +95,34 @@ class DataView(QWidget):
         # 创建绘图类型选择
         plot_type_layout = QHBoxLayout()
         plot_type_layout.addWidget(QLabel("绘图类型:"))
-
-        # 创建控制面板布局
-        controls_layout = QHBoxLayout()  # 确保正确定义布局容器
-        controls_layout.setContentsMargins(0, 0, 0, 0)
-
         self.plot_type_combo = QComboBox()
         self.plot_type_combo.addItems(["散点图", "带误差棒的散点图", "直方图", "2D密度图"])
         self.plot_type_combo.currentIndexChanged.connect(self.on_plot_type_changed)
         plot_type_layout.addWidget(self.plot_type_combo)
+
+        # 标记Marker样式设置
+        self.mark_style_label = QLabel("标记样式:")
+        self.mark_style_combo = QComboBox()
+        self.mark_style_combo.addItems(["圆形", "点", "方形", "三角", "星形"])
         
+        # 标记大小设置
+        self.mark_size_label = QLabel("标记大小:")
+        self.mark_size_spin = QSpinBox()
+        self.mark_size_spin.setRange(5, 50)
+        self.mark_size_spin.setValue(20)
+
+        # 将标记控件添加到绘图类型布局中
+        plot_type_layout.addWidget(self.mark_style_label)
+        plot_type_layout.addWidget(self.mark_style_combo)
+        plot_type_layout.addWidget(self.mark_size_label)
+        plot_type_layout.addWidget(self.mark_size_spin)
+
         plot_layout.addLayout(plot_type_layout)
+
+        # 创建控制面板布局
+        controls_layout = QHBoxLayout()  # 确保正确定义布局容器
+        controls_layout.setContentsMargins(0, 0, 0, 0)
+        
         
         # 创建数据选择表单
         form_layout = QFormLayout()
@@ -144,24 +161,7 @@ class DataView(QWidget):
         self.color_button.setStyleSheet(f"background-color: {self.selected_color};")
         form_layout.addRow("颜色:", self.color_button)
         plot_layout.addLayout(form_layout)
-
-        # 标记Marker样式设置
-        self.mark_style_label = QLabel("标记样式:")
-        self.mark_style_combo = QComboBox()
-        self.mark_style_combo.addItems(["圆形", "点", "方形", "三角", "星形"])
-        
-        # 标记大小设置
-        self.mark_size_label = QLabel("标记大小:")
-        self.mark_size_spin = QSpinBox()
-        self.mark_size_spin.setRange(5, 50)
-        self.mark_size_spin.setValue(20)
-        
-        # 将新控件添加到现有布局中（在颜色按钮附近）
-        controls_layout.addWidget(self.mark_style_label)
-        controls_layout.addWidget(self.mark_style_combo)
-        controls_layout.addWidget(self.mark_size_label)
-        controls_layout.addWidget(self.mark_size_spin)
-
+       
         # 将控件添加到布局（确认使用同一个布局对象）
         controls_layout.addWidget(QLabel("图表类型:"))
         controls_layout.addWidget(self.plot_type_combo)
@@ -337,7 +337,16 @@ class DataView(QWidget):
     def on_plot_type_changed(self, index):
         """处理绘图类型变化"""
         plot_type = self.plot_type_combo.currentText()
+
+        # 根据绘图类型显示/隐藏相关控件
+        is_scatter_plot = plot_type in ["散点图", "带误差棒的散点图"]
         
+        # 标记样式和大小控件仅在散点图和带误差棒散点图时显示
+        self.mark_style_label.setVisible(is_scatter_plot)
+        self.mark_style_combo.setVisible(is_scatter_plot)
+        self.mark_size_label.setVisible(is_scatter_plot)
+        self.mark_size_spin.setVisible(is_scatter_plot)
+
         # 根据绘图类型显示/隐藏相关控件
         if plot_type == "散点图":
             self.y_combo.setEnabled(True)
