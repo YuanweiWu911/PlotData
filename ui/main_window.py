@@ -72,13 +72,15 @@ class MainWindow(QMainWindow):
 
         # 修正信号连接，接收4个参数
         self.data_view.plot_requested.connect(
-           lambda p,x,y,c,xe,ye: self.plot_view.handle_plot_request({
+           lambda p,x,y,c,xe,ye,ms,msz: self.plot_view.handle_plot_request({
                'plot_type': p,
                'x_col': x,
                'y_col': y,
                'color': c,
                'xerr_col': xe,
                'yerr_col': ye,
+               'mark_style': ms,  # 添加标记样式参数
+               'mark_size': msz,  # 添加标记大小参数              
                'data': self.data_manager.get_data()
            })
         )

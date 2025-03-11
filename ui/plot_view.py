@@ -94,17 +94,25 @@ class PlotView(QWidget):
     def handle_plot_request(self, plot_params):
         """处理绘图请求"""
         self.current_plot_params = plot_params
-        
+
         plot_type = plot_params["plot_type"]
         data = plot_params["data"]
         x_col = plot_params["x_col"]
         color = plot_params["color"]
+        # 添加新参数处理
+        mark_style = plot_params["mark_style"]
+        mark_size = plot_params["mark_size"]
         
         # 根据绘图类型调用不同的绘图方法
         if plot_type == "散点图":
             y_col = plot_params["y_col"]
             success, message = self.visualizer.scatter_plot(
-                data, x_col, y_col, color=color
+                data,
+                x_col,
+                y_col,
+                color=color,
+                mark_style = mark_style,
+                mark_size = mark_size
             )
             
         elif plot_type == "带误差棒的散点图":
@@ -112,7 +120,14 @@ class PlotView(QWidget):
             xerr_col = plot_params.get("xerr_col")
             yerr_col = plot_params.get("yerr_col")
             success, message = self.visualizer.scatter_plot_with_error(
-                data, x_col, y_col, xerr_col, yerr_col, color=color
+                data,
+                x_col,
+                y_col,
+                xerr_col, 
+                yerr_col, 
+                color=color,
+                mark_style = mark_style,
+                mark_size = mark_size
             )
             
         elif plot_type == "直方图":
@@ -240,7 +255,9 @@ class PlotView(QWidget):
                 "color": self.current_plot_params.get("color"),
                 "title": self.title_edit.text(),
                 "x_label": self.x_label_edit.text(),
-                "y_label": self.y_label_edit.text()
+                "y_label": self.y_label_edit.text(),
+                "mark_style": self.current_plot_params.get("mark_style"),
+                "mark_size": self.current_plot_params.get("mark_size"),
             }
             
             # 根据图表类型添加特定设置

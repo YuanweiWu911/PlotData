@@ -148,7 +148,7 @@ class DataView(QWidget):
         # 标记Marker样式设置
         self.mark_style_label = QLabel("标记样式:")
         self.mark_style_combo = QComboBox()
-        self.mark_style_combo.addItems(["圆形", "方形", "三角", "星形"])
+        self.mark_style_combo.addItems(["圆形", "点", "方形", "三角", "星形"])
         
         # 标记大小设置
         self.mark_size_label = QLabel("标记大小:")

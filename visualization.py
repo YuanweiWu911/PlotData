@@ -24,17 +24,40 @@ class Visualizer:
             self.canvas.axes.clear()
             self.canvas.draw()
     
-    def scatter_plot(self, data, x_col, y_col, title=None, x_label=None, y_label=None, color='blue', size=20, alpha=0.7):
+    def scatter_plot(self, data,
+        x_col,
+        y_col,
+        title=None,
+        x_label=None,
+        y_label=None,
+        color='blue',
+        alpha=0.7,
+        mark_size=10,
+        mark_style='o'):
         """绘制散点图"""
         if self.canvas is None:
             return False, "画布未初始化"
+
+         # 添加标记样式映射
+        style_map = {
+            "圆形": 'o',
+            "点": '.',
+            "方形": 's',
+            "三角": '^',
+            "星形": '*'
+        }
+        marker = style_map.get(mark_style, 'o')  # 默认圆形
         
         try:
             x = data[x_col]
             y = data[y_col]
             
             self.canvas.axes.clear()
-            self.canvas.axes.scatter(x, y, c=color, s=size, alpha=alpha)
+            self.canvas.axes.scatter(x, y,
+                marker=marker,
+                c=color,
+                s=mark_size,
+                alpha=alpha)
             
             # 设置标题和标签
             if title:
@@ -55,11 +78,32 @@ class Visualizer:
         except Exception as e:
             return False, f"散点图绘制失败: {str(e)}"
     
-    def scatter_plot_with_error(self, data, x_col, y_col, xerr_col=None, yerr_col=None, 
-                               title=None, x_label=None, y_label=None, color='blue', size=20, alpha=0.7):
+    def scatter_plot_with_error(self, data, 
+        x_col, 
+        y_col, 
+        xerr_col=None, 
+        yerr_col=None,
+        title=None,
+        x_label=None,
+        y_label=None,
+        color='blue',
+        alpha=0.7, 
+        mark_size=10,
+        mark_style='o'):
+
+
         """绘制带误差棒的散点图"""
         if self.canvas is None:
             return False, "画布未初始化"
+        # 添加标记样式映射
+        style_map = {
+            "圆形": 'o',
+            "点": '.',
+            "方形": 's',
+            "三角": '^',
+            "星形": '*'
+        }
+        marker = style_map.get(mark_style, 'o')  # 默认圆形
         
         try:
             x = data[x_col]
@@ -73,11 +117,11 @@ class Visualizer:
             self.canvas.axes.errorbar(x, y, 
                                     xerr=xerr,
                                     yerr=yerr,
-                                    fmt='o',         # 设置点标记形状
-                                    markersize=size,  # 单独设置点大小
+                                    fmt=marker,         # 设置点标记形状
+                                    markersize=mark_size,  # 单独设置点大小
                                     color=color,
                                     alpha=alpha,
-                                    ecolor='gray',    # 误差棒颜色
+                                    ecolor=color,    # 误差棒颜色
                                     elinewidth=1.5,   # 误差棒线宽
                                     capsize=5)        # 误差棒端帽长度
             
