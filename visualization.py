@@ -65,13 +65,21 @@ class Visualizer:
             x = data[x_col]
             y = data[y_col]
             
-            xerr = data[xerr_col] if xerr_col else None
-            yerr = data[yerr_col] if yerr_col else None
+            xerr = data[xerr_col] if xerr_col and xerr_col != "无" else None
+            yerr = data[yerr_col] if yerr_col and yerr_col != "无" else None
             
             self.canvas.axes.clear()
-            self.canvas.axes.errorbar(x, y, xerr=xerr, yerr=yerr, fmt='o', 
-                                     ecolor='black', capsize=5, capthick=1, 
-                                     color=color, markersize=size, alpha=alpha)
+            # 修改为正确的errorbar参数设置
+            self.canvas.axes.errorbar(x, y, 
+                                    xerr=xerr,
+                                    yerr=yerr,
+                                    fmt='o',         # 设置点标记形状
+                                    markersize=size,  # 单独设置点大小
+                                    color=color,
+                                    alpha=alpha,
+                                    ecolor='gray',    # 误差棒颜色
+                                    elinewidth=1.5,   # 误差棒线宽
+                                    capsize=5)        # 误差棒端帽长度
             
             # 设置标题和标签
             if title:

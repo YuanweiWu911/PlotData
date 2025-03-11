@@ -72,18 +72,29 @@ class MainWindow(QMainWindow):
 
         # 修正信号连接，接收4个参数
         self.data_view.plot_requested.connect(
-            lambda plot_type, x_col, y_col, color: (
-                QMessageBox.warning(self, "错误", "请先加载数据") 
-                if self.data_manager.get_data() is None 
-                else self.plot_view.handle_plot_request({
-                    "plot_type": plot_type,
-                    "x_col": x_col,
-                    "y_col": y_col,
-                    "data": self.data_manager.get_data(),
-                    "color": color  # 使用传入的颜色参数
-                })
-            )
+           lambda p,x,y,c,xe,ye: self.plot_view.handle_plot_request({
+               'plot_type': p,
+               'x_col': x,
+               'y_col': y,
+               'color': c,
+               'xerr_col': xe,
+               'yerr_col': ye,
+               'data': self.data_manager.get_data()
+           })
         )
+#       self.data_view.plot_requested.connect(
+#           lambda plot_type, x_col, y_col, color: (
+#               QMessageBox.warning(self, "错误", "请先加载数据") 
+#               if self.data_manager.get_data() is None 
+#               else self.plot_view.handle_plot_request({
+#                   "plot_type": plot_type,
+#                   "x_col": x_col,
+#                   "y_col": y_col,
+#                   "data": self.data_manager.get_data(),
+#                   "color": color  # 使用传入的颜色参数
+#               })
+#           )
+#       )
 
     def create_actions(self):
         # 文件操作

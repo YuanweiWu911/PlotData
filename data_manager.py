@@ -11,8 +11,11 @@ class DataManager:
     def load_data(self, file_path, sep=None):
         try:
             if file_path.endswith('.csv') or file_path.endswith('.txt'):
-                # 修改这里：使用self.data而不是self._data
-                self.data = pd.read_csv(file_path, sep=sep)
+                # 自动检测分隔符（多个空格、逗号、竖线）
+                if sep is None:
+                    sep = r'\s+|,|\|'  # 正则表达式匹配多个空格/逗号/竖线
+                self.data = pd.read_csv(file_path, sep=sep, engine='python')  # 添加engine参数
+
             elif file_path.endswith(('.xlsx', '.xls')):
                 self.data = pd.read_excel(file_path)
             elif file_path.endswith('.json'):
