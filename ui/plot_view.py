@@ -1,9 +1,9 @@
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
                             QLabel, QGroupBox, QFormLayout, QLineEdit,
-                            QMessageBox, QFileDialog)
+                            QMessageBox, QFileDialog, QProgressDialog)
 from PyQt6.QtCore import Qt, pyqtSlot
 from PyQt6.QtGui import QPixmap, QImage
-
+from PyQt6.QtCore import Qt, pyqtSlot, QSize  # 添加QSize导入
 import matplotlib
 matplotlib.use('QtAgg')
 
@@ -286,34 +286,3 @@ class PlotView(QWidget):
         except Exception as e:
             QMessageBox.critical(self, "错误", f"加载图表设置失败: {str(e)}")
             return None
-
-    def draw_plot(self, plot_type, x_col, y_col):
-        """处理绘图请求"""
-        try:
-            data = self.data_manager.get_data()
-            if data is None or data.empty:
-                QMessageBox.warning(self, "警告", "没有可用的数据")
-                return
-
-            # 根据不同类型调用可视化器
-            if plot_type == "散点图":
-                success, msg = self.visualizer.scatter_plot(
-                    data, x_col, y_col, 
-                    title=f"{x_col} vs {y_col}",
-                    x_label=x_col,
-                    y_label=y_col
-                )
-            elif plot_type == "直方图":
-                success, msg = self.visualizer.histogram(
-                    data, x_col,
-                    title=f"{x_col} 分布",
-                    x_label=x_col,
-                    bins=10  # 可配置参数
-                )
-            # 添加其他图表类型的处理...
-
-            if not success:
-                QMessageBox.critical(self, "错误", msg)
-                
-        except Exception as e:
-            QMessageBox.critical(self, "错误", f"绘图失败: {str(e)}")

@@ -60,13 +60,13 @@ class DataView(QWidget):
     """数据视图组件"""
     
     # 修改信号定义，使其与实际使用匹配
-    plot_requested = pyqtSignal(str, str, str)  # 图表类型, x轴列, y轴列
+    plot_requested = pyqtSignal(str, str, str, str)  # 图表类型, x轴列, y轴列, 颜色
     
     def __init__(self, data_manager):
         super().__init__()
         self.data_manager = data_manager
         self.init_ui()  # 确保初始化方法被调用
-
+       
     def init_ui(self):
         # 创建主布局
         main_layout = QVBoxLayout(self)
@@ -131,20 +131,22 @@ class DataView(QWidget):
         self.bins_spin.setValue(10)
         self.bins_label = QLabel("分箱数量:")
         form_layout.addRow(self.bins_label, self.bins_spin)
-        
-        # 颜色选择
+
+        # 添加颜色选择组件
         self.color_button = QPushButton("选择颜色")
         self.color_button.clicked.connect(self.choose_color)
-        self.current_color = QColor(0, 0, 255)  # 默认蓝色
+        self.selected_color = "black"  # 默认颜色
+        self.color_button.setStyleSheet("background-color: black;")
         form_layout.addRow("颜色:", self.color_button)
-        
         plot_layout.addLayout(form_layout)
-        
+
         # 绘图按钮
-        self.plot_button = QPushButton("绘制图表")
+        self.plot_button = QPushButton("生成图")
         self.plot_button.clicked.connect(self.request_plot)
         plot_layout.addWidget(self.plot_button)
-        
+
+        # 添加绘图控制组到主布局（原代码第345行附近）
+        main_layout.addWidget(plot_group)  # 确保在数据筛选区域前添加        
         # 添加数据筛选区域
         filter_group = QGroupBox("数据筛选")
         filter_layout = QVBoxLayout(filter_group)
@@ -184,12 +186,8 @@ class DataView(QWidget):
         
         # 初始化UI状态
         self.on_plot_type_changed(0)  # 默认为散点图
-        
-        # 新增绘图按钮
-        self.plot_button = QPushButton("生成图表", self)
-        self.plot_button.clicked.connect(self.on_plot_clicked)
-        main_layout.addWidget(self.plot_button)
-    
+         
+
     # 确保on_plot_clicked是类方法（删除嵌套定义）
     def on_plot_clicked(self):
         """处理绘图按钮点击事件"""
@@ -329,12 +327,23 @@ class DataView(QWidget):
     
     def choose_color(self):
         """打开颜色选择对话框"""
-        color = QColorDialog.getColor(self.current_color, self, "选择颜色")
+        color = QColorDialog.getColor(initial=QColor(self.selected_color))
         if color.isValid():
-            self.current_color = color
-    
+            self.selected_color = color.name()
+            self.color_button.setStyleSheet(f"background-color: {self.selected_color};")
+
+    # 在触发绘图的代码处传递颜色参数
+    def trigger_plot_action(self):
+        # ... 原有逻辑 ...
+        self.plot_requested.emit(plot_type, x_col, y_col, self.selected_color)
+
     def request_plot(self):
         """请求绘制图表"""
+        if (sip.isdeleted(self.x_combo) or 
+            sip.isdeleted(self.y_combo) or
+            sip.isdeleted(self.plot_type_combo)):
+            return        
+
         # 获取当前选择的列
         x_column = self.x_combo.currentText()  # 修正变量名
         
@@ -355,7 +364,8 @@ class DataView(QWidget):
                 return
         
         # 发送绘图信号
-        self.plot_requested.emit(plot_type, x_column, y_column)
+#       self.plot_requested.emit(plot_type, x_column, y_column)
+        self.plot_requested.emit(plot_type, x_column, y_column, self.selected_color)  # 添加颜色参数        
     
     def apply_filter(self):
         """应用数据筛选"""

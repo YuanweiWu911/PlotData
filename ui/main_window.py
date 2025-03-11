@@ -70,8 +70,20 @@ class MainWindow(QMainWindow):
         else:
             self.resize(1000, 700)
 
-        # 在初始化DataView后添加信号连接
-        self.data_view.plot_requested.connect(self.plot_view.draw_plot) 
+        # 修正信号连接，接收4个参数
+        self.data_view.plot_requested.connect(
+            lambda plot_type, x_col, y_col, color: (
+                QMessageBox.warning(self, "错误", "请先加载数据") 
+                if self.data_manager.get_data() is None 
+                else self.plot_view.handle_plot_request({
+                    "plot_type": plot_type,
+                    "x_col": x_col,
+                    "y_col": y_col,
+                    "data": self.data_manager.get_data(),
+                    "color": color  # 使用传入的颜色参数
+                })
+            )
+        )
 
     def create_actions(self):
         # 文件操作
