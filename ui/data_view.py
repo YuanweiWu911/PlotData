@@ -94,7 +94,7 @@ class DataView(QWidget):
         filter_layout = QVBoxLayout(filter_group)
 
         # 添加筛选表达式区域
-        filter_layout.addWidget(QLabel("筛选表达式: `列名` > 10 & `列名` < 100"))
+        filter_layout.addWidget(QLabel("示例: `列名` > 10 & `列名` < 100"))
         # 筛选表达式输入框
         self.filter_expr_edit = QTextEdit()
         self.filter_expr_edit.setMaximumHeight(60)
@@ -140,30 +140,31 @@ class DataView(QWidget):
         self.plot_type_combo.currentIndexChanged.connect(self.on_plot_type_changed)
         plot_type_layout.addWidget(self.plot_type_combo)
 
+        # 添加颜色选择组件
+        plot_type_layout.addWidget(QLabel("颜色:"))
+        self.color_button = QPushButton("选择颜色")
+        self.color_button.clicked.connect(self.choose_color)
+        self.selected_color = "blue"  # 默认颜色
+        self.color_button.setStyleSheet(f"background-color: {self.selected_color};")
+        plot_type_layout.addWidget(self.color_button)
+
         # 标记Marker样式设置
         self.mark_style_label = QLabel("标记样式:")
         self.mark_style_combo = QComboBox()
         self.mark_style_combo.addItems(["圆形", "点", "方形", "三角", "星形"])
+        plot_type_layout.addWidget(self.mark_style_label)
+        plot_type_layout.addWidget(self.mark_style_combo)
         
         # 标记大小设置
         self.mark_size_label = QLabel("标记大小:")
         self.mark_size_spin = QSpinBox()
         self.mark_size_spin.setRange(5, 50)
         self.mark_size_spin.setValue(20)
-
-        # 将标记控件添加到绘图类型布局中
-        plot_type_layout.addWidget(self.mark_style_label)
-        plot_type_layout.addWidget(self.mark_style_combo)
         plot_type_layout.addWidget(self.mark_size_label)
         plot_type_layout.addWidget(self.mark_size_spin)
 
         plot_layout.addLayout(plot_type_layout)
 
-        # 创建控制面板布局
-        controls_layout = QHBoxLayout()  # 确保正确定义布局容器
-        controls_layout.setContentsMargins(0, 0, 0, 0)
-        
-        
         # 创建数据选择表单
         form_layout = QFormLayout()
         
@@ -193,27 +194,8 @@ class DataView(QWidget):
         self.bins_spin.setValue(10)
         self.bins_label = QLabel("分箱数量:")
         form_layout.addRow(self.bins_label, self.bins_spin)
-
-        # 添加颜色选择组件
-        self.color_button = QPushButton("选择颜色")
-        self.color_button.clicked.connect(self.choose_color)
-        self.selected_color = "blue"  # 默认颜色
-        self.color_button.setStyleSheet(f"background-color: {self.selected_color};")
+        
         plot_layout.addLayout(form_layout)
-       
-        # 将控件添加到布局（确认使用同一个布局对象）
-        controls_layout.addWidget(QLabel("图表类型:"))
-        controls_layout.addWidget(self.plot_type_combo)
-        controls_layout.addWidget(self.color_button)
-        
-        # 新增的标记样式控件
-        controls_layout.addWidget(self.mark_style_label)  # 确保使用已定义的controls_layout
-        controls_layout.addWidget(self.mark_style_combo)
-        controls_layout.addWidget(self.mark_size_label)
-        controls_layout.addWidget(self.mark_size_spin)
-        
-        # 将控制面板布局添加到主布局
-        main_layout.addLayout(controls_layout) 
 
         # 绘图按钮
         self.plot_button = QPushButton("生成图")

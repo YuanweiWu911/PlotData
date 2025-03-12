@@ -101,7 +101,6 @@ class PlotView(QWidget):
         
         # 重新处理绘图请求
         self.handle_plot_request(self.current_plot_params.copy())
-
    
     @pyqtSlot()
     def save_plot_settings(self):

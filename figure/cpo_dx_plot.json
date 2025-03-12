@@ -1,7 +1,7 @@
 {
-    "title": "test",
+    "title": "",
     "x_label": "MJD (day)",
-    "y_label": "CPO  dX (arcsec)",
+    "y_label": "CPO dX (arcsec)",
     "plot_type": "\u5e26\u8bef\u5dee\u68d2\u7684\u6563\u70b9\u56fe",
     "color": "blue",
     "mark_style": "\u70b9",
