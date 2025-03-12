@@ -5,10 +5,10 @@ from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import QDir
 
-from data_manager import DataManager
-from visualization import Visualizer
+from core.data_manager import DataManager
+from core.visualization import Visualizer
+from core.config_manager import ConfigManager
 from ui.main_window import MainWindow
-from config_manager import ConfigManager
 
 def setup_logging():
     """设置日志系统"""

@@ -1,3 +1,5 @@
+import pandas as pd
+import numpy as np
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
                             QLabel, QTableView, QHeaderView, QComboBox, 
                             QGroupBox, QFormLayout, QSpinBox, 
@@ -9,9 +11,7 @@ from PyQt6 import sip
 from PyQt6.QtCore import QMetaObject, Qt, QThread
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import pyqtSignal, QObject
-
-import pandas as pd
-import numpy as np
+from core.data_manager import DataManager
 
 class PandasModel(QAbstractTableModel):
     """用于在QTableView中显示pandas DataFrame的模型"""

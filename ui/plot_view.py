@@ -7,9 +7,6 @@ from PyQt6.QtCore import Qt, pyqtSlot, QSize  # 添加QSize导入
 import matplotlib
 matplotlib.use('QtAgg')
 
-# 添加缺失的导入
-from visualization import Visualizer
-
 class PlotView(QWidget):
     """绘图视图组件"""
     
@@ -31,7 +28,7 @@ class PlotView(QWidget):
         plot_layout = QVBoxLayout(plot_group)
         
         # 创建画布
-        from visualization import PlotCanvas
+        from core.visualization import PlotCanvas
         self.canvas = PlotCanvas(self, width=5, height=4)
         plot_layout.addWidget(self.canvas)
         

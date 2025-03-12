@@ -1,13 +1,17 @@
+import os
 from PyQt6 import sip  # 新增导入
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
                             QSplitter, QFileDialog, QMessageBox, QToolBar, 
                             QStatusBar, QLabel, QDialog, QApplication, QInputDialog)
 from PyQt6.QtCore import Qt, QSize  # 添加 QSize 导入
 from PyQt6.QtGui import QIcon, QPalette, QColor, QAction  # 从 QtGui 导入 QAction
-import os
-
-from .data_view import DataView
 from .plot_view import PlotView
+from core.config_manager import ConfigManager
+from core.data_manager import DataManager
+from core import visualization
+from ui.data_view import DataView
+from ui.plot_view import PlotView
+from ui.stats_view import StatsView
 
 class MainWindow(QMainWindow):
     def __init__(self, data_manager, visualizer, config_manager=None):
