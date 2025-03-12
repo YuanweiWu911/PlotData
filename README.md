@@ -1,5 +1,7 @@
 # PlotData
 
+![PlotData Logo](resources/icon.png)
+
 PlotData是一款基于Python的交互式数据可视化工具，提供简单易用的界面，帮助用户快速加载、处理和可视化数据。
 
 ## 功能特点
@@ -31,45 +33,88 @@ pip install -r requirements.txt
 python main.py
 ```
 ## 使用说明
-1. 通过菜单栏或拖拽方式加载数据文件
-2. 使用数据清洗功能处理缺失值和异常值
-3. 在数据视图页面进行筛选和排序
-4. 在统计视图页面查看数据统计信息
-5. 在绘图视图页面创建和自定义图表
-6. 导出处理后的数据或保存图表
+### 基本操作流程
+1. 数据加载 ：通过"文件→打开"菜单或快捷键Ctrl+O加载数据文件
+2. 数据预览 ：在数据视图中浏览和检查数据
+3. 数据清洗 ：使用"数据→数据清洗"功能处理缺失值和异常值
+4. 统计分析 ：在统计视图中查看数据的统计信息
+5. 创建图表 ：在数据视图中选择列和图表类型，点击"绘制图表"
+6. 自定义图表 ：调整图表的颜色、标记样式、大小等属性
+7. 导出结果 ：保存图表为图片或导出处理后的数据
+### 快捷键 功能 快捷键 打开文件
+
+Ctrl+O 导出数据
+
+Ctrl+E 退出程序
+
+Ctrl+Q 切换主题
+
+Ctrl+T 首选项设置
+
+Ctrl+P 帮助内容
+
+F1
 ## 项目结构
-```plaintext
+```
 PlotData/
-├── ui/                  # 用户界面模块
-│   ├── main_window.py  # 主窗口
-│   ├── data_view.py     # 数据视图
-│   ├── stats_view.py    # 统计视图
-│   └── plot_view.py     # 绘图视图
 ├── core/                # 核心功能模块
+│   ├── __init__.py      # 包初始化
+│   ├── config_manager.py # 配置管理
 │   ├── data_manager.py  # 数据管理
-│   └── config_manager.py # 配置管理
+│   └── visualization.py # 可视化引擎
+├── ui/                  # 用户界面模块
+│   ├── __init__.py      # 包初始化
+│   ├── clean_dialog.py  # 数据清洗对话框
+│   ├── data_view.py     # 数据视图
+│   ├── help_dialog.py   # 帮助对话框
+│   ├── main_window.py   # 主窗口
+│   ├── plot_view.py     # 绘图视图
+│   ├── preferences_dialog.py # 首选项对话框
+│   └── stats_view.py    # 统计视图
+├── resources/           # 资源文件
+│   └── icon.png         # 应用图标
 ├── tests/               # 测试代码
+├── __init__.py          # 包初始化
+├── main.py              # 主程序入口
+├── setup.py             # 安装配置
+├── requirements.txt     # 依赖包列表
 └── README.md            # 项目文档
+```
+## 技术栈
+- PyQt6 : 用户界面框架
+- Matplotlib : 图表绘制
+- Pandas : 数据处理和分析
+- NumPy : 数值计算
+- setuptools : 包管理
+## 开发指南
+### 环境设置
+推荐使用虚拟环境进行开发：
+
+```bash
+python -m venv venv
+pip install -r requirements.txt
+venv\Scripts\activate
  ```
 
- ## 贡献指南
- 欢迎提交 Issue 和 Pull Request。请确保：
+### 代码规范
+- 遵循PEP 8编码规范
+- 类和方法需添加文档字符串
+- UI组件命名规则：
+  - 对话框类：XXXDialog
+  - 视图类：XXXView
+  - 信号命名：xxx_signal
+### 测试
+添加单元测试到tests目录，确保新功能和修复的bug有相应的测试覆盖。
 
- 1. 代码符合 PEP8 规范
- 2. 添加必要的单元测试
- 3. 更新相关文档
- ## 许可证
- MIT License
+## 贡献指南
+欢迎提交Issue和Pull Request。请确保：
 
- ```plaintext
+1. 代码符合PEP 8规范
+2. 添加必要的单元测试
+3. 更新相关文档
+## 许可证
+MIT License
 
- 这个 README 更新包含了：
- 1. 项目概述和主要功能
- 2. 系统要求和安装指南
- 3. 使用说明
- 4. 项目结构
- 5. 贡献指南
- 6. 许可证信息
-
- 所有信息都基于当前工程代码中的实际功能，特别是从 `data_manager.py`、`main_window.py` 等核心文件中提取的功能描述。
-  ```
+## 联系方式
+- 项目维护者： YuanweiWu911
+- 问题反馈：请使用GitHub Issues
