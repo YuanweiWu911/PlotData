@@ -23,6 +23,30 @@ class PlotView(QWidget):
         # 创建主布局
         main_layout = QVBoxLayout(self)
         
+        # 创建工具栏
+        toolbar_layout = QHBoxLayout()
+        
+        # 添加保存设置按钮到工具栏
+        self.save_settings_toolbar_button = QPushButton("保存设置")
+        self.save_settings_toolbar_button.setIcon(self.style().standardIcon(self.style().StandardPixmap.SP_DialogSaveButton))
+        self.save_settings_toolbar_button.clicked.connect(self.save_plot_settings)
+        toolbar_layout.addWidget(self.save_settings_toolbar_button)
+        
+        # 添加加载设置按钮到工具栏
+        self.load_settings_toolbar_button = QPushButton("加载设置")
+        self.load_settings_toolbar_button.setIcon(self.style().standardIcon(self.style().StandardPixmap.SP_DialogOpenButton))
+        self.load_settings_toolbar_button.clicked.connect(self.load_plot_settings)
+        toolbar_layout.addWidget(self.load_settings_toolbar_button)
+        
+        # 添加保存图表按钮到工具栏
+        self.save_plot_toolbar_button = QPushButton("保存图表")
+        self.save_plot_toolbar_button.setIcon(self.style().standardIcon(self.style().StandardPixmap.SP_DialogSaveButton))
+        self.save_plot_toolbar_button.clicked.connect(self.save_plot)
+        toolbar_layout.addWidget(self.save_plot_toolbar_button)
+        
+        toolbar_layout.addStretch()
+        main_layout.addLayout(toolbar_layout)
+        
         # 创建绘图区域
         plot_group = QGroupBox("绘图区域")
         plot_layout = QVBoxLayout(plot_group)
@@ -53,36 +77,22 @@ class PlotView(QWidget):
         self.y_label_edit = QLineEdit()
         settings_layout.addRow("Y轴标签:", self.y_label_edit)
         
-        # 应用设置按钮
+        # 应用设置按钮 - 保留这个按钮，因为它用于应用标题和标签设置
         self.apply_settings_button = QPushButton("应用设置")
         self.apply_settings_button.clicked.connect(self.apply_settings)
         settings_layout.addRow("", self.apply_settings_button)
         
-        # 添加保存/加载设置按钮
-        settings_buttons_layout = QHBoxLayout()
-        
-        self.save_settings_button = QPushButton("保存设置")
-        self.save_settings_button.clicked.connect(self.save_plot_settings)
-        settings_buttons_layout.addWidget(self.save_settings_button)
-        
-        self.load_settings_button = QPushButton("加载设置")
-        self.load_settings_button.clicked.connect(self.load_plot_settings)
-        settings_buttons_layout.addWidget(self.load_settings_button)
-        
-        settings_layout.addRow("", settings_buttons_layout)
+        # 删除原来的保存/加载设置按钮布局
+        # settings_buttons_layout = QHBoxLayout()
+        # self.save_settings_button = QPushButton("保存设置")
+        # self.save_settings_button.clicked.connect(self.save_plot_settings)
+        # settings_buttons_layout.addWidget(self.save_settings_button)
+        # self.load_settings_button = QPushButton("加载设置")
+        # self.load_settings_button.clicked.connect(self.load_plot_settings)
+        # settings_buttons_layout.addWidget(self.load_settings_button)
+        # settings_layout.addRow("", settings_buttons_layout)
         
         main_layout.addWidget(settings_group)
-        
-#       # 创建保存图表区域
-#       save_group = QGroupBox("保存图表")
-#       save_layout = QHBoxLayout(save_group)
-#       
-#       # 保存按钮
-#       self.save_button = QPushButton("保存图表")
-#       self.save_button.clicked.connect(self.save_plot)
-#       save_layout.addWidget(self.save_button)
-#       
-#       main_layout.addWidget(save_group)
         
         # 存储当前绘图参数
         self.current_plot_params = None

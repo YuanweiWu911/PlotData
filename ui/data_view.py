@@ -73,6 +73,24 @@ class DataView(QWidget):
         # 创建主布局
         main_layout = QVBoxLayout(self)
         
+        # 创建工具栏
+        toolbar_layout = QHBoxLayout()
+        
+        # 添加载入数据按钮到工具栏
+        self.load_data_button = QPushButton("载入数据")
+        self.load_data_button.setIcon(self.style().standardIcon(self.style().StandardPixmap.SP_DialogOpenButton))
+        self.load_data_button.clicked.connect(self.load_data)
+        toolbar_layout.addWidget(self.load_data_button)
+        
+        # 添加导出数据按钮到工具栏
+        self.export_data_button = QPushButton("导出数据")
+        self.export_data_button.setIcon(self.style().standardIcon(self.style().StandardPixmap.SP_DialogSaveButton))
+        self.export_data_button.clicked.connect(self.export_data)
+        toolbar_layout.addWidget(self.export_data_button)
+        
+        toolbar_layout.addStretch()
+        main_layout.addLayout(toolbar_layout)
+        
         # 创建数据表视图
         self.table_label = QLabel("数据预览:")
         main_layout.addWidget(self.table_label)
@@ -90,37 +108,41 @@ class DataView(QWidget):
         main_layout.addWidget(self.table_view)
         
         # 添加数据筛选区域 - 移到绘图控制前面
+        # 添加数据筛选区域 - 减小高度
         filter_group = QGroupBox("数据筛选")
         filter_layout = QVBoxLayout(filter_group)
-
-        # 添加筛选表达式区域
-        filter_layout.addWidget(QLabel("示例: `列名` > 10 & `列名` < 100"))
-        # 筛选表达式输入框
+        filter_layout.setContentsMargins(5, 5, 5, 5)  # 减小内边距
+        filter_layout.setSpacing(3)  # 减小控件间距
+        
+        # 添加筛选表达式区域 - 使用更紧凑的布局
+        filter_expr_layout = QHBoxLayout()
+#       filter_expr_layout.addWidget(QLabel("筛选表达式:"))
         self.filter_expr_edit = QTextEdit()
-        self.filter_expr_edit.setMaximumHeight(60)
-        filter_layout.addWidget(self.filter_expr_edit)
+        self.filter_expr_edit.setMaximumHeight(40)  # 减小文本框高度
+        self.filter_expr_edit.setPlaceholderText("示例: `列名` > 10 & `列名` < 100")
+        filter_expr_layout.addWidget(self.filter_expr_edit)
+        filter_layout.addLayout(filter_expr_layout)
         
-        # 添加筛选表达式说明标签
-#       example_label = QLabel("示例: `列名` > 10 & `列名` < 100")
-#       example_label.setWordWrap(True)
-#       filter_layout.addWidget(example_label)
-        
-        # 创建按钮布局
+        # 创建按钮布局 - 使用更紧凑的布局
         filter_btn_layout = QHBoxLayout()
+        filter_btn_layout.setSpacing(5)  # 减小按钮间距
         
         # 显示可用列名按钮
         self.show_columns_btn = QPushButton("显示可用列名")
         self.show_columns_btn.clicked.connect(self.show_available_columns)
+        self.show_columns_btn.setMaximumHeight(25)  # 减小按钮高度
         filter_btn_layout.addWidget(self.show_columns_btn)
         
-        # 应用筛选按钮 - 统一使用一个变量名
+        # 应用筛选按钮
         self.apply_filter_btn = QPushButton("应用筛选")
         self.apply_filter_btn.clicked.connect(self.apply_filter)
+        self.apply_filter_btn.setMaximumHeight(25)  # 减小按钮高度
         filter_btn_layout.addWidget(self.apply_filter_btn)
         
-        # 清除筛选按钮 - 统一使用一个变量名
+        # 清除筛选按钮
         self.clear_filter_btn = QPushButton("清除筛选")
         self.clear_filter_btn.clicked.connect(self.clear_filter)
+        self.clear_filter_btn.setMaximumHeight(25)  # 减小按钮高度
         filter_btn_layout.addWidget(self.clear_filter_btn)
         
         filter_layout.addLayout(filter_btn_layout)
@@ -603,3 +625,20 @@ class DataView(QWidget):
             
         except Exception as e:
             print(f"数据加载后处理出错: {str(e)}")
+
+
+    def load_data(self):
+        """载入数据按钮点击事件处理"""
+        # 这里需要调用主窗口的打开文件方法
+        # 由于这是在子组件中，我们需要通过信号将请求传递给主窗口
+        # 可以发射一个自定义信号，或者通过父窗口引用调用方法
+        parent = self.window()
+        if hasattr(parent, 'open_file'):
+            parent.open_file()
+    
+    def export_data(self):
+        """导出数据按钮点击事件处理"""
+        # 同样，这里需要调用主窗口的导出文件方法
+        parent = self.window()
+        if hasattr(parent, 'export_data'):
+            parent.export_data()

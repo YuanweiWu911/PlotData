@@ -36,7 +36,7 @@ class MainWindow(QMainWindow):
         self.create_menu()
         
         # 创建工具栏
-        self.create_toolbar()
+#       self.create_toolbar()
         
         # 创建状态栏
         self.create_statusbar()
@@ -189,15 +189,15 @@ class MainWindow(QMainWindow):
         help_menu.addAction(self.help_action)
         help_menu.addAction(self.about_action)
         
-    def create_toolbar(self):
-        # 创建工具栏
-        toolbar = QToolBar("主工具栏")
-        toolbar.setIconSize(QSize(16, 16))
-        self.addToolBar(toolbar)
-        
-        toolbar.addAction(self.open_action)
-        toolbar.addAction(self.export_action)
-        toolbar.addAction(self.save_plot_action)  
+#   def create_toolbar(self):
+#       # 创建工具栏
+#       toolbar = QToolBar("主工具栏")
+#       toolbar.setIconSize(QSize(16, 16))
+#       self.addToolBar(toolbar)
+#       
+#       toolbar.addAction(self.open_action)
+#       toolbar.addAction(self.export_action)
+#       toolbar.addAction(self.save_plot_action)  
 
     def save_current_plot(self):
         """保存当前图表"""
