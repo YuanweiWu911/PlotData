@@ -93,7 +93,7 @@ PlotData/
 ```bash
 python -m venv venv
 pip install -r requirements.txt
-venv\Scripts\activate
+source venv\Scripts\activate
  ```
 
 ### 代码规范

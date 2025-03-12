@@ -89,7 +89,46 @@ class DataView(QWidget):
         
         main_layout.addWidget(self.table_view)
         
-        # 创建绘图控制组
+        # 添加数据筛选区域 - 移到绘图控制前面
+        filter_group = QGroupBox("数据筛选")
+        filter_layout = QVBoxLayout(filter_group)
+
+        # 添加筛选表达式区域
+        filter_layout.addWidget(QLabel("筛选表达式: `列名` > 10 & `列名` < 100"))
+        # 筛选表达式输入框
+        self.filter_expr_edit = QTextEdit()
+        self.filter_expr_edit.setMaximumHeight(60)
+        filter_layout.addWidget(self.filter_expr_edit)
+        
+        # 添加筛选表达式说明标签
+#       example_label = QLabel("示例: `列名` > 10 & `列名` < 100")
+#       example_label.setWordWrap(True)
+#       filter_layout.addWidget(example_label)
+        
+        # 创建按钮布局
+        filter_btn_layout = QHBoxLayout()
+        
+        # 显示可用列名按钮
+        self.show_columns_btn = QPushButton("显示可用列名")
+        self.show_columns_btn.clicked.connect(self.show_available_columns)
+        filter_btn_layout.addWidget(self.show_columns_btn)
+        
+        # 应用筛选按钮 - 统一使用一个变量名
+        self.apply_filter_btn = QPushButton("应用筛选")
+        self.apply_filter_btn.clicked.connect(self.apply_filter)
+        filter_btn_layout.addWidget(self.apply_filter_btn)
+        
+        # 清除筛选按钮 - 统一使用一个变量名
+        self.clear_filter_btn = QPushButton("清除筛选")
+        self.clear_filter_btn.clicked.connect(self.clear_filter)
+        filter_btn_layout.addWidget(self.clear_filter_btn)
+        
+        filter_layout.addLayout(filter_btn_layout)
+        
+        # 添加筛选区域到主布局
+        main_layout.addWidget(filter_group)
+        
+        # 创建绘图控制组 - 移到数据筛选后面
         plot_group = QGroupBox("绘图控制")
         plot_layout = QVBoxLayout(plot_group)
         
@@ -160,7 +199,6 @@ class DataView(QWidget):
         self.color_button.clicked.connect(self.choose_color)
         self.selected_color = "blue"  # 默认颜色
         self.color_button.setStyleSheet(f"background-color: {self.selected_color};")
-        form_layout.addRow("颜色:", self.color_button)
         plot_layout.addLayout(form_layout)
        
         # 将控件添加到布局（确认使用同一个布局对象）
@@ -182,47 +220,8 @@ class DataView(QWidget):
         self.plot_button.clicked.connect(self.request_plot)
         plot_layout.addWidget(self.plot_button)
 
-        # 添加绘图控制组到主布局（原代码第345行附近）
-        main_layout.addWidget(plot_group)  # 确保在数据筛选区域前添加        
-
-        # 添加数据筛选区域
-        filter_group = QGroupBox("数据筛选")
-        filter_layout = QVBoxLayout(filter_group)
-
-        # 添加筛选表达式区域
-        filter_layout.addWidget(QLabel("筛选表达式:"))
-        # 筛选表达式输入框
-        self.filter_expr_edit = QTextEdit()
-        self.filter_expr_edit.setMaximumHeight(60)
-        filter_layout.addWidget(self.filter_expr_edit)
-        
-        # 添加筛选表达式说明标签
-        example_label = QLabel("示例: `列名` > 10 & `列名` < 100")
-        example_label.setWordWrap(True)
-        filter_layout.addWidget(example_label)
-        
-        # 创建按钮布局
-        filter_btn_layout = QHBoxLayout()
-        
-        # 显示可用列名按钮
-        self.show_columns_btn = QPushButton("显示可用列名")
-        self.show_columns_btn.clicked.connect(self.show_available_columns)
-        filter_btn_layout.addWidget(self.show_columns_btn)
-        
-        # 应用筛选按钮 - 统一使用一个变量名
-        self.apply_filter_btn = QPushButton("应用筛选")
-        self.apply_filter_btn.clicked.connect(self.apply_filter)
-        filter_btn_layout.addWidget(self.apply_filter_btn)
-        
-        # 清除筛选按钮 - 统一使用一个变量名
-        self.clear_filter_btn = QPushButton("清除筛选")
-        self.clear_filter_btn.clicked.connect(self.clear_filter)
-        filter_btn_layout.addWidget(self.clear_filter_btn)
-        
-        filter_layout.addLayout(filter_btn_layout)
-        
-        # 添加筛选区域到主布局
-        main_layout.addWidget(filter_group)
+        # 添加绘图控制组到主布局
+        main_layout.addWidget(plot_group)
         
         # 初始化UI状态
         self.on_plot_type_changed(0)  # 默认为散点图

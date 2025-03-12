@@ -73,16 +73,16 @@ class PlotView(QWidget):
         
         main_layout.addWidget(settings_group)
         
-        # 创建保存图表区域
-        save_group = QGroupBox("保存图表")
-        save_layout = QHBoxLayout(save_group)
-        
-        # 保存按钮
-        self.save_button = QPushButton("保存图表")
-        self.save_button.clicked.connect(self.save_plot)
-        save_layout.addWidget(self.save_button)
-        
-        main_layout.addWidget(save_group)
+#       # 创建保存图表区域
+#       save_group = QGroupBox("保存图表")
+#       save_layout = QHBoxLayout(save_group)
+#       
+#       # 保存按钮
+#       self.save_button = QPushButton("保存图表")
+#       self.save_button.clicked.connect(self.save_plot)
+#       save_layout.addWidget(self.save_button)
+#       
+#       main_layout.addWidget(save_group)
         
         # 存储当前绘图参数
         self.current_plot_params = None

@@ -148,6 +148,11 @@ class MainWindow(QMainWindow):
             action.triggered.connect(self.open_recent_file)
             self.recent_file_actions.append(action)
 
+                # 添加保存图表操作
+            self.save_plot_action = QAction("保存图表", self)
+            self.save_plot_action.setShortcut("Ctrl+S")
+            self.save_plot_action.triggered.connect(self.save_current_plot)
+
     def create_menu(self):
         # 创建菜单栏
         menu_bar = self.menuBar()
@@ -190,13 +195,15 @@ class MainWindow(QMainWindow):
         toolbar.setIconSize(QSize(16, 16))
         self.addToolBar(toolbar)
         
-#       # 添加操作到工具栏并设置图标
-#       icon_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources", "icon.png")
-#       if os.path.exists(icon_path):
-#           self.open_action.setIcon(QIcon(icon_path))
-#       
         toolbar.addAction(self.open_action)
-        
+        toolbar.addAction(self.export_action)
+        toolbar.addAction(self.save_plot_action)  
+
+    def save_current_plot(self):
+        """保存当前图表"""
+        if hasattr(self, 'plot_view') and self.plot_view:
+            self.plot_view.save_plot()
+
     def create_statusbar(self):
         # 创建状态栏
         self.status_bar = QStatusBar()
