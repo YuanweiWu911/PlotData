@@ -104,7 +104,7 @@ class MainWindow(QMainWindow):
 
     def create_actions(self):
         # 文件操作
-        self.open_action = QAction("打开", self)
+        self.open_action = QAction("载入数据", self)
         self.open_action.setShortcut("Ctrl+O")
         self.open_action.triggered.connect(lambda: self.open_file())  # 确保使用lambda传递空参数
         
@@ -190,7 +190,11 @@ class MainWindow(QMainWindow):
         toolbar.setIconSize(QSize(16, 16))
         self.addToolBar(toolbar)
         
-        # 添加操作到工具栏
+#       # 添加操作到工具栏并设置图标
+#       icon_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources", "icon.png")
+#       if os.path.exists(icon_path):
+#           self.open_action.setIcon(QIcon(icon_path))
+#       
         toolbar.addAction(self.open_action)
         
     def create_statusbar(self):

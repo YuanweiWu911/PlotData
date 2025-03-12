@@ -1,6 +1,6 @@
 # PlotData
 
-![PlotData Logo](resources/icon.png)
+![PlotData Logo](./resources/icon.png)
 
 PlotData是一款基于Python的交互式数据可视化工具，提供简单易用的界面，帮助用户快速加载、处理和可视化数据。
 

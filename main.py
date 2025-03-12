@@ -69,4 +69,9 @@ def main():
     sys.exit(app.exec())
 
 if __name__ == "__main__":
+    # 在Windows上设置应用程序ID（在创建QApplication后）
+    if os.name == 'nt':
+        import ctypes
+        app_id = 'yuanweiwu911.plotdata.1.0'  # 应用程序ID格式：公司名.产品名.版本
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
     main()
