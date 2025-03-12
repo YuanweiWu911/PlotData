@@ -1,7 +1,8 @@
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
                             QLabel, QTableView, QHeaderView, QComboBox, 
-                            QGroupBox, QFormLayout, QSpinBox, QCheckBox,
-                            QColorDialog, QMessageBox, QLineEdit)  # 添加缺失的QLineEdit导入
+                            QGroupBox, QFormLayout, QSpinBox, 
+                            QColorDialog, QMessageBox, QTextEdit,
+                            QDialog, QListWidget, QListWidgetItem)  # 添加缺失的QLineEdit导入
 from PyQt6.QtCore import Qt, QAbstractTableModel, QModelIndex, pyqtSignal
 from PyQt6.QtGui import QColor
 from PyQt6 import sip
@@ -183,46 +184,48 @@ class DataView(QWidget):
 
         # 添加绘图控制组到主布局（原代码第345行附近）
         main_layout.addWidget(plot_group)  # 确保在数据筛选区域前添加        
+
         # 添加数据筛选区域
         filter_group = QGroupBox("数据筛选")
         filter_layout = QVBoxLayout(filter_group)
+
+        # 添加筛选表达式区域
+        filter_layout.addWidget(QLabel("筛选表达式:"))
+        # 筛选表达式输入框
+        self.filter_expr_edit = QTextEdit()
+        self.filter_expr_edit.setMaximumHeight(60)
+        filter_layout.addWidget(self.filter_expr_edit)
         
-        # 列选择
-        filter_col_layout = QHBoxLayout()
-        filter_col_layout.addWidget(QLabel("筛选列:"))
+        # 添加筛选表达式说明标签
+        example_label = QLabel("示例: `列名` > 10 & `列名` < 100")
+        example_label.setWordWrap(True)
+        filter_layout.addWidget(example_label)
         
-        self.filter_col_combo = QComboBox()
-        filter_col_layout.addWidget(self.filter_col_combo)
+        # 创建按钮布局
+        filter_btn_layout = QHBoxLayout()
         
-        filter_layout.addLayout(filter_col_layout)
+        # 显示可用列名按钮
+        self.show_columns_btn = QPushButton("显示可用列名")
+        self.show_columns_btn.clicked.connect(self.show_available_columns)
+        filter_btn_layout.addWidget(self.show_columns_btn)
         
-        # 筛选条件
-        filter_cond_layout = QHBoxLayout()
+        # 应用筛选按钮 - 统一使用一个变量名
+        self.apply_filter_btn = QPushButton("应用筛选")
+        self.apply_filter_btn.clicked.connect(self.apply_filter)
+        filter_btn_layout.addWidget(self.apply_filter_btn)
         
-        self.filter_op_combo = QComboBox()
-        self.filter_op_combo.addItems(["等于", "大于", "小于", "包含"])
-        filter_cond_layout.addWidget(self.filter_op_combo)
+        # 清除筛选按钮 - 统一使用一个变量名
+        self.clear_filter_btn = QPushButton("清除筛选")
+        self.clear_filter_btn.clicked.connect(self.clear_filter)
+        filter_btn_layout.addWidget(self.clear_filter_btn)
         
-        self.filter_value_edit = QLineEdit()
-        filter_cond_layout.addWidget(self.filter_value_edit)
+        filter_layout.addLayout(filter_btn_layout)
         
-        filter_layout.addLayout(filter_cond_layout)
-        
-        # 应用筛选按钮
-        self.apply_filter_button = QPushButton("应用筛选")
-        self.apply_filter_button.clicked.connect(self.apply_filter)
-        filter_layout.addWidget(self.apply_filter_button)
-        
-        # 清除筛选按钮
-        self.clear_filter_button = QPushButton("清除筛选")
-        self.clear_filter_button.clicked.connect(self.clear_filter)
-        filter_layout.addWidget(self.clear_filter_button)
-        
+        # 添加筛选区域到主布局
         main_layout.addWidget(filter_group)
         
         # 初始化UI状态
         self.on_plot_type_changed(0)  # 默认为散点图
-         
 
     # 确保on_plot_clicked是类方法（删除嵌套定义）
     def on_plot_clicked(self):
@@ -293,46 +296,74 @@ class DataView(QWidget):
             if data is None:
                 return
 
+            # 新增：清理列名中的空格
+            data.columns = data.columns.str.replace(' ', '')  # 移除列名中的空格
+
             # 统一更新表格模型
             self.table_model.update_data(data)
-            columns = self.data_manager.get_column_names()
+            
+            columns = list(data.columns)
             
             # 安全更新所有下拉框
             self.safe_update_comboboxes(columns)
             
             # 更新标签显示
             self.table_label.setText(f"数据预览: {len(data)}行 x {len(data.columns)}列")
-            
+
+            # 打印调试信息
+            print(f"已更新数据视图，列数：{len(columns)}，行数：{len(data)}")
+
         except Exception as e:
             print(f"更新数据视图时出错: {str(e)}")
+            import traceback
+            traceback.print_exc()
 
     def safe_update_comboboxes(self, columns):
         """安全更新所有下拉框"""
-        combos_to_update = [
-            (self.x_combo, False),
-            (self.y_combo, False),
-            (self.xerr_combo, True),
-            (self.yerr_combo, True),
-            (self.filter_col_combo, False)
-        ]
-        
-        for combo, has_none in combos_to_update:
-            if sip.isdeleted(combo):
-                continue
+        try:
+            # 检查列名是否为空
+            if not columns or len(columns) == 0:
+                print("警告：没有可用的列名")
+                return
                 
-            current_text = combo.currentText() if combo.count() > 0 else ""
-            combo.blockSignals(True)
-            combo.clear()
-            
-            if has_none:
-                combo.addItem("无")
+            print(f"正在更新下拉框，可用列：{columns}")
+
+            combos_to_update = [
+                (self.x_combo, False),
+                (self.y_combo, False),
+                (self.xerr_combo, True),
+                (self.yerr_combo, True)#,
+#               (self.filter_col_combo, False)
+            ]
+
+#           # 如果筛选列下拉框存在，也添加到更新列表
+#           if hasattr(self, 'filter_col_combo') and not sip.isdeleted(self.filter_col_combo):
+#               combos_to_update.append((self.filter_col_combo, False))
+
+            for combo, has_none in combos_to_update:
+                if sip.isdeleted(combo):
+                    continue
+                    
+                current_text = combo.currentText() if combo.count() > 0 else ""
+                combo.blockSignals(True)
+                combo.clear()
                 
-            combo.addItems(columns)
-            
-            if current_text in (["无"] if has_none else []) + columns:
-                combo.setCurrentText(current_text)
+                if has_none:
+                    combo.addItem("无")
+                    
+                combo.addItems(columns)
                 
-            combo.blockSignals(False)
+                if current_text in (["无"] if has_none else []) + columns:
+                    combo.setCurrentText(current_text)
+                    
+                combo.blockSignals(False)
+                
+            print("下拉框更新完成")
+                
+        except Exception as e:
+            print(f"更新下拉框时出错: {str(e)}")
+            import traceback
+            traceback.print_exc()
     
     def on_plot_type_changed(self, index):
         """处理绘图类型变化"""
@@ -458,57 +489,48 @@ class DataView(QWidget):
             mark_size)  # 添加颜色参数        
     
     def apply_filter(self):
-        """应用数据筛选"""
-        column = self.filter_col_combo.currentText()
-        if not column:
-            QMessageBox.warning(self, "警告", "请选择筛选列")
-            return
-        
-        operation = self.filter_op_combo.currentText()
-        filter_value = self.filter_value_edit.text()
-        
-        if not filter_value:
-            QMessageBox.warning(self, "警告", "请输入筛选值")
-            return
+        """应用新的多条件筛选"""
+        expr = self.filter_expr_edit.toPlainText().strip()
         
         try:
-            # 获取原始数据
-            data = self.data_manager.get_data(filtered = False)
-            
-            # 根据操作类型应用不同的筛选条件
-            if operation == "等于":
-                try:
-                    # 尝试转换为数值
-                    value = float(filter_value)
-                    filtered_data = data[data[column] == value]
-                except ValueError:
-                    # 如果不是数值，按字符串处理
-                    filtered_data = data[data[column].astype(str) == filter_value]
-            elif operation == "大于":
-                filtered_data = data[data[column] > float(filter_value)]
-            elif operation == "小于":
-                filtered_data = data[data[column] < float(filter_value)]
-            elif operation == "包含":
-                filtered_data = data[data[column].astype(str).str.contains(filter_value, case=False)]
-
-            # 将筛选后的数据保存到数据管理器
-            self.data_manager.set_filtered_data(filtered_data)
-
-            # 更新表格视图
-            self.table_model.update_data(filtered_data)
-
-            # 保存筛选后的数据，用于绘图
-            self.data_manager.set_filtered_data(filtered_data)
-
-            # 显示筛选结果信息
-            QMessageBox.information(self, "筛选结果", 
-                                   f"筛选前: {len(data)}行\n筛选后: {len(filtered_data)}行")
-
-            # 更新状态信息
-            self.table_label.setText(f"数据预览 (已筛选: {len(filtered_data)} 行)")
-            
+            if expr:
+                # 转换逻辑运算符为Pandas兼容格式
+                expr = expr.replace(' and ', ' & ').replace(' or ', ' | ')
+                
+                # 获取原始数据
+                raw_data = self.data_manager.get_data(filtered=False)
+                
+                # 执行筛选
+                success, message = self.data_manager.set_filtered_data(expr, raw_data)
+                
+                if success:
+                    # 使用数据管理器的显示数据接口
+                    display_data = self.data_manager.get_display_data()
+                    self.table_model.update_data(display_data)
+                    # 添加筛选状态标记
+                    self.filter_applied = True
+                    info_msg = f"筛选结果: {len(display_data)} 行 (原始数据 {len(raw_data)} 行)"
+                    self.table_label.setText(info_msg)
+                else:
+                    QMessageBox.warning(self, "筛选错误", message)
+            else:
+                self.clear_filter()
+                
         except Exception as e:
-            QMessageBox.critical(self, "错误", f"应用筛选失败: {str(e)}")
+            error_detail = str(e)
+            # 添加列名提示
+            if "未定义的列名" in error_detail or "列名不存在" in error_detail:
+                error_detail += "\n\n列名使用建议：\n"
+                error_detail += "1. 包含空格或特殊字符时使用反引号包裹，如：`Column Name`\n"
+                error_detail += "2. 检查列名拼写（区分大小写）\n"
+                error_detail += "3. 使用下方列选择器获取有效列名"
+                
+            QMessageBox.critical(self, "筛选错误", 
+                               f"表达式错误: {error_detail}\n\n表达式示例：\n"
+                               "数值范围: `MJD` > 52000 & `MJD` < 60000\n"
+                               "多条件组合: (`Column A` > 5) | (`Column B` < 3)")
+
+            self.clear_filter()
 
     def clear_filter(self):
         """清除筛选条件"""
@@ -520,7 +542,7 @@ class DataView(QWidget):
         self.data_manager.clear_filtered_data()
 
         # 清空筛选输入
-        self.filter_value_edit.clear()
+        self.filter_expr_edit.clear()
         
         # 更新状态信息
         self.table_label.setText("数据预览")
@@ -532,3 +554,71 @@ class DataView(QWidget):
         # 更新表格显示原始数据
         self.table_model.update_data(self.data_manager.get_data(filtered=False))
         QMessageBox.information(self, "提示", "已重置筛选，显示所有数据")
+
+    # 添加显示可用列名的方法
+    def show_available_columns(self):
+        """显示当前数据中可用的列名"""
+        if not self.data_manager or self.data_manager.get_data() is None:
+            QMessageBox.warning(self, "警告", "请先加载数据")
+            return
+            
+        columns = self.data_manager.get_column_names()
+        if not columns:
+            QMessageBox.information(self, "列名", "当前数据没有可用列")
+            return
+            
+        # 创建列名对话框
+        columns_dialog = QDialog(self)
+        columns_dialog.setWindowTitle("可用列名")
+        columns_dialog.setMinimumWidth(400)
+        
+        layout = QVBoxLayout(columns_dialog)
+        
+        # 添加说明文本
+        info_label = QLabel("以下是当前数据中的可用列名，双击可复制到筛选表达式:")
+        info_label.setWordWrap(True)
+        layout.addWidget(info_label)
+        
+        # 创建列表显示所有列名
+        columns_list = QListWidget()
+        for col in columns:
+            item = QListWidgetItem(f"`{col}`")
+            item.setData(Qt.ItemDataRole.UserRole, col)
+            columns_list.addItem(item)
+        
+        # 双击列名时复制到筛选表达式
+        columns_list.itemDoubleClicked.connect(
+            lambda item: self.insert_column_to_filter(item.data(Qt.ItemDataRole.UserRole))
+        )
+        
+        layout.addWidget(columns_list)
+        
+        # 添加关闭按钮
+        close_btn = QPushButton("关闭")
+        close_btn.clicked.connect(columns_dialog.accept)
+        layout.addWidget(close_btn)
+        
+        columns_dialog.exec()
+    
+    def insert_column_to_filter(self, column_name):
+        """将列名插入到筛选表达式中"""
+        current_text = self.filter_expr_edit.toPlainText()
+        cursor = self.filter_expr_edit.textCursor()
+        cursor.insertText(f"`{column_name}`")
+        self.filter_expr_edit.setFocus()
+
+    # 在数据加载后调用此方法
+    def on_data_loaded(self):
+        """数据加载后的处理"""
+        try:
+            # 更新数据视图
+            self.update_data_view()
+            
+            # 启用绘图控制
+            self.plot_group.setEnabled(True)
+            
+            # 启用筛选控制
+            self.filter_group.setEnabled(True)
+            
+        except Exception as e:
+            print(f"数据加载后处理出错: {str(e)}")

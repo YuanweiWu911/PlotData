@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+import re
 
 class DataManager:
     def __init__(self):
@@ -23,8 +24,12 @@ class DataManager:
                 self.data = pd.read_json(file_path)
             else:
                 return False, "不支持的格式"
+
+            # 新增列名清理
+            if not self.data.empty:
+                self.data.columns = self.data.columns.str.replace(' ', '')
             
-            # 保存文件信息
+            # 保存文件信息（保持原有逻辑）
             self.file_path = file_path
             self.file_name = os.path.basename(file_path)
             
@@ -35,8 +40,8 @@ class DataManager:
                 'rows': len(self.data) if self.data is not None else 0,
                 'columns': len(self.data.columns) if self.data is not None else 0
             }
-            
             return True, "加载成功"
+
         except Exception as e:
             return False, str(e)
     
@@ -45,10 +50,6 @@ class DataManager:
         if filtered and self.filtered_data is not None:
             return self.filtered_data
         return self.data
-        
-    def set_filtered_data(self, filtered_data):
-        """设置筛选后的数据"""
-        self.filtered_data = filtered_data
         
     def reset_filter(self):
         """重置筛选，清除筛选后的数据"""
@@ -357,9 +358,78 @@ class DataManager:
         except Exception as e:
             return False, f"数据清洗失败: {str(e)}"
     
-    def set_filtered_data(self, filtered_data):
-        """设置筛选后的数据"""
-        self.filtered_data = filtered_data
+    # 增强数据管理器方法
+    def set_filtered_data(self, expr_or_data, raw_data=None):
+        """增强版筛选方法，支持两种模式：
+        1. 表达式模式：expr_or_data 是查询表达式，raw_data 是原始数据
+        2. 直接设置模式：当 expr_or_data 是 DataFrame 对象时直接设置数据
+        """
+        if isinstance(expr_or_data, pd.DataFrame):
+            # 直接设置模式
+            self.filtered_data = expr_or_data
+            return True, "直接设置筛选数据成功"
+
+        try:
+            expr = expr_or_data
+            if raw_data is None:
+                raw_data = self.data
+            if raw_data is None:
+                return False, "请先加载数据"
+                
+            # 处理空表达式
+            if not expr.strip():
+                self.filtered_data = None
+                return True, "已清除筛选条件"
+
+            # 修改这里：确保所有列名都被正确处理
+            all_columns = raw_data.columns.tolist()
+            # 1. 先获取所有列名
+            expr = re.sub(
+                r'\b(?!_)(?!\d)([a-zA-Z_][\w\s:-]*?)\b(?![\w\s]*`)',  # 扩展特殊字符匹配范围
+                lambda m: f'`{m.group(1)}`' if any(c in m.group(1) for c in (' ', ':', '-', '%', '#', '@')) else m.group(1),
+                expr
+            )
+            
+            # 2. 再处理普通列名（确保所有数据列都被正确引用）
+            for col in all_columns:
+                # 避免重复添加反引号
+                if f"`{col}`" not in expr and re.search(r'\b' + re.escape(col) + r'\b', expr):
+                    expr = re.sub(r'\b' + re.escape(col) + r'\b', f"`{col}`", expr)
+            
+            # 3. 提取所有引用的列名并验证
+            referenced_cols = [col.strip('`') for col in re.findall(r'`([^`]+)`', expr)]
+            missing_cols = [col for col in referenced_cols if col not in raw_data.columns]
+
+#           # 新增列名存在性检查（带空值保护）
+#           if not hasattr(raw_data, 'columns'):
+#               return False, "数据格式错误，无法获取列信息"
+
+#          
+#           # 修改列名存在性验证逻辑
+#           used_columns = re.findall(r'`([^`]+)`|\b([a-zA-Z_]\w*)\b', expr)
+#           used_columns = [col[0] or col[1] for col in used_columns]
+#           missing_cols = [col for col in used_columns if col not in raw_data.columns]
+
+#           # 添加列名存在性验证
+#           missing_cols = [col.strip('`') for col in re.findall(r'`([^`]+)`', expr) 
+#                          if col.strip('`') not in raw_data.columns]
+            if missing_cols:
+                return False, f"列名不存在: {', '.join(missing_cols)}"
+
+            # 打印处理后的表达式，便于调试
+            print(f"处理后的筛选表达式: {expr}")
+            filtered = raw_data.query(expr)
+            
+            if filtered.empty:
+                return False, "筛选条件没有匹配到任何数据"
+            
+            self.filtered_data = filtered
+            return True, f"找到 {len(filtered)} 条匹配记录"
+            
+        except pd.errors.UndefinedVariableError as e:
+            return False, f"存在未定义的列名: {str(e).split(':')[-1]}"
+        except Exception as e:
+            return False, f"无效的筛选表达式: {str(e)}"
     
     def clear_filtered_data(self):
         """清除筛选后的数据"""
