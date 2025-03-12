@@ -419,14 +419,17 @@ class DataView(QWidget):
             sip.isdeleted(self.plot_type_combo)):
             return        
 
+        # 获取当前数据（使用筛选后的数据）
+        data = self.data_manager.get_data(filtered=True)
+
+        # 获取当前选择的列和绘图类型
+        x_column = self.x_combo.currentText()
+        y_column = self.y_combo.currentText()
+        plot_type = self.plot_type_combo.currentText()
+
         # 获取误差列时应排除"无"选项
         xerr_col = self.xerr_combo.currentText() if self.xerr_combo.currentText() != "无" else None
         yerr_col = self.yerr_combo.currentText() if self.yerr_combo.currentText() != "无" else None
-
-        # 获取当前选择的列
-        x_column = self.x_combo.currentText()  # 修正变量名
-        
-        plot_type = self.plot_type_combo.currentText()
         
         # 根据图表类型检查必要的输入
         if plot_type == "直方图":
@@ -470,7 +473,7 @@ class DataView(QWidget):
         
         try:
             # 获取原始数据
-            data = self.data_manager.get_data()
+            data = self.data_manager.get_data(filtered = False)
             
             # 根据操作类型应用不同的筛选条件
             if operation == "等于":
@@ -487,10 +490,20 @@ class DataView(QWidget):
                 filtered_data = data[data[column] < float(filter_value)]
             elif operation == "包含":
                 filtered_data = data[data[column].astype(str).str.contains(filter_value, case=False)]
-            
+
+            # 将筛选后的数据保存到数据管理器
+            self.data_manager.set_filtered_data(filtered_data)
+
             # 更新表格视图
             self.table_model.update_data(filtered_data)
-            
+
+            # 保存筛选后的数据，用于绘图
+            self.data_manager.set_filtered_data(filtered_data)
+
+            # 显示筛选结果信息
+            QMessageBox.information(self, "筛选结果", 
+                                   f"筛选前: {len(data)}行\n筛选后: {len(filtered_data)}行")
+
             # 更新状态信息
             self.table_label.setText(f"数据预览 (已筛选: {len(filtered_data)} 行)")
             
@@ -502,9 +515,20 @@ class DataView(QWidget):
         # 恢复原始数据
         data = self.data_manager.get_data()
         self.table_model.update_data(data)
-        
+
+        # 清空筛选后的数据
+        self.data_manager.clear_filtered_data()
+
         # 清空筛选输入
         self.filter_value_edit.clear()
         
         # 更新状态信息
         self.table_label.setText("数据预览")
+    
+    # 添加重置筛选功能
+    def reset_filter(self):
+        """重置数据筛选"""
+        self.data_manager.reset_filter()
+        # 更新表格显示原始数据
+        self.table_model.update_data(self.data_manager.get_data(filtered=False))
+        QMessageBox.information(self, "提示", "已重置筛选，显示所有数据")

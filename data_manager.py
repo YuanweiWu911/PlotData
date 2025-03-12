@@ -5,6 +5,7 @@ import os
 class DataManager:
     def __init__(self):
         self.data = None
+        self.filtered_data = None
         self.file_path = None
         self.file_name = None
     
@@ -39,10 +40,20 @@ class DataManager:
         except Exception as e:
             return False, str(e)
     
-    def get_data(self):
-        """获取当前数据"""
+    def get_data(self, filtered=True):
+        """获取数据，可选择是否返回筛选后的数据"""
+        if filtered and self.filtered_data is not None:
+            return self.filtered_data
         return self.data
-    
+        
+    def set_filtered_data(self, filtered_data):
+        """设置筛选后的数据"""
+        self.filtered_data = filtered_data
+        
+    def reset_filter(self):
+        """重置筛选，清除筛选后的数据"""
+        self.filtered_data = None
+
     def get_column_names(self):
         """获取列名列表"""
         if self.data is not None:
@@ -345,3 +356,15 @@ class DataManager:
             return success, f"数据清洗完成，处理前: {original_rows} 行，处理后: {len(cleaned_data)} 行"
         except Exception as e:
             return False, f"数据清洗失败: {str(e)}"
+    
+    def set_filtered_data(self, filtered_data):
+        """设置筛选后的数据"""
+        self.filtered_data = filtered_data
+    
+    def clear_filtered_data(self):
+        """清除筛选后的数据"""
+        self.filtered_data = None
+    
+    def get_display_data(self):
+        """获取用于显示和绘图的数据（优先使用筛选后的数据）"""
+        return self.filtered_data if self.filtered_data is not None else self.data
