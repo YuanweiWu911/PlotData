@@ -110,15 +110,16 @@ class DataView(QWidget):
         # 添加数据筛选区域 - 移到绘图控制前面
         # 添加数据筛选区域 - 减小高度
         filter_group = QGroupBox("数据筛选")
+        filter_group.setStyleSheet("QGroupBox { max-height: 120px; }")
         filter_layout = QVBoxLayout(filter_group)
         filter_layout.setContentsMargins(5, 5, 5, 5)  # 减小内边距
         filter_layout.setSpacing(3)  # 减小控件间距
         
         # 添加筛选表达式区域 - 使用更紧凑的布局
         filter_expr_layout = QHBoxLayout()
-#       filter_expr_layout.addWidget(QLabel("筛选表达式:"))
         self.filter_expr_edit = QTextEdit()
-        self.filter_expr_edit.setMaximumHeight(40)  # 减小文本框高度
+#       self.filter_expr_edit.setMaximumHeight(50)
+#       self.filter_expr_edit.setMinimumHeight(40)
         self.filter_expr_edit.setPlaceholderText("示例: `列名` > 10 & `列名` < 100")
         filter_expr_layout.addWidget(self.filter_expr_edit)
         filter_layout.addLayout(filter_expr_layout)
@@ -152,7 +153,12 @@ class DataView(QWidget):
         
         # 创建绘图控制组 - 移到数据筛选后面
         plot_group = QGroupBox("绘图控制")
+        
+#       plot_group.setStyleSheet("QGroupBox { min-height: 80px; }")
+#       plot_group.setStyleSheet("QGroupBox { max-height: 80px; }")
         plot_layout = QVBoxLayout(plot_group)
+        plot_layout.setContentsMargins(1, 1, 1, 1)  # 减小内边距
+        plot_layout.setSpacing(3)  # 减小控件间距
         
         # 创建绘图类型选择
         plot_type_layout = QHBoxLayout()
