@@ -5,11 +5,16 @@ import re
 
 class DataManager:
     def __init__(self):
+        self.current_file = None
         self.data = None
         self.filtered_data = None
         self.file_path = None
         self.file_name = None
-    
+
+    def has_filter(self):
+        """检查是否应用了筛选条件"""
+        return self.filtered_data is not None and not self.filtered_data.empty
+
     def load_data(self, file_path, sep=None):
         try:
             if file_path.endswith('.csv') or file_path.endswith('.txt'):
@@ -40,10 +45,12 @@ class DataManager:
                 'rows': len(self.data) if self.data is not None else 0,
                 'columns': len(self.data.columns) if self.data is not None else 0
             }
+            self.current_file = file_path
             return True, "加载成功"
 
         except Exception as e:
-            return False, str(e)
+            self.current_file = None
+            return False, f"数据加载失败：{str(e)}"
     
     def get_data(self, filtered=True):
         """获取数据，可选择是否返回筛选后的数据"""
@@ -438,3 +445,23 @@ class DataManager:
     def get_display_data(self):
         """获取用于显示和绘图的数据（优先使用筛选后的数据）"""
         return self.filtered_data if self.filtered_data is not None else self.data
+
+    def open_file(self, file_path):
+        """打开数据文件并记录当前文件路径"""
+        try:
+            success, message = self.load_data(file_path)
+            if success:
+                self.current_file = file_path
+            else:
+                self.current_file = None
+            return success, message
+        except Exception as e:
+            self.current_file = None
+            return False, f"文件打开失败: {str(e)}"
+    def get_filtered_data(self):
+        """获取筛选后的数据
+        如果没有应用筛选，则返回原始数据
+        """
+        if self.filtered_data is not None:
+            return self.filtered_data
+        return self.data

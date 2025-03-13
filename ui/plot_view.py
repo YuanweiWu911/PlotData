@@ -1,9 +1,8 @@
+import os
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
-                            QLabel, QGroupBox, QFormLayout, QLineEdit,
+                            QGroupBox, QFormLayout, QLineEdit, QApplication,
                             QMessageBox, QFileDialog, QProgressDialog)
 from PyQt6.QtCore import Qt, pyqtSlot
-from PyQt6.QtGui import QPixmap, QImage
-from PyQt6.QtCore import Qt, pyqtSlot, QSize  # 添加QSize导入
 import matplotlib
 matplotlib.use('QtAgg')
 
@@ -82,16 +81,6 @@ class PlotView(QWidget):
         self.apply_settings_button.clicked.connect(self.apply_settings)
         settings_layout.addRow("", self.apply_settings_button)
         
-        # 删除原来的保存/加载设置按钮布局
-        # settings_buttons_layout = QHBoxLayout()
-        # self.save_settings_button = QPushButton("保存设置")
-        # self.save_settings_button.clicked.connect(self.save_plot_settings)
-        # settings_buttons_layout.addWidget(self.save_settings_button)
-        # self.load_settings_button = QPushButton("加载设置")
-        # self.load_settings_button.clicked.connect(self.load_plot_settings)
-        # settings_buttons_layout.addWidget(self.load_settings_button)
-        # settings_layout.addRow("", settings_buttons_layout)
-        
         main_layout.addWidget(settings_group)
         
         # 存储当前绘图参数
@@ -109,8 +98,19 @@ class PlotView(QWidget):
         self.current_plot_params['x_label'] = self.x_label_edit.text() or None
         self.current_plot_params['y_label'] = self.y_label_edit.text() or None
         
-        # 重新处理绘图请求
-        self.handle_plot_request(self.current_plot_params.copy())
+        # 重新处理绘图请求 - 添加histtype和bins参数
+        self.handle_plot_request(
+            self.current_plot_params.get('plot_type', ''),
+            self.current_plot_params.get('x_col', ''),
+            self.current_plot_params.get('y_col', ''),
+            self.current_plot_params.get('color', 'blue'),
+            self.current_plot_params.get('xerr_col', None),
+            self.current_plot_params.get('yerr_col', None),
+            self.current_plot_params.get('mark_style', 'o'),
+            self.current_plot_params.get('mark_size', 10),
+            self.current_plot_params.get('histtype', 'bar'),  # 添加histtype参数
+            self.current_plot_params.get('bins', 10)          # 添加bins参数
+        )
    
     @pyqtSlot()
     def save_plot_settings(self):
@@ -119,32 +119,74 @@ class PlotView(QWidget):
             QMessageBox.information(self, "提示", "请先生成图表后再保存设置")
             return
             
+        # 获取主窗口中的data_view实例
+        main_window = self.window()
+        data_view = main_window.data_view if hasattr(main_window, 'data_view') else None
+    
+        # 获取当前数据文件路径 - 修复此处
+        current_file_path = ""
+        if hasattr(self.data_manager, 'current_file') and self.data_manager.current_file:
+            current_file_path = self.data_manager.current_file
+        elif 'data_file_path' in self.current_plot_params:
+            current_file_path = self.current_plot_params.get('data_file_path', '')
+        
+        # 提取需要保存的设置
+        settings = {
+            # 数据文件信息 - 确保优先保存
+            'data_file_path': current_file_path,
+            
+            # 数据筛选参数
+            'filter_expr': data_view.filter_expr_edit.toPlainText() if data_view else '',
+            
+            # 绘图控制参数
+            'x_col': data_view.x_combo.currentText() if data_view else '',
+            'y_col': data_view.y_combo.currentText() if data_view else '',
+            'xerr_col': data_view.xerr_combo.currentText() if data_view else '',
+            'yerr_col': data_view.yerr_combo.currentText() if data_view else '',
+            
+            # 图表样式参数
+            'plot_type': data_view.plot_type_combo.currentText() if data_view else '散点图',
+            'color': data_view.color_button.property("color") if data_view and data_view.color_button.property("color") else 'blue',
+            'mark_style': data_view.mark_style_combo.currentText() if data_view else 'o',
+            'mark_size': data_view.mark_size_spin.value() if data_view else 10,
+
+            # 直方图特有参数
+            'histtype': data_view.histtype_combo.currentText() if data_view and hasattr(data_view, 'histtype_combo') else 'bar',
+            'bins': self.current_plot_params.get('bins', 10),
+
+            # 图表显示设置
+            'title': self.title_edit.text(),
+            'x_label': self.x_label_edit.text(),
+            'y_label': self.y_label_edit.text()
+        }
+        
+        # 打印调试信息
+        print(f"保存设置 - 数据文件路径: {settings['data_file_path']}")
+        
+        # 设置默认保存路径为当前数据文件所在目录
+        default_dir = ""
+        if settings['data_file_path']:
+            default_dir = os.path.dirname(settings['data_file_path'])
+            # 提取文件名作为默认保存名
+            base_name = os.path.splitext(os.path.basename(settings['data_file_path']))[0]
+            default_path = os.path.join(default_dir, f"{base_name}_plot.json")
+        else:
+            default_path = ""
+        
         file_path, _ = QFileDialog.getSaveFileName(
             self, 
             "保存图表设置", 
-            "", 
+            default_path, 
             "JSON文件 (*.json);;所有文件 (*.*)"
         )
         
         if file_path:
             try:
-                # 提取需要保存的设置
-                settings = {
-                    'title': self.title_edit.text(),
-                    'x_label': self.x_label_edit.text(),
-                    'y_label': self.y_label_edit.text(),
-                    'plot_type': self.current_plot_params.get('plot_type'),
-                    'color': self.current_plot_params.get('color', 'blue'),
-                    'mark_style': self.current_plot_params.get('mark_style', 'o'),
-                    'mark_size': self.current_plot_params.get('mark_size', 10),
-                    'bins': self.current_plot_params.get('bins', 10)
-                }
-                
                 import json
-                with open(file_path, 'w') as f:
-                    json.dump(settings, f, indent=4)
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    json.dump(settings, f, indent=4, ensure_ascii=False)
                 
-                QMessageBox.information(self, "成功", "图表设置已保存")
+                QMessageBox.information(self, "成功", f"图表设置已保存到\n{file_path}")
             except Exception as e:
                 QMessageBox.critical(self, "错误", f"保存设置失败: {str(e)}")
     
@@ -161,33 +203,80 @@ class PlotView(QWidget):
         if file_path:
             try:
                 import json
-                with open(file_path, 'r') as f:
+                with open(file_path, 'r', encoding='utf-8') as f:
                     settings = json.load(f)
                 
-                # 应用加载的设置
-                if 'title' in settings:
-                    self.title_edit.setText(settings['title'])
-                if 'x_label' in settings:
-                    self.x_label_edit.setText(settings['x_label'])
-                if 'y_label' in settings:
-                    self.y_label_edit.setText(settings['y_label'])
-                
-                # 如果当前有绘图参数，更新它
-                if self.current_plot_params:
-                    self.current_plot_params.update({
-                        'title': settings.get('title'),
-                        'x_label': settings.get('x_label'),
-                        'y_label': settings.get('y_label'),
-                        'color': settings.get('color', self.current_plot_params.get('color', 'blue')),
-                        'mark_style': settings.get('mark_style', self.current_plot_params.get('mark_style', 'o')),
-                        'mark_size': settings.get('mark_size', self.current_plot_params.get('mark_size', 10)),
-                        'bins': settings.get('bins', self.current_plot_params.get('bins', 10))
-                    })
+                # 获取主窗口中的data_view实例
+                main_window = self.window()
+                data_view = main_window.data_view if hasattr(main_window, 'data_view') else None
+
+                # 1. 首先加载数据文件 - 优先处理
+                data_file_path = settings.get('data_file_path')
+                if data_file_path:
+                    if os.path.exists(data_file_path):
+                        # 显示加载进度对话框
+                        progress = QProgressDialog("正在加载数据文件...", "取消", 0, 100, self)
+                        progress.setWindowTitle("加载中")
+                        progress.setWindowModality(Qt.WindowModality.WindowModal)
+                        progress.show()
+                        progress.setValue(10)
+                        
+                        # 加载文件
+                        main_window.open_file(data_file_path)
+                        progress.setValue(50)
+                        QApplication.processEvents()  # 等待数据加载完成
+                        progress.setValue(100)
+                    else:
+                        QMessageBox.warning(
+                            self, 
+                            "文件不存在", 
+                            f"无法找到原始数据文件:\n{data_file_path}\n\n将继续加载其他设置。"
+                        )
+
+                # 2. 应用筛选条件
+                if data_view and self.data_manager.get_data() is not None:
+                    filter_expr = settings.get('filter_expr')
+                    if filter_expr:
+                        data_view.filter_expr_edit.setPlainText(filter_expr)
+                        data_view.apply_filter()
+                        QApplication.processEvents()
+
+                    # 3. 设置绘图参数
+                    # 设置颜色并保存属性
+                    color = settings.get('color', 'blue')
+                    data_view.color_button.setStyleSheet(f"background-color: {color};")
+                    data_view.color_button.setProperty("color", color)
                     
-                    # 重新绘制图表
-                    self.handle_plot_request(self.current_plot_params.copy())
+                    # 设置其他参数
+                    data_view.plot_type_combo.setCurrentText(settings.get('plot_type', '散点图'))
+                    data_view.mark_style_combo.setCurrentText(settings.get('mark_style', 'o'))
+                    data_view.mark_size_spin.setValue(settings.get('mark_size', 10))
+
+                    # 设置直方图特有参数
+                    if hasattr(data_view, 'histtype_combo'):
+                        histtype = settings.get('histtype', 'bar')
+                        index = data_view.histtype_combo.findText(histtype)
+                        if index >= 0:
+                            data_view.histtype_combo.setCurrentIndex(index)
+
+                    # 设置数据列
+                    data_view.x_combo.setCurrentText(settings.get('x_col', ''))
+                    data_view.y_combo.setCurrentText(settings.get('y_col', ''))
+                    data_view.xerr_combo.setCurrentText(settings.get('xerr_col', ''))
+                    data_view.yerr_combo.setCurrentText(settings.get('yerr_col', ''))
+
+                # 4. 更新图表显示设置
+                self.title_edit.setText(settings.get('title', ''))
+                self.x_label_edit.setText(settings.get('x_label', ''))
+                self.y_label_edit.setText(settings.get('y_label', ''))
                 
-                QMessageBox.information(self, "成功", "图表设置已加载")
+                # 5. 触发绘图
+                if data_view and self.data_manager.get_data() is not None:
+                    data_view.request_plot()
+                    QMessageBox.information(self, "成功", "设置已完整加载并应用")
+                else:
+                    QMessageBox.information(self, "部分成功", "图表设置已加载，但未能加载数据或生成图表")
+                
             except Exception as e:
                 QMessageBox.critical(self, "错误", f"加载设置失败: {str(e)}")
     
@@ -222,94 +311,116 @@ class PlotView(QWidget):
             except Exception as e:
                 QMessageBox.critical(self, "错误", f"保存图表失败: {str(e)}")
 
-    @pyqtSlot(dict)
-    def handle_plot_request(self, plot_params):
-        """处理绘图请求"""
-        if not plot_params or 'data' not in plot_params:
-            QMessageBox.warning(self, "错误", "无效的绘图参数")
-            return
+    @pyqtSlot(str, str, str, str, str, str, str, int, str, int)
+    def handle_plot_request(self, plot_type, x_col, y_col, color, xerr_col, yerr_col, mark_style, mark_size, histtype='bar', bins=10):
+        """处理绘图请求
         
-        # 获取当前图表设置
-        title = self.title_edit.text()
-        x_label = self.x_label_edit.text()
-        y_label = self.y_label_edit.text()
-        
-        # 添加图表设置到绘图参数
-        plot_params['title'] = title if title else None
-        plot_params['x_label'] = x_label if x_label else None
-        plot_params['y_label'] = y_label if y_label else None
-        
-        # 存储当前绘图参数以便应用设置时使用
-        self.current_plot_params = plot_params.copy()
-        
-        # 根据绘图类型调用相应的绘图方法
-        plot_type = plot_params.get('plot_type')
-        data = plot_params['data']
-        x_col = plot_params['x_col']
-        color = plot_params.get('color', 'blue')
-        
-        success = False
-        message = ""
-        
+        Args:
+            plot_type: 图表类型
+            x_col: X轴列名
+            y_col: Y轴列名
+            color: 颜色
+            xerr_col: X轴误差列
+            yerr_col: Y轴误差列
+            mark_style: 标记样式
+            mark_size: 标记大小
+            histtype: 直方图类型，默认为'bar'
+            bins: 直方图分箱数量，默认为10
+        """
         try:
+            # 获取数据
+            data = self.data_manager.get_data(filtered=True)
+            if data is None or data.empty:
+                QMessageBox.warning(self, "错误", "没有可用的数据进行绘图")
+                return
+                
+            # 获取图表设置
+            title = self.title_edit.text()
+            x_label = self.x_label_edit.text()
+            y_label = self.y_label_edit.text()
+            
+            # 构建当前绘图参数以便后续应用设置
+            self.current_plot_params = {
+                'plot_type': plot_type,
+                'x_col': x_col,
+                'y_col': y_col,
+                'color': color,
+                'xerr_col': xerr_col,
+                'yerr_col': yerr_col,
+                'mark_style': mark_style,
+                'mark_size': mark_size,
+                'histtype': histtype,
+                'bins': bins,
+                'title': title,
+                'x_label': x_label,
+                'y_label': y_label
+            }
+            
+            # 根据图表类型调用不同的绘图方法
             if plot_type == "散点图":
+                # 散点图代码保持不变
                 success, message = self.visualizer.scatter_plot(
-                    data=plot_params['data'],
-                    x_col=plot_params['x_col'],
-                    y_col=plot_params['y_col'],
-                    title=plot_params['title'],
-                    x_label=plot_params['x_label'],
-                    y_label=plot_params['y_label'],
-                    color=plot_params.get('color', 'blue'),
-                    mark_style=plot_params.get('mark_style', 'o'),
-                    mark_size=plot_params.get('mark_size', 10)
+                    data=data,
+                    x_col=x_col,
+                    y_col=y_col,
+                    title=title,
+                    x_label=x_label,
+                    y_label=y_label,
+                    color=color,
+                    mark_size=mark_size,
+                    mark_style=mark_style
                 )
             elif plot_type == "带误差棒的散点图":
+                # 误差棒散点图代码保持不变
                 success, message = self.visualizer.scatter_plot_with_error(
-                    data=plot_params['data'],
-                    x_col=plot_params['x_col'],
-                    y_col=plot_params['y_col'],
-                    xerr_col=plot_params.get('xerr_col'),
-                    yerr_col=plot_params.get('yerr_col'),
-                    title=plot_params['title'],
-                    x_label=plot_params['x_label'],
-                    y_label=plot_params['y_label'],
-                    color=plot_params.get('color', 'blue'),
-                    mark_style=plot_params.get('mark_style', 'o'),
-                    mark_size=plot_params.get('mark_size', 10)
+                    data=data,
+                    x_col=x_col,
+                    y_col=y_col,
+                    xerr_col=xerr_col,
+                    yerr_col=yerr_col,
+                    title=title,
+                    x_label=x_label,
+                    y_label=y_label,
+                    color=color,
+                    mark_size=mark_size,
+                    mark_style=mark_style
                 )
             elif plot_type == "直方图":
-                bins = plot_params.get("bins", 10)
-                success, message = self.visualizer.histogram(
-                    data=data, 
-                    col=x_col, 
-                    bins=bins, 
-                    title=plot_params['title'],
-                    x_label=plot_params['x_label'],
-                    y_label=plot_params['y_label'],
-                    color=color
-                )
+                # 直方图使用专门的参数
+                valid_histtypes = ['bar', 'barstacked', 'step', 'stepfilled']
+                # 验证histtype参数
+                valid_histtype = histtype if histtype in valid_histtypes else 'bar'
                 
-            elif plot_type == "2D密度图":
-                y_col = plot_params["y_col"]
-                bins = plot_params.get("bins", 20)
-                success, message = self.visualizer.density_map_2d(
-                    data=data, 
-                    x_col=x_col, 
-                    y_col=y_col, 
-                    bins=bins,
-                    title=plot_params['title'],
-                    x_label=plot_params['x_label'],
-                    y_label=plot_params['y_label']
+                success, message = self.visualizer.histogram(
+                    data=data,
+                    col=x_col,
+                    bins=bins,  # 使用专门的bins参数
+                    title=title,
+                    x_label=x_label,
+                    y_label=y_label,
+                    color=color,
+                    histtype=valid_histtype,  # 使用专门的histtype参数
+                    edgecolor = 'black',
+                    hatch = '/'
                 )
-            
+            elif plot_type == "2D密度图":
+                # 2D密度图代码保持不变
+                success, message = self.visualizer.density_map_2d(
+                    data=data,
+                    x_col=x_col,
+                    y_col=y_col,
+                    bins=bins,  # 使用专门的bins参数
+                    title=title,
+                    x_label=x_label,
+                    y_label=y_label
+                )
             else:
-                success = False
-                message = f"未知的绘图类型: {plot_type}"
+                QMessageBox.warning(self, "错误", f"不支持的图表类型: {plot_type}")
+                return
+                
+            # 显示绘图结果
+            if not success:
+                QMessageBox.warning(self, "绘图错误", message)
+        
         except Exception as e:
-            success = False
-            message = f"绘图错误: {str(e)}"
-            
-        # 显示结果消息
-        if not success:
-            QMessageBox.warning(self, "绘图错误", message)
+            QMessageBox.critical(self, "绘图错误", f"绘图过程中发生错误: {str(e)}")

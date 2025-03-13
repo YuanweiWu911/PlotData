@@ -74,33 +74,15 @@ class MainWindow(QMainWindow):
         else:
             self.resize(1000, 700)
 
-        # 修正信号连接，接收4个参数
+        # 修正信号连接，接收10个参数
         self.data_view.plot_requested.connect(
-           lambda p,x,y,c,xe,ye,ms,msz: self.plot_view.handle_plot_request({
-               'plot_type': p,
-               'x_col': x,
-               'y_col': y,
-               'color': c,
-               'xerr_col': xe,
-               'yerr_col': ye,
-               'mark_style': ms,  # 添加标记样式参数
-               'mark_size': msz,  # 添加标记大小参数              
-               'data': self.data_manager.get_data()
-           })
+           lambda p,x,y,c,xe,ye,ms,msz: 
+           self.plot_view.handle_plot_request(
+               p,x,y,c,xe,ye,ms,msz,
+               self.data_view.histtype_combo.currentText() if hasattr(self.data_view, 'histtype_combo') else 'bar',  # 获取用户设置的histtype
+               self.data_view.bins_spin.value() if hasattr(self.data_view, 'bins_spin') else 10      # 获取用户设置的bins
+           )
         )
-#       self.data_view.plot_requested.connect(
-#           lambda plot_type, x_col, y_col, color: (
-#               QMessageBox.warning(self, "错误", "请先加载数据") 
-#               if self.data_manager.get_data() is None 
-#               else self.plot_view.handle_plot_request({
-#                   "plot_type": plot_type,
-#                   "x_col": x_col,
-#                   "y_col": y_col,
-#                   "data": self.data_manager.get_data(),
-#                   "color": color  # 使用传入的颜色参数
-#               })
-#           )
-#       )
 
     def create_actions(self):
         # 文件操作

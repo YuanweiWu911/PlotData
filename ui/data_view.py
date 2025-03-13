@@ -154,8 +154,6 @@ class DataView(QWidget):
         # 创建绘图控制组 - 移到数据筛选后面
         plot_group = QGroupBox("绘图控制")
         
-#       plot_group.setStyleSheet("QGroupBox { min-height: 80px; }")
-#       plot_group.setStyleSheet("QGroupBox { max-height: 80px; }")
         plot_layout = QVBoxLayout(plot_group)
         plot_layout.setContentsMargins(1, 1, 1, 1)  # 减小内边距
         plot_layout.setSpacing(3)  # 减小控件间距
@@ -222,6 +220,12 @@ class DataView(QWidget):
         self.bins_spin.setValue(10)
         self.bins_label = QLabel("分箱数量:")
         form_layout.addRow(self.bins_label, self.bins_spin)
+
+        # 直方图类型设置
+        self.histtype_label = QLabel("直方图类型:")
+        self.histtype_combo = QComboBox()
+        self.histtype_combo.addItems(["bar", "barstacked", "step", "stepfilled"])
+        form_layout.addRow(self.histtype_label, self.histtype_combo)        
         
         plot_layout.addLayout(form_layout)
 
@@ -375,17 +379,39 @@ class DataView(QWidget):
             traceback.print_exc()
     
     def on_plot_type_changed(self, index):
-        """处理绘图类型变化"""
+        """绘图类型改变时的处理"""
         plot_type = self.plot_type_combo.currentText()
-
-        # 根据绘图类型显示/隐藏相关控件
-        is_scatter_plot = plot_type in ["散点图", "带误差棒的散点图"]
         
-        # 标记样式和大小控件仅在散点图和带误差棒散点图时显示
-        self.mark_style_label.setVisible(is_scatter_plot)
-        self.mark_style_combo.setVisible(is_scatter_plot)
-        self.mark_size_label.setVisible(is_scatter_plot)
-        self.mark_size_spin.setVisible(is_scatter_plot)
+        # 根据绘图类型显示/隐藏相关控件
+        is_scatter = plot_type == "散点图" or plot_type == "带误差棒的散点图"
+        is_error_scatter = plot_type == "带误差棒的散点图"
+        is_histogram = plot_type == "直方图"
+        is_density = plot_type == "2D密度图"
+        
+        # 显示/隐藏Y轴选择
+        self.y_combo.setEnabled(not is_histogram)  # 直方图不需要Y轴
+        self.y_combo.setVisible(not is_histogram)
+        
+        # 显示/隐藏误差棒选择
+        self.xerr_label.setVisible(is_error_scatter)
+        self.xerr_combo.setVisible(is_error_scatter)
+        self.yerr_label.setVisible(is_error_scatter)
+        self.yerr_combo.setVisible(is_error_scatter)
+        
+        # 显示/隐藏分箱数量
+        self.bins_label.setVisible(is_histogram or is_density)
+        self.bins_spin.setVisible(is_histogram or is_density)
+        
+        # 显示/隐藏直方图类型选择
+        if hasattr(self, 'histtype_label'):
+            self.histtype_label.setVisible(is_histogram)
+            self.histtype_combo.setVisible(is_histogram)
+        
+        # 显示/隐藏标记样式和大小
+        self.mark_style_label.setVisible(is_scatter)
+        self.mark_style_combo.setVisible(is_scatter)
+        self.mark_size_label.setVisible(is_scatter)
+        self.mark_size_spin.setVisible(is_scatter)
 
         # 根据绘图类型显示/隐藏相关控件
         if plot_type == "散点图":
@@ -453,50 +479,151 @@ class DataView(QWidget):
             mark_size)
  
     def request_plot(self):
-        """请求绘制图表"""
-        if (sip.isdeleted(self.x_combo) or 
-            sip.isdeleted(self.y_combo) or
-            sip.isdeleted(self.plot_type_combo)):
-            return        
-
-        # 获取当前数据（使用筛选后的数据）
-        data = self.data_manager.get_data(filtered=True)
-
-        # 获取当前选择的列和绘图类型
-        x_column = self.x_combo.currentText()
-        y_column = self.y_combo.currentText()
-        plot_type = self.plot_type_combo.currentText()
-
-        # 获取误差列时应排除"无"选项
-        xerr_col = self.xerr_combo.currentText() if self.xerr_combo.currentText() != "无" else None
-        yerr_col = self.yerr_combo.currentText() if self.yerr_combo.currentText() != "无" else None
-        
-        # 根据图表类型检查必要的输入
-        if plot_type == "直方图":
-            if not x_column:
-                QMessageBox.warning(self, "警告", "请选择要绘制的X轴列")
-                return
-            # 直方图只需要X轴数据
-            y_column = ""
-        else:
-            # 其他图表类型需要X轴和Y轴数据
-            y_column = self.y_combo.currentText()  # 修正变量名
-            if not x_column or not y_column:
-                QMessageBox.warning(self, "警告", "请选择要绘制的X轴和Y轴列")
+        """请求绘图"""
+        try:
+            if hasattr(self.data_manager, 'get_data') and hasattr(self.data_manager.get_data, '__call__'):
+                # 如果get_data方法支持filtered参数
+                if 'filtered' in self.data_manager.get_data.__code__.co_varnames:
+                    data = self.data_manager.get_data(filtered=True)
+                else:
+                    # 否则使用原来的逻辑
+                    if hasattr(self.data_manager, 'has_filter') and self.data_manager.has_filter():
+                        if hasattr(self.data_manager, 'get_filtered_data'):
+                            data = self.data_manager.get_filtered_data()
+                        else:
+                            data = self.data_manager.get_data()
+                    else:
+                        data = self.data_manager.get_data()
+            else:
+                QMessageBox.warning(self, "错误", "数据管理器不可用")
                 return
 
-        # 获取mark参数
-        mark_style = self.mark_style_combo.currentText()
-        mark_size = self.mark_size_spin.value()
+            if data is None or data.empty:
+                QMessageBox.warning(self, "错误", "没有可用的数据进行绘图")
+                return
+            
+            # 获取绘图参数
+            x_col = self.x_combo.currentText()
+            y_col = self.y_combo.currentText()
+            plot_type = self.plot_type_combo.currentText()
+            
+            # 获取误差列
+            xerr_col = self.xerr_combo.currentText()
+            yerr_col = self.yerr_combo.currentText()
+            
+            # 如果选择了"无"，则设置为None
+            xerr_col = None if xerr_col == "无" else xerr_col
+            yerr_col = None if yerr_col == "无" else yerr_col
+            
+            # 获取样式参数
+            color = self.color_button.property("color") or "blue"
+            mark_style = self.mark_style_combo.currentText()
+            mark_size = self.mark_size_spin.value()
+            
+            # 获取分箱数量 - 确保直方图使用
+            bins = self.bins_spin.value()  # 确保这个控件存在
+#           histtype = self.histtype_combo.currentText() if plot_type == "直方图" else "bar"        
+            histtype = self.histtype_combo.currentText() if hasattr(self, 'histtype_combo') else 'bar'
+            # 构建绘图参数
 
-        # 发送绘图信号
-        self.plot_requested.emit(plot_type, x_column, y_column, 
-            self.selected_color,
-            xerr_col,
-            yerr_col,
-            mark_style,
-            mark_size)  # 添加颜色参数        
+            plot_params = {
+                'data': data,
+                'x_col': x_col,
+                'y_col': y_col,
+                'xerr_col': xerr_col,
+                'yerr_col': yerr_col,
+                'plot_type': plot_type,
+                'color': color,
+                'mark_style': mark_style,
+                'mark_size': mark_size,
+                'bins': bins, 
+                'histtype': histtype
+            }
+            
+            # 发送绘图请求信号
+#           self.plot_requested.emit(
+#               plot_type,
+#               x_col,
+#               y_col,
+#               self.selected_color,
+#               xerr_col,
+#               yerr_col,
+#               mark_style,
+#               mark_size
+#           )
+
+            # 发送绘图请求信号
+            if plot_type == "直方图":
+                # 直方图特殊处理：将bins作为mark_size参数传递
+                self.plot_requested.emit(
+                    plot_type,
+                    x_col,
+                    "",  # 直方图不需要y轴
+                    self.selected_color,
+                    None,  # xerr
+                    None,  # yerr
+                    histtype,  # 用mark_style参数传递histtype
+                    bins    # 用mark_size参数传递bins
+                )
+            else:
+                # 其他图表类型正常传递参数
+                self.plot_requested.emit(
+                    plot_type,
+                    x_col,
+                    y_col,
+                    self.selected_color,
+                    xerr_col,
+                    yerr_col,
+                    mark_style,
+                    mark_size
+                )
+
+            if (sip.isdeleted(self.x_combo) or 
+                sip.isdeleted(self.y_combo) or
+                sip.isdeleted(self.plot_type_combo)):
+                return        
     
+            # 获取当前数据（使用筛选后的数据）
+            data = self.data_manager.get_data(filtered=True)
+    
+            # 获取当前选择的列和绘图类型
+            x_column = self.x_combo.currentText()
+            y_column = self.y_combo.currentText()
+            plot_type = self.plot_type_combo.currentText()
+    
+            # 获取误差列时应排除"无"选项
+            xerr_col = self.xerr_combo.currentText() if self.xerr_combo.currentText() != "无" else None
+            yerr_col = self.yerr_combo.currentText() if self.yerr_combo.currentText() != "无" else None
+            
+            # 根据图表类型检查必要的输入
+            if plot_type == "直方图":
+                if not x_column:
+                    QMessageBox.warning(self, "警告", "请选择要绘制的X轴列")
+                    return
+                # 直方图只需要X轴数据
+                y_column = ""
+            else:
+                # 其他图表类型需要X轴和Y轴数据
+                y_column = self.y_combo.currentText()  # 修正变量名
+                if not x_column or not y_column:
+                    QMessageBox.warning(self, "警告", "请选择要绘制的X轴和Y轴列")
+                    return
+    
+            # 获取mark参数
+            mark_style = self.mark_style_combo.currentText()
+            mark_size = self.mark_size_spin.value()
+    
+            # 发送绘图信号
+            self.plot_requested.emit(plot_type, x_column, y_column, 
+                self.selected_color,
+                xerr_col,
+                yerr_col,
+                mark_style,
+                mark_size)  # 添加颜色参数        
+        except Exception as e:
+            print(f"绘图请求失败: {str(e)}")
+            QMessageBox.warning(self, "错误", f"绘图请求失败: {str(e)}")            
+
     def apply_filter(self):
         """应用新的多条件筛选"""
         expr = self.filter_expr_edit.toPlainText().strip()
@@ -648,3 +775,8 @@ class DataView(QWidget):
         parent = self.window()
         if hasattr(parent, 'export_data'):
             parent.export_data()
+
+    def on_color_changed(self, color):
+        """颜色选择回调"""
+        self.color_button.setStyleSheet(f"background-color: {color.name()};")
+        self.color_button.setProperty("color", color.name())  # 新增属性存储

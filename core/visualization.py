@@ -144,8 +144,17 @@ class Visualizer:
         except Exception as e:
             return False, f"带误差棒的散点图绘制失败: {str(e)}"
     
-    def histogram(self, data, col, bins=10, title=None, x_label=None, y_label="频率", color='blue', alpha=0.7):
-        """绘制直方图"""
+    def histogram(self, data, col, bins=10, title=None, x_label=None, y_label="频率", color='blue', histtype='bar', alpha=0.7, edgecolor='black', hatch='/',**kwargs):
+        """绘制直方图
+        Args:
+            data: pandas DataFrame
+            x_col: str, x轴数据列名
+            bins: int, 分箱数量
+            color: str, 颜色
+            histtype: str, 直方图类型 ('bar', 'barstacked', 'step', 'stepfilled')
+            alpha: float, 透明度
+            **kwargs: 其他参数
+        """
         if self.canvas is None:
             return False, "画布未初始化"
         
@@ -153,7 +162,13 @@ class Visualizer:
             values = data[col]
             
             self.canvas.axes.clear()
-            self.canvas.axes.hist(values, bins=bins, color=color, alpha=alpha)
+            self.canvas.axes.hist(values, 
+                bins=bins,
+                color=color,
+                histtype = histtype,
+                edgecolor = 'black',
+                hatch = '/',
+                alpha=alpha)
             
             # 设置标题和标签
             if title:
