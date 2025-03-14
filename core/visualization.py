@@ -216,23 +216,25 @@ class Visualizer:
             (bool, str): 成功标志和消息
         """
         try:
-            # 清除当前图表 - 确保完全清理
+            # 清除当前图表 - 更安全的清理方式
             if self.canvas:
-                self.canvas.fig.clear()  # 完全清除图形
-                if hasattr(self, 'colorbar') and self.colorbar:
+                # 先处理colorbar
+                if hasattr(self, 'colorbar') and self.colorbar is not None:
                     try:
-                        self.colorbar.remove()
-                    except Exception as e:
-                        print(f"移除旧colorbar时出错: {str(e)}")
-                    finally:
+                        # 直接将colorbar设为None，不尝试移除
                         self.colorbar = None
+                    except Exception as e:
+                        print(f"重置colorbar时出错: {str(e)}")
+                
+                # 然后清除图形
+                self.canvas.fig.clear()
                 
                 # 重新创建axes
                 self.canvas.axes = self.canvas.fig.add_subplot(111)
-                
+                    
             # 重置图形布局参数 - 为colorbar预留空间
             self.canvas.fig.subplots_adjust(left=0.1, right=0.8, bottom=0.1, top=0.9)
-
+    
             # 检查列是否存在
             if x_col not in data.columns:
                 return False, f"列 '{x_col}' 不存在"
@@ -284,9 +286,6 @@ class Visualizer:
             
             # 确保坐标轴比例自动调整
             self.canvas.axes.set_aspect('auto')
-            
-            # 注意：不要在这里调用tight_layout，它会与colorbar冲突
-            # 而是使用之前设置的subplots_adjust参数
             
             # 更新画布
             self.canvas.draw()

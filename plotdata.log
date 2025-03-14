@@ -629,3 +629,7 @@
 2025-03-14 17:13:47,334 - PlotData.ConfigManager - INFO - 配置文件加载成功
 2025-03-14 17:13:47,931 - PlotData - INFO - 应用程序界面已加载
 2025-03-14 17:16:05,014 - PlotData.ConfigManager - INFO - 配置已保存
+2025-03-14 17:17:18,987 - PlotData - INFO - 启动应用程序
+2025-03-14 17:17:19,387 - PlotData.ConfigManager - INFO - 配置文件加载成功
+2025-03-14 17:17:20,326 - PlotData - INFO - 应用程序界面已加载
+2025-03-14 17:19:32,575 - PlotData.ConfigManager - INFO - 配置已保存
