@@ -62,7 +62,7 @@ class DataView(QWidget):
     
     # 修改信号定义，使其与实际使用匹配
     # 图表类型, x轴列, y轴列, 颜色, xerr, yerr, markstyle, marksize
-    plot_requested = pyqtSignal(str, str, str, str, str, str, str, int)
+    plot_requested = pyqtSignal(str, str, str, str, str, str, str, int, str, int, str)
     
     def __init__(self, data_manager):
         super().__init__()
@@ -167,7 +167,7 @@ class DataView(QWidget):
         plot_type_layout.addWidget(self.plot_type_combo)
 
         # 添加颜色选择组件
-        plot_type_layout.addWidget(QLabel("颜色:"))
+        plot_type_layout.addWidget(QLabel(""))
         self.color_button = QPushButton("选择颜色")
         self.color_button.clicked.connect(self.choose_color)
         self.selected_color = "blue"  # 默认颜色
@@ -240,6 +240,14 @@ class DataView(QWidget):
         # 初始化UI状态
         self.on_plot_type_changed(0)  # 默认为散点图
 
+        # 添加colorbar样式选择（初始隐藏）
+        self.colorbar_label = QLabel("Colorbar样式:")
+        self.colorbar_combo = QComboBox()
+        self.colorbar_combo.addItems(["viridis", "plasma", "inferno", "magma", "cividis", "jet", "rainbow", "coolwarm", "RdBu", "hot"])
+        self.colorbar_label.setVisible(False)
+        self.colorbar_combo.setVisible(False)
+        form_layout.addRow(self.colorbar_label, self.colorbar_combo)
+
     # 确保on_plot_clicked是类方法（删除嵌套定义）
     def on_plot_clicked(self):
         """处理绘图按钮点击事件"""
@@ -252,12 +260,13 @@ class DataView(QWidget):
             yerr_col = self.yerr_combo.currentText() if self.yerr_combo.currentText() != "无" else None
             mark_style = self.mark_style_combo.currentText()
             mark_size = self.mark_size_spin.value()
-     
+            histtype = self.histtype_combo.currentText()
+            bins = self.bins_spin.value()
+            colormap = self.colorbar_combo.currentText() if plot_type == "2D密度图" else None     
+
             if not x_col or not y_col:
                 QMessageBox.warning(self, "警告", "请先选择X轴和Y轴列")
                 return
-            
-            plot_type = self.plot_type_combo.currentText()
             self.plot_requested.emit(plot_type,
                 x_col,
                 y_col, 
@@ -265,7 +274,11 @@ class DataView(QWidget):
                 xerr_col,
                 yerr_col,
                 mark_style,
-                mark_size)
+                mark_size,
+                histtype,
+                bins,
+                colormap
+        )
  
         except Exception as e:
             print(f"绘图请求失败: {str(e)}")
@@ -412,8 +425,17 @@ class DataView(QWidget):
         self.mark_style_combo.setVisible(is_scatter)
         self.mark_size_label.setVisible(is_scatter)
         self.mark_size_spin.setVisible(is_scatter)
+        
+        # 显示/隐藏颜色选择按钮和Colorbar样式
+        # 对于散点图、带误差棒散点图和直方图，显示颜色选择按钮，隐藏Colorbar样式
+        # 对于2D密度图，隐藏颜色选择按钮，显示Colorbar样式
+        self.color_button.setVisible(not is_density)  # 非2D密度图时显示颜色选择按钮
+        
+        # 确保colorbar相关控件存在
+        if hasattr(self, 'colorbar_label') and hasattr(self, 'colorbar_combo'):
+            self.colorbar_label.setVisible(is_density)  # 仅2D密度图时显示Colorbar样式
+            self.colorbar_combo.setVisible(is_density)
 
-        # 根据绘图类型显示/隐藏相关控件
         if plot_type == "散点图":
             self.y_combo.setEnabled(True)
             self.xerr_label.setVisible(False)
@@ -447,8 +469,14 @@ class DataView(QWidget):
             self.xerr_combo.setVisible(False)
             self.yerr_label.setVisible(False)
             self.yerr_combo.setVisible(False)
+            self.color_button.setVisible(False)
             self.bins_label.setVisible(True)
             self.bins_spin.setVisible(True)
+            show_colorbar_controls = (plot_type == "2D密度图")
+            self.colorbar_label.setVisible(show_colorbar_controls)
+            self.colorbar_combo.setVisible(show_colorbar_controls)
+            
+            # 显示/隐藏颜色选择（2D密度图不需要）
     
     def choose_color(self):
         """打开颜色选择对话框"""
@@ -468,6 +496,9 @@ class DataView(QWidget):
         yerr_col = self.yerr_combo.currentText() if self.yerr_combo.currentText() != "无" else None
         mark_style = self.mark_style_combo.currentText()
         mark_size = self.mark_size_spin.value()
+        histtype = self.histtype_combo.currentText()
+        bins = self.bins_spin.value()
+        colormap = self.colorbar_combo.currentText() if plot_type == "2D密度图" else None     
 
         self.plot_requested.emit(plot_type,
             x_col,
@@ -476,7 +507,11 @@ class DataView(QWidget):
             xerr_col,
             yerr_col,
             mark_style,
-            mark_size)
+            mark_size,
+            histtype,
+            bins,
+            colormap
+    )
  
     def request_plot(self):
         """请求绘图"""
@@ -522,9 +557,9 @@ class DataView(QWidget):
             
             # 获取分箱数量 - 确保直方图使用
             bins = self.bins_spin.value()  # 确保这个控件存在
-#           histtype = self.histtype_combo.currentText() if plot_type == "直方图" else "bar"        
             histtype = self.histtype_combo.currentText() if hasattr(self, 'histtype_combo') else 'bar'
             # 构建绘图参数
+            colormap = self.colorbar_combo.currentText() if plot_type == "2D密度图" else None     
 
             plot_params = {
                 'data': data,
@@ -537,21 +572,10 @@ class DataView(QWidget):
                 'mark_style': mark_style,
                 'mark_size': mark_size,
                 'bins': bins, 
-                'histtype': histtype
+                'histtype': histtype,
+                'colormap': colormap
             }
             
-            # 发送绘图请求信号
-#           self.plot_requested.emit(
-#               plot_type,
-#               x_col,
-#               y_col,
-#               self.selected_color,
-#               xerr_col,
-#               yerr_col,
-#               mark_style,
-#               mark_size
-#           )
-
             # 发送绘图请求信号
             if plot_type == "直方图":
                 # 直方图特殊处理：将bins作为mark_size参数传递
@@ -562,8 +586,11 @@ class DataView(QWidget):
                     self.selected_color,
                     None,  # xerr
                     None,  # yerr
+                    mark_style,
+                    mark_size,
                     histtype,  # 用mark_style参数传递histtype
-                    bins    # 用mark_size参数传递bins
+                    bins,   # 用mark_size参数传递bins
+                    None
                 )
             else:
                 # 其他图表类型正常传递参数
@@ -575,7 +602,10 @@ class DataView(QWidget):
                     xerr_col,
                     yerr_col,
                     mark_style,
-                    mark_size
+                    mark_size,
+                    histtype,
+                    bins,
+                    colormap
                 )
 
             if (sip.isdeleted(self.x_combo) or 
@@ -613,13 +643,28 @@ class DataView(QWidget):
             mark_style = self.mark_style_combo.currentText()
             mark_size = self.mark_size_spin.value()
     
-            # 发送绘图信号
-            self.plot_requested.emit(plot_type, x_column, y_column, 
+            # 获取直方图参数
+            histtype = self.histtype_combo.currentText()
+            bins = self.bins_spin.value()           
+
+            # 获取colorbar样式（如果是2D密度图）
+            colormap = self.colorbar_combo.currentText() if self.plot_type_combo.currentText() == "2D密度图" else None
+
+            # 统一发出信号，确保提供所有11个参数
+            self.plot_requested.emit(
+                plot_type,
+                x_col,
+                y_col,
                 self.selected_color,
                 xerr_col,
                 yerr_col,
                 mark_style,
-                mark_size)  # 添加颜色参数        
+                mark_size,
+                histtype,
+                bins,
+                colormap
+            )
+
         except Exception as e:
             print(f"绘图请求失败: {str(e)}")
             QMessageBox.warning(self, "错误", f"绘图请求失败: {str(e)}")            

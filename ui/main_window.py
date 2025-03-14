@@ -74,14 +74,12 @@ class MainWindow(QMainWindow):
         else:
             self.resize(1000, 700)
 
-        # 修正信号连接，接收10个参数
+        # 修正信号连接，确保接收所有11个参数
         self.data_view.plot_requested.connect(
-           lambda p,x,y,c,xe,ye,ms,msz: 
-           self.plot_view.handle_plot_request(
-               p,x,y,c,xe,ye,ms,msz,
-               self.data_view.histtype_combo.currentText() if hasattr(self.data_view, 'histtype_combo') else 'bar',  # 获取用户设置的histtype
-               self.data_view.bins_spin.value() if hasattr(self.data_view, 'bins_spin') else 10      # 获取用户设置的bins
-           )
+            lambda p,x,y,c,xe,ye,ms,msz,ht,b,cm: 
+            self.plot_view.handle_plot_request(
+                p,x,y,c,xe,ye,ms,msz,ht,b,cm
+            )
         )
 
     def create_actions(self):

@@ -10,7 +10,7 @@
     "mark_style": "点",
     "mark_size": 5,
     "histtype": "barstacked",
-    "bins": 100,
+    "bins": 50,
     "title": "",
     "x_label": "cpo dX",
     "y_label": "cpo dY"

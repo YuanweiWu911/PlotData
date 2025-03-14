@@ -19,6 +19,7 @@ class Visualizer:
     def __init__(self):
         self.canvas = None
         self.colorbar = None
+        self.current_colorbar = None
         
     def set_canvas(self, canvas):
         """设置画布"""
@@ -27,13 +28,15 @@ class Visualizer:
     def clear_plot(self):
         """清除图表"""
         if self.canvas:
-            # 确保axes存在
-            if not hasattr(self.canvas, 'axes') or self.canvas.axes is None:
-                self.canvas.axes = self.canvas.fig.add_subplot(111)            
-            self.canvas.axes.clear()
-            if hasattr(self, 'colorbar') and self.colorbar:
-                self.colorbar.remove()
-                self.colorbar = None
+            # 完全重置图形 - 最彻底的方式
+            self.canvas.fig.clear()
+            
+            # 重新创建主axes
+            self.canvas.axes = self.canvas.fig.add_subplot(111)
+            
+            # 确保colorbar引用被清除
+            self.colorbar = None
+            
             # 重置布局参数
             self.canvas.fig.subplots_adjust(left=0.1, right=0.9, bottom=0.1, top=0.9)
             self.canvas.draw()
@@ -51,6 +54,9 @@ class Visualizer:
         """绘制散点图"""
         if self.canvas is None:
             return False, "画布未初始化"
+
+        # 先清除之前的图表
+        self.clear_plot()
 
          # 添加标记样式映射
         style_map = {
@@ -109,6 +115,10 @@ class Visualizer:
         """绘制带误差棒的散点图"""
         if self.canvas is None:
             return False, "画布未初始化"
+
+        # 先清除之前的图表
+        self.clear_plot()
+
         # 添加标记样式映射
         style_map = {
             "圆形": 'o',
@@ -171,6 +181,9 @@ class Visualizer:
         """
         if self.canvas is None:
             return False, "画布未初始化"
+
+        # 先清除之前的图表
+        self.clear_plot()
         
         try:
             values = data[col]
@@ -200,7 +213,8 @@ class Visualizer:
         except Exception as e:
             return False, f"直方图绘制失败: {str(e)}"
     
-    def density_map_2d(self, data, x_col, y_col, bins=10, title=None, x_label=None, y_label=None):
+    def density_map_2d(self, data, x_col, y_col, 
+        bins=10, title=None, x_label=None, y_label=None, colormap='viridis'):
         """绘制2D密度图
         
         Args:
@@ -211,36 +225,24 @@ class Visualizer:
             title: 图表标题
             x_label: X轴标签
             y_label: Y轴标签
+            colormap: 2d map 色表
             
         Returns:
             (bool, str): 成功标志和消息
         """
         try:
-            # 清除当前图表 - 更安全的清理方式
-            if self.canvas:
-                # 先处理colorbar
-                if hasattr(self, 'colorbar') and self.colorbar is not None:
-                    try:
-                        # 直接将colorbar设为None，不尝试移除
-                        self.colorbar = None
-                    except Exception as e:
-                        print(f"重置colorbar时出错: {str(e)}")
-                
-                # 然后清除图形
-                self.canvas.fig.clear()
-                
-                # 重新创建axes
-                self.canvas.axes = self.canvas.fig.add_subplot(111)
-                    
-            # 重置图形布局参数 - 为colorbar预留空间
-            self.canvas.fig.subplots_adjust(left=0.1, right=0.8, bottom=0.1, top=0.9)
-    
+            # 使用标准清理方法代替直接操作fig
+            self.clear_plot()  # 替换原有的fig.clear()
+
             # 检查列是否存在
             if x_col not in data.columns:
                 return False, f"列 '{x_col}' 不存在"
             if y_col not in data.columns:
                 return False, f"列 '{y_col}' 不存在"
-            
+
+            # 重置图形布局参数 - 为colorbar预留空间
+            self.canvas.fig.subplots_adjust(left=0.15, right=0.95, bottom=0.1, top=0.9)
+    
             # 提取数据
             x_data = data[x_col].dropna()
             y_data = data[y_col].dropna()
@@ -254,7 +256,7 @@ class Visualizer:
             y_data = y_data[:min_len]
             
             # 绘制2D密度图
-            h, xedges, yedges, im = self.canvas.axes.hist2d(x_data, y_data, bins=bins, cmap='viridis')
+            h, xedges, yedges, im = self.canvas.axes.hist2d(x_data, y_data, bins=bins, cmap=colormap)
             
             # 创建新的colorbar - 简化处理方式
             try:
@@ -265,6 +267,7 @@ class Visualizer:
                     fraction=0.046,  # 控制colorbar宽度
                     pad=0.04         # 控制colorbar与图的间距
                 )
+                self.colorbar.ax.set_label("colorbar")
             except Exception as e:
                 print(f"创建colorbar失败: {str(e)}")
                 self.colorbar = None

@@ -154,7 +154,11 @@ class PlotView(QWidget):
 
             # 直方图特有参数
             'histtype': data_view.histtype_combo.currentText() if data_view and hasattr(data_view, 'histtype_combo') else 'bar',
-            'bins': self.current_plot_params.get('bins', 10),
+            'bins': self.current_plot_params.get('bins', 50),
+
+            # 2D densitymap 参数
+            'colormap': data_view.colorbar_combo.currentText() if data_view and hasattr(data_view, 'colorbar_combo') else 'viridis',  # 新增
+#           'bins': data_view.bins_spin.value() if hasattr(data_view, 'bins_spin') else 50,
 
             # 图表显示设置
             'title': self.title_edit.text(),
@@ -260,6 +264,20 @@ class PlotView(QWidget):
                         index = data_view.histtype_combo.findText(histtype)
                         if index >= 0:
                             data_view.histtype_combo.setCurrentIndex(index)
+        
+                    # 设置分箱数量（适用于直方图和2D密度图）
+                    if hasattr(data_view, 'bins_spin'):
+                        data_view.bins_spin.setValue(settings.get('bins', 50))  # 新增
+                    
+                    # 设置Colorbar样式（2D密度图）
+                    if hasattr(data_view, 'colorbar_combo'):
+                        colormap = settings.get('colormap')
+                        if colormap:
+                            index = data_view.colorbar_combo.findText(colormap)
+                            if index >= 0:
+                                data_view.colorbar_combo.setCurrentIndex(index)  # 新增
+                       # 触发绘图类型变更事件以更新界面
+                    data_view.on_plot_type_changed(data_view.plot_type_combo.currentIndex())  # 新增     
 
                     # 设置数据列
                     data_view.x_combo.setCurrentText(settings.get('x_col', ''))
@@ -314,7 +332,9 @@ class PlotView(QWidget):
                 QMessageBox.critical(self, "错误", f"保存图表失败: {str(e)}")
 
     @pyqtSlot(str, str, str, str, str, str, str, int, str, int)
-    def handle_plot_request(self, plot_type, x_col, y_col, color, xerr_col, yerr_col, mark_style, mark_size, histtype='bar', bins=10):
+    def handle_plot_request(self, plot_type, x_col, y_col, color,
+        xerr_col, yerr_col, mark_style, mark_size,
+        histtype='bar', bins=10, colormap = None):
         """处理绘图请求
         
         Args:
@@ -328,6 +348,7 @@ class PlotView(QWidget):
             mark_size: 标记大小
             histtype: 直方图类型，默认为'bar'
             bins: 直方图分箱数量，默认为10
+            colormap: 2D密度图色表
         """
         try:
             # 获取数据
@@ -355,7 +376,8 @@ class PlotView(QWidget):
                 'bins': bins,
                 'title': title,
                 'x_label': x_label,
-                'y_label': y_label
+                'y_label': y_label,
+                'colormap': colormap
             }
             
             # 根据图表类型调用不同的绘图方法
@@ -414,7 +436,8 @@ class PlotView(QWidget):
                     bins=bins,  # 使用专门的bins参数
                     title=title,
                     x_label=x_label,
-                    y_label=y_label
+                    y_label=y_label,
+                    colormap=colormap
                 )
             else:
                 QMessageBox.warning(self, "错误", f"不支持的图表类型: {plot_type}")
