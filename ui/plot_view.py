@@ -52,6 +52,8 @@ class PlotView(QWidget):
         
         # 创建画布
         from core.visualization import PlotCanvas
+        if hasattr(self, 'canvas'):
+            self.canvas.deleteLater()
         self.canvas = PlotCanvas(self, width=5, height=4)
         plot_layout.addWidget(self.canvas)
         
