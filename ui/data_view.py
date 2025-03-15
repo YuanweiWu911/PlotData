@@ -82,6 +82,13 @@ class DataView(QWidget):
         self.load_data_button.clicked.connect(self.load_data)
         toolbar_layout.addWidget(self.load_data_button)
         
+        # 新增数据预览切换按钮
+        self.preview_toggle_button = QPushButton("数据预览 ✓")
+        self.preview_toggle_button.setCheckable(True)
+        self.preview_toggle_button.setChecked(True)
+        self.preview_toggle_button.clicked.connect(self.toggle_preview)
+        toolbar_layout.addWidget(self.preview_toggle_button)
+        
         # 添加导出数据按钮到工具栏
         self.export_data_button = QPushButton("导出数据")
         self.export_data_button.setIcon(self.style().standardIcon(self.style().StandardPixmap.SP_DialogSaveButton))
@@ -92,7 +99,7 @@ class DataView(QWidget):
         main_layout.addLayout(toolbar_layout)
         
         # 创建数据表视图
-        self.table_label = QLabel("数据预览:")
+        self.table_label = QLabel("")
         main_layout.addWidget(self.table_label)
         
         self.table_view = QTableView()
@@ -843,3 +850,43 @@ class DataView(QWidget):
         """颜色选择回调"""
         self.color_button.setStyleSheet(f"background-color: {color.name()};")
         self.color_button.setProperty("color", color.name())  # 新增属性存储
+
+    def create_buttons(self):
+        button_layout = QHBoxLayout()
+        
+        # 载入数据按钮 (已存在)
+        self.load_button = QPushButton("载入数据")
+        button_layout.addWidget(self.load_button)
+
+        # 新增预览按钮
+        self.preview_toggle_button = QPushButton("数据预览 ✓")
+        self.preview_toggle_button.setCheckable(True)
+        self.preview_toggle_button.setChecked(True)
+        self.preview_toggle_button.clicked.connect(self.toggle_preview)
+        button_layout.addWidget(self.preview_toggle_button)
+
+        # 导出数据按钮 (已存在)
+        self.export_button = QPushButton("导出数据") 
+        button_layout.addWidget(self.export_button)
+
+        return button_layout
+
+    def toggle_preview(self):
+        """切换数据预览和筛选区域的显示状态"""
+        is_visible = self.preview_toggle_button.isChecked()
+        
+        # 控制表格视图可见性
+        if hasattr(self, 'table_view'):
+            self.table_view.setVisible(is_visible)
+        
+        # 控制筛选区域可见性
+        filter_group = None
+        for child in self.children():
+            if isinstance(child, QGroupBox) and child.title() == "数据筛选":
+                filter_group = child
+                break
+        if filter_group:
+            filter_group.setVisible(is_visible)
+        
+        # 更新按钮文本
+        self.preview_toggle_button.setText("数据预览 ✓" if is_visible else "数据预览")

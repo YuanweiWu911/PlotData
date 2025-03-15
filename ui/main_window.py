@@ -461,23 +461,21 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def create_left_toolbar(self):
-        """创建左侧工具栏"""
+        """创建左侧工具栏（已移除预览按钮）"""
         left_toolbar = QHBoxLayout()
-        
-#       # 导入数据按钮
-#       self.import_button = QPushButton("导入数据")
-#       self.import_button.clicked.connect(self.open_file)  # 修正为正确的方法名
-#       left_toolbar.addWidget(self.import_button)
-        
-        # 添加数据预览切换按钮
-        self.preview_toggle_button = QPushButton("数据预览")
-        self.preview_toggle_button.setCheckable(True)  # 设置为可切换状态
-        self.preview_toggle_button.setChecked(True)    # 默认为显示状态
-        self.preview_toggle_button.clicked.connect(self.toggle_data_preview)
-        left_toolbar.addWidget(self.preview_toggle_button)
-        
-        # 返回布局以便添加到主布局
         return left_toolbar
+
+#   # 移除以下方法（功能已迁移至data_view.py）
+#   # def toggle_data_preview(self):
+#   #     """切换数据预览和筛选区域的显示状态"""
+#   #     ...原有实现...
+#       self.preview_toggle_button.setCheckable(True)  # 设置为可切换状态
+#       self.preview_toggle_button.setChecked(True)    # 默认为显示状态
+#       self.preview_toggle_button.clicked.connect(self.toggle_data_preview)
+#       left_toolbar.addWidget(self.preview_toggle_button)
+#       
+#       # 返回布局以便添加到主布局
+#       return left_toolbar
 
     def toggle_data_preview(self):
         """切换数据预览和筛选区域的显示状态"""
