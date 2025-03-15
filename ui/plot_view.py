@@ -647,188 +647,84 @@ class PlotView(QWidget):
                 QMessageBox.critical(self, "错误", f"保存图表失败: {str(e)}")
 
     @pyqtSlot(str, str, str, str, str, str, str, int, str, int)
-    def handle_plot_request(self, plot_type, x_col, y_col, color,
-        xerr_col, yerr_col, mark_style, mark_size,
-        histtype='bar', bins=10, colormap = None):
+    def handle_plot_request(self, plot_type, x_col, y_col, color, xerr_col=None, yerr_col=None, mark_style='o', mark_size=10, histtype='bar', bins=50, colormap='viridis'):
         """处理绘图请求"""
-        try:
-            # 获取新增设置参数
-            x_major_ticks = self.x_major_ticks_spin.value()
-            x_minor_ticks = self.x_minor_ticks_spin.value()
-            x_show_grid = self.x_grid_checkbox.isChecked()
-            
-            y_major_ticks = self.y_major_ticks_spin.value()
-            y_minor_ticks = self.y_minor_ticks_spin.value()
-            y_show_grid = self.y_grid_checkbox.isChecked()
-
-            # 获取坐标轴范围设置并转换为浮点数
-            try:
-                x_min = float(self.x_ticks_min.text()) if self.x_ticks_min.text() else None
-                x_max = float(self.x_ticks_max.text()) if self.x_ticks_max.text() else None
-                y_min = float(self.y_ticks_min.text()) if self.y_ticks_min.text() else None
-                y_max = float(self.y_ticks_max.text()) if self.y_ticks_max.text() else None
-            except ValueError:
-                x_min, x_max, y_min, y_max = None, None, None, None
-                print("坐标轴范围设置格式无效，将使用自动范围")
-
-            # 获取数据
-            data = self.data_manager.get_data(filtered=True)
-            if data is None or data.empty:
-                QMessageBox.warning(self, "错误", "没有可用的数据进行绘图")
-                return
-                
-            # 获取图表设置
-            title = self.title_edit.text()
-            x_label = self.x_label_edit.text()
-            y_label = self.y_label_edit.text()
-            
-            # 构建当前绘图参数以便后续应用设置
-            self.current_plot_params = {
-                'plot_type': plot_type,
-                'x_col': x_col,
-                'y_col': y_col,
-                'color': color,
-                'xerr_col': xerr_col,
-                'yerr_col': yerr_col,
-                'mark_style': mark_style,
-                'mark_size': mark_size,
-                'histtype': histtype,
-                'bins': bins,
-                'title': title,
-                'x_label': x_label,
-                'y_label': y_label,
-                'colormap': colormap,
-                # 修正刻度设置参数名称，使用与save_plot_settings一致的键名
-                'x_min': x_min,
-                'x_max': x_max,
-                'y_min': y_min,
-                'y_max': y_max,
-                'x_major_ticks': x_major_ticks,
-                'x_minor_ticks': x_minor_ticks,
-                'x_show_grid': x_show_grid,
-                'y_major_ticks': y_major_ticks,
-                'y_minor_ticks': y_minor_ticks,
-                'y_show_grid': y_show_grid
-            }
-            
-            # 根据图表类型调用不同的绘图方法
-            if plot_type == "散点图":
-                # 散点图代码，添加坐标轴范围参数 - 修正参数名称
-                success, message = self.visualizer.scatter_plot(
-                    data=data,
-                    x_col=x_col,
-                    y_col=y_col,
-                    title=title,
-                    x_label=x_label,
-                    y_label=y_label,
-                    color=color,
-                    mark_size=mark_size,
-                    mark_style=mark_style,
-                    x_major_ticks=x_major_ticks,  # 修改为X轴主刻度
-                    x_minor_ticks=x_minor_ticks,  # 修改为X轴次刻度
-                    x_show_grid=x_show_grid,      # 修改为X轴网格线
-                    y_major_ticks=y_major_ticks,  # 添加Y轴主刻度
-                    y_minor_ticks=y_minor_ticks,  # 添加Y轴次刻度
-                    y_show_grid=y_show_grid,      # 添加Y轴网格线
-                    x_min=x_min,
-                    x_max=x_max,
-                    y_min=y_min,
-                    y_max=y_max
-                )
-            elif plot_type == "带误差棒的散点图":
-                # 误差棒散点图代码，添加坐标轴范围参数 - 修正参数名称
-                success, message = self.visualizer.scatter_plot_with_error(
-                    data=data,
-                    x_col=x_col,
-                    y_col=y_col,
-                    xerr_col=xerr_col,
-                    yerr_col=yerr_col,
-                    title=title,
-                    x_label=x_label,
-                    y_label=y_label,
-                    color=color,
-                    mark_size=mark_size,
-                    mark_style=mark_style,
-                    x_major_ticks=x_major_ticks,
-                    x_minor_ticks=x_minor_ticks,
-                    x_show_grid=x_show_grid,
-                    y_major_ticks=y_major_ticks,
-                    y_minor_ticks=y_minor_ticks,
-                    y_show_grid=y_show_grid,
-                    x_min=x_min,
-                    x_max=x_max,
-                    y_min=y_min,
-                    y_max=y_max
-                )
-            elif plot_type == "直方图":
-                # 直方图使用专门的参数，添加坐标轴范围参数 - 修正参数名称
-                valid_histtypes = ['bar', 'barstacked', 'step', 'stepfilled']
-                # 验证histtype参数
-                valid_histtype = histtype if histtype in valid_histtypes else 'bar'
-                
-                success, message = self.visualizer.histogram(
-                    data=data,
-                    col=x_col,
-                    bins=bins,
-                    title=title,
-                    x_label=x_label,
-                    y_label=y_label,
-                    color=color,
-                    histtype=valid_histtype,
-                    edgecolor='black',
-                    hatch='/',
-                    x_major_ticks=x_major_ticks,
-                    x_minor_ticks=x_minor_ticks,
-                    x_show_grid=x_show_grid,
-                    y_major_ticks=y_major_ticks,
-                    y_minor_ticks=y_minor_ticks,
-                    y_show_grid=y_show_grid,
-                    x_min=x_min,
-                    x_max=x_max,
-                    y_min=y_min,
-                    y_max=y_max
-                )
-            elif plot_type == "2D密度图":
-                # 2D密度图代码，添加坐标轴范围参数 - 修正参数名称
-                success, message = self.visualizer.density_map_2d(
-                    data=data,
-                    x_col=x_col,
-                    y_col=y_col,
-                    bins=bins,
-                    title=title,
-                    x_label=x_label,
-                    y_label=y_label,
-                    colormap=colormap,
-                    x_major_ticks=x_major_ticks,
-                    x_minor_ticks=x_minor_ticks,
-                    x_show_grid=x_show_grid,
-                    y_major_ticks=y_major_ticks,
-                    y_minor_ticks=y_minor_ticks,
-                    y_show_grid=y_show_grid,
-                    x_min=x_min,
-                    x_max=x_max,
-                    y_min=y_min,
-                    y_max=y_max
-                )
-            else:
-                QMessageBox.warning(self, "错误", f"不支持的图表类型: {plot_type}")
-                return
-                
-            # 显示绘图结果
-            if not success:
-                QMessageBox.warning(self, "绘图错误", message)
+        # 保存当前绘图参数
+        self.current_plot_params = {
+            'plot_type': plot_type,
+            'x_col': x_col,
+            'y_col': y_col,
+            'color': color,
+            'xerr_col': xerr_col,
+            'yerr_col': yerr_col,
+            'mark_style': mark_style,
+            'mark_size': mark_size,
+            'histtype': histtype,
+            'bins': bins,
+            'colormap': colormap
+        }
         
+        # 获取数据
+        data = self.data_manager.get_data()
+        if data is None or data.empty:
+            QMessageBox.warning(self, "错误", "没有可用的数据")
+            return
+            
+        # 检查列是否存在
+        if x_col not in data.columns:
+            QMessageBox.warning(self, "错误", f"X轴列 '{x_col}' 不存在")
+            return
+            
+        if y_col not in data.columns and plot_type != "直方图":
+            QMessageBox.warning(self, "错误", f"Y轴列 '{y_col}' 不存在")
+            return
+            
+        # 检查误差棒列
+        if xerr_col and xerr_col not in data.columns:
+            QMessageBox.warning(self, "错误", f"X误差列 '{xerr_col}' 不存在")
+            return
+            
+        if yerr_col and yerr_col not in data.columns:
+            QMessageBox.warning(self, "错误", f"Y误差列 '{yerr_col}' 不存在")
+            return
+        
+        try:
+            print(f"开始绘图: {plot_type}")
+            QApplication.processEvents()  # 处理挂起的事件，防止界面卡死
+            
+            # 确保 alpha 值是有效的数值类型
+            alpha = 1.0  # 默认不透明
+            
+            # 根据绘图类型调用不同的绘图方法
+            if plot_type == "散点图":
+                self.visualizer.scatter_plot(data, x_col, y_col, color, mark_style, mark_size, alpha=alpha)
+            elif plot_type == "带误差棒的散点图":
+                self.visualizer.scatter_plot_with_error(data, x_col, y_col, xerr_col, yerr_col, color, mark_style, mark_size, alpha=alpha)
+            elif plot_type == "直方图":
+                self.visualizer.histogram(data, x_col, bins, histtype, color, alpha=alpha)
+            elif plot_type == "2D密度图":
+                self.visualizer.density_map_2d(data, x_col, y_col, bins, colormap)
+            else:
+                QMessageBox.warning(self, "错误", f"不支持的绘图类型: {plot_type}")
+                return
+                
+            # 应用图表设置
+            self.apply_settings()
+            
+            print(f"绘图成功: {plot_type}")
+            
         except Exception as e:
-            QMessageBox.critical(self, "绘图错误", f"绘图过程中发生错误: {str(e)}")
+            QMessageBox.critical(self, "绘图错误", f"绘图过程中发生错误:\n{str(e)}")
+            import traceback
+            traceback.print_exc()
 
-    @pyqtSlot()
     def update_columns(self):
         """更新列选择下拉框"""
         # 保存当前选择的值
-        current_x = self.x_combo.currentText()
-        current_y = self.y_combo.currentText()
-        current_xerr = self.xerr_combo.currentText()
-        current_yerr = self.yerr_combo.currentText()
+        current_x = self.x_combo.currentText() if self.x_combo.count() > 0 else ""
+        current_y = self.y_combo.currentText() if self.y_combo.count() > 0 else ""
+        current_xerr = self.xerr_combo.currentText() if self.xerr_combo.count() > 0 else ""
+        current_yerr = self.yerr_combo.currentText() if self.yerr_combo.count() > 0 else ""
         
         # 清空下拉框
         self.x_combo.clear()
@@ -843,6 +739,7 @@ class PlotView(QWidget):
         # 获取数据列
         columns = self.data_manager.get_column_names()
         if not columns:
+            print("没有可用的数据列")
             return
             
         # 添加列到下拉框
@@ -873,6 +770,8 @@ class PlotView(QWidget):
             self.yerr_combo.setCurrentText(current_yerr)
         else:
             self.yerr_combo.setCurrentText("无")  # 默认不选择误差棒
+            
+        print(f"更新列完成，可用列: {columns}")
 
     def on_plot_type_changed(self, index):
         """处理绘图类型变更"""
@@ -890,6 +789,8 @@ class PlotView(QWidget):
             self.density_settings.setVisible(True)
         elif plot_type == "带误差棒的散点图":
             self.error_settings.setVisible(True)
+
+        print(f"绘图类型已更改为: {plot_type}")
     
     def choose_color(self):
         """打开颜色选择对话框"""
@@ -907,54 +808,96 @@ class PlotView(QWidget):
             self.color_button.setProperty("color", color.name())
     
     def request_plot(self):
-        """请求绘图"""
-        # 获取当前选择的列
-        x_col = self.x_combo.currentText()
-        y_col = self.y_combo.currentText()
-        
-        # 获取误差棒列
-        xerr_col = self.xerr_combo.currentText()
-        if xerr_col == "无":
-            xerr_col = None
+        """处理绘图请求"""
+        try:
+            print("PlotView 接收到绘图请求")
             
-        yerr_col = self.yerr_combo.currentText()
-        if yerr_col == "无":
-            yerr_col = None
-        
-        # 获取绘图类型和样式
-        plot_type = self.plot_type_combo.currentText()
-        color = self.color_button.property("color") or "blue"
-        mark_style = self.mark_style_combo.currentText()
-        mark_size = self.mark_size_spin.value()
-        
-        # 获取特殊图表参数
-        histtype = self.histtype_combo.currentText() if plot_type == "直方图" else "bar"
-        bins = self.bins_spin.value() if plot_type == "直方图" else 50
-        colormap = self.colorbar_combo.currentText() if plot_type == "2D密度图" else "viridis"
-        
-        # 检查必要的列是否已选择
-        if not x_col:
-            QMessageBox.warning(self, "错误", "请选择X轴列")
-            return
+            # 防止重复调用
+            if hasattr(self, '_is_plotting') and self._is_plotting:
+                print("绘图正在进行中，请稍候...")
+                return
+                
+            self._is_plotting = True
             
-        if plot_type != "直方图" and not y_col:
-            QMessageBox.warning(self, "错误", "请选择Y轴列")
-            return
+            # 检查数据是否存在
+            data = self.data_manager.get_data()
+            if data is None or data.empty:
+                QMessageBox.warning(self, "错误", "没有可用的数据")
+                self._is_plotting = False
+                return
+                
+            # 从控件获取当前值
+            plot_type = self.plot_type_combo.currentText()
+            x_col = self.x_combo.currentText()
             
-        # 处理绘图请求
-        self.handle_plot_request(
-            plot_type=plot_type,
-            x_col=x_col,
-            y_col=y_col,
-            color=color,
-            xerr_col=xerr_col,
-            yerr_col=yerr_col,
-            mark_style=mark_style,
-            mark_size=mark_size,
-            histtype=histtype,
-            bins=bins,
-            colormap=colormap
-        )
+            # 检查必要的列是否选择
+            if not x_col:
+                QMessageBox.warning(self, "警告", "请先选择X轴列")
+                self._is_plotting = False
+                return
+                
+            y_col = self.y_combo.currentText()
+            if plot_type != "直方图" and not y_col:
+                QMessageBox.warning(self, "警告", "请先选择Y轴列")
+                self._is_plotting = False
+                return
+                
+            # 检查列是否存在于数据中
+            if x_col not in data.columns:
+                QMessageBox.warning(self, "错误", f"X轴列 '{x_col}' 不存在于数据中")
+                self._is_plotting = False
+                return
+                
+            if plot_type != "直方图" and y_col not in data.columns:
+                QMessageBox.warning(self, "错误", f"Y轴列 '{y_col}' 不存在于数据中")
+                self._is_plotting = False
+                return
+                
+            # 获取其他参数
+            xerr_col = self.xerr_combo.currentText() if self.xerr_combo.currentText() != "无" else None
+            yerr_col = self.yerr_combo.currentText() if self.yerr_combo.currentText() != "无" else None
+            
+            # 检查误差列是否存在
+            if xerr_col and xerr_col not in data.columns:
+                QMessageBox.warning(self, "错误", f"X误差列 '{xerr_col}' 不存在于数据中")
+                self._is_plotting = False
+                return
+                
+            if yerr_col and yerr_col not in data.columns:
+                QMessageBox.warning(self, "错误", f"Y误差列 '{yerr_col}' 不存在于数据中")
+                self._is_plotting = False
+                return
+                
+            mark_style = self.mark_style_combo.currentText()
+            mark_size = self.mark_size_spin.value()
+            histtype = self.histtype_combo.currentText()
+            bins = self.bins_spin.value()
+            colormap = self.colorbar_combo.currentText() if plot_type == "2D密度图" else None
+            
+            # 获取颜色 - 确保是有效的颜色值
+            color = self.color_button.property("color")
+            if not color or not isinstance(color, str):
+                color = "blue"  # 默认颜色
+                
+            print(f"准备绘图: 类型={plot_type}, X={x_col}, Y={y_col}, 颜色={color}")
+            
+            # 调用绘图方法
+            self.handle_plot_request(
+                plot_type, x_col, y_col, color, 
+                xerr_col, yerr_col, mark_style, 
+                mark_size, histtype, bins, colormap
+            )
+            
+            print(f"绘图请求处理完成")
+            
+        except Exception as e:
+            print(f"绘图请求处理失败: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            QMessageBox.warning(self, "错误", f"绘图请求处理失败: {str(e)}")
+        finally:
+            # 无论成功还是失败，都重置绘图状态
+            self._is_plotting = False
     
     def toggle_settings_visibility(self):
         """切换设置区域的显示状态"""

@@ -274,39 +274,22 @@ class DataView(QWidget):
 #       main_layout.addWidget(self.plot_button)
 
     # 确保on_plot_clicked是类方法（删除嵌套定义）
-    def on_plot_clicked(self):
-        """处理绘图按钮点击事件"""
-        try:
-            # 从控件获取当前值
-            plot_type = self.plot_type_combo.currentText()
-            x_col = self.x_combo.currentText()
-            y_col = self.y_combo.currentText()
-            xerr_col = self.xerr_combo.currentText() if self.xerr_combo.currentText() != "无" else None
-            yerr_col = self.yerr_combo.currentText() if self.yerr_combo.currentText() != "无" else None
-            mark_style = self.mark_style_combo.currentText()
-            mark_size = self.mark_size_spin.value()
-            histtype = self.histtype_combo.currentText()
-            bins = self.bins_spin.value()
-            colormap = self.colorbar_combo.currentText() if plot_type == "2D密度图" else None     
-
-            if not x_col or not y_col:
-                QMessageBox.warning(self, "警告", "请先选择X轴和Y轴列")
-                return
-            self.plot_requested.emit(plot_type,
-                x_col,
-                y_col, 
-                self.selected_color,
-                xerr_col,
-                yerr_col,
-                mark_style,
-                mark_size,
-                histtype,
-                bins,
-                colormap
-        )
- 
-        except Exception as e:
-            print(f"绘图请求失败: {str(e)}")
+#   def on_plot_clicked(self):
+#       """处理绘图按钮点击事件 - 现在只转发到 PlotView"""
+#       try:
+#           # 获取主窗口
+#           main_window = self.window()
+#           if hasattr(main_window, 'plot_view') and main_window.plot_view:
+#               # 调用 PlotView 的绘图方法
+#               main_window.plot_view.request_plot()
+#               print("已将绘图请求转发到 PlotView")
+#           else:
+#               print("无法找到 PlotView 对象")
+#               QMessageBox.warning(self, "错误", "无法找到绘图视图组件")
+#       except Exception as e:
+#           print(f"绘图请求转发失败: {str(e)}")
+#           import traceback
+#           traceback.print_exc()
 
     def safe_update_combobox(self):
         """安全更新下拉框的方法"""
@@ -336,20 +319,21 @@ class DataView(QWidget):
         if not QApplication.instance().thread() == QThread.currentThread():
             QMetaObject.invokeMethod(self, "update_data_view", Qt.ConnectionType.QueuedConnection)
             return
-
+    
         try:
             # 使用sip检查所有UI组件状态
             if sip.isdeleted(self):  # 检查父组件是否被删除
                 return
-
+    
             # 合并后的数据加载逻辑
             data = self.data_manager.get_data()
             if data is None:
+                print("警告：数据为空")
                 return
-
+    
             # 新增：清理列名中的空格
             data.columns = data.columns.str.replace(' ', '')  # 移除列名中的空格
-
+    
             # 统一更新表格模型
             self.table_model.update_data(data)
             
@@ -360,10 +344,21 @@ class DataView(QWidget):
             
             # 更新标签显示
             self.table_label.setText(f"数据预览: {len(data)}行 x {len(data.columns)}列")
-
+    
             # 打印调试信息
             print(f"已更新数据视图，列数：{len(columns)}，行数：{len(data)}")
-
+    
+            # 通知 PlotView 更新
+            main_window = self.window()
+            if hasattr(main_window, 'plot_view') and main_window.plot_view:
+                try:
+                    main_window.plot_view.update_columns()
+                    print("已通知 PlotView 更新列选择下拉框")
+                except Exception as e:
+                    print(f"通知 PlotView 更新时出错: {str(e)}")
+                    import traceback
+                    traceback.print_exc()
+    
         except Exception as e:
             print(f"更新数据视图时出错: {str(e)}")
             import traceback
@@ -379,35 +374,25 @@ class DataView(QWidget):
                 
             print(f"正在更新下拉框，可用列：{columns}")
 
-            combos_to_update = [
-                (self.x_combo, False),
-                (self.y_combo, False),
-                (self.xerr_combo, True),
-                (self.yerr_combo, True)#,
-#               (self.filter_col_combo, False)
-            ]
-
-#           # 如果筛选列下拉框存在，也添加到更新列表
-#           if hasattr(self, 'filter_col_combo') and not sip.isdeleted(self.filter_col_combo):
-#               combos_to_update.append((self.filter_col_combo, False))
-
-            for combo, has_none in combos_to_update:
-                if sip.isdeleted(combo):
-                    continue
-                    
-                current_text = combo.currentText() if combo.count() > 0 else ""
-                combo.blockSignals(True)
-                combo.clear()
-                
-                if has_none:
-                    combo.addItem("无")
-                    
-                combo.addItems(columns)
-                
-                if current_text in (["无"] if has_none else []) + columns:
-                    combo.setCurrentText(current_text)
-                    
-                combo.blockSignals(False)
+            # 只更新 DataView 中实际存在的下拉框
+            # 例如，如果有 filter_col_combo 这样的属性，可以保留
+            if hasattr(self, 'filter_col_combo') and not sip.isdeleted(self.filter_col_combo):
+                current_text = self.filter_col_combo.currentText() if self.filter_col_combo.count() > 0 else ""
+                self.filter_col_combo.blockSignals(True)
+                self.filter_col_combo.clear()
+                self.filter_col_combo.addItems(columns)
+                if current_text in columns:
+                    self.filter_col_combo.setCurrentText(current_text)
+                self.filter_col_combo.blockSignals(False)
+            
+            # 通知 PlotView 更新其下拉框
+            main_window = self.window()
+            if hasattr(main_window, 'plot_view') and main_window.plot_view:
+                # 调用 PlotView 的更新方法
+                main_window.plot_view.update_columns()
+                print("已通知 PlotView 更新列选择下拉框")
+            else:
+                print("无法找到 PlotView 对象，无法更新列选择下拉框")
                 
             print("下拉框更新完成")
                 
@@ -416,283 +401,143 @@ class DataView(QWidget):
             import traceback
             traceback.print_exc()
     
-    def on_plot_type_changed(self, index):
-        """绘图类型改变时的处理"""
-        plot_type = self.plot_type_combo.currentText()
-        
-        # 根据绘图类型显示/隐藏相关控件
-        is_scatter = plot_type == "散点图" or plot_type == "带误差棒的散点图"
-        is_error_scatter = plot_type == "带误差棒的散点图"
-        is_histogram = plot_type == "直方图"
-        is_density = plot_type == "2D密度图"
-        
-        # 显示/隐藏Y轴选择
-        self.y_combo.setEnabled(not is_histogram)  # 直方图不需要Y轴
-        self.y_combo.setVisible(not is_histogram)
-        
-        # 显示/隐藏误差棒选择
-        self.xerr_label.setVisible(is_error_scatter)
-        self.xerr_combo.setVisible(is_error_scatter)
-        self.yerr_label.setVisible(is_error_scatter)
-        self.yerr_combo.setVisible(is_error_scatter)
-        
-        # 显示/隐藏分箱数量
-        self.bins_label.setVisible(is_histogram or is_density)
-        self.bins_spin.setVisible(is_histogram or is_density)
-        
-        # 显示/隐藏直方图类型选择
-        if hasattr(self, 'histtype_label'):
-            self.histtype_label.setVisible(is_histogram)
-            self.histtype_combo.setVisible(is_histogram)
-        
-        # 显示/隐藏标记样式和大小
-        self.mark_style_label.setVisible(is_scatter)
-        self.mark_style_combo.setVisible(is_scatter)
-        self.mark_size_label.setVisible(is_scatter)
-        self.mark_size_spin.setVisible(is_scatter)
-        
-        # 显示/隐藏颜色选择按钮和Colorbar样式
-        # 对于散点图、带误差棒散点图和直方图，显示颜色选择按钮，隐藏Colorbar样式
-        # 对于2D密度图，隐藏颜色选择按钮，显示Colorbar样式
-        self.color_button.setVisible(not is_density)  # 非2D密度图时显示颜色选择按钮
-        
-        # 确保colorbar相关控件存在
-        if hasattr(self, 'colorbar_label') and hasattr(self, 'colorbar_combo'):
-            self.colorbar_label.setVisible(is_density)  # 仅2D密度图时显示Colorbar样式
-            self.colorbar_combo.setVisible(is_density)
+#   def on_plot_type_changed(self, index):
+#       """绘图类型改变时的处理"""
+#       plot_type = self.plot_type_combo.currentText()
+#       
+#       # 根据绘图类型显示/隐藏相关控件
+#       is_scatter = plot_type == "散点图" or plot_type == "带误差棒的散点图"
+#       is_error_scatter = plot_type == "带误差棒的散点图"
+#       is_histogram = plot_type == "直方图"
+#       is_density = plot_type == "2D密度图"
+#       
+#       # 显示/隐藏Y轴选择
+#       self.y_combo.setEnabled(not is_histogram)  # 直方图不需要Y轴
+#       self.y_combo.setVisible(not is_histogram)
+#       
+#       # 显示/隐藏误差棒选择
+#       self.xerr_label.setVisible(is_error_scatter)
+#       self.xerr_combo.setVisible(is_error_scatter)
+#       self.yerr_label.setVisible(is_error_scatter)
+#       self.yerr_combo.setVisible(is_error_scatter)
+#       
+#       # 显示/隐藏分箱数量
+#       self.bins_label.setVisible(is_histogram or is_density)
+#       self.bins_spin.setVisible(is_histogram or is_density)
+#       
+#       # 显示/隐藏直方图类型选择
+#       if hasattr(self, 'histtype_label'):
+#           self.histtype_label.setVisible(is_histogram)
+#           self.histtype_combo.setVisible(is_histogram)
+#       
+#       # 显示/隐藏标记样式和大小
+#       self.mark_style_label.setVisible(is_scatter)
+#       self.mark_style_combo.setVisible(is_scatter)
+#       self.mark_size_label.setVisible(is_scatter)
+#       self.mark_size_spin.setVisible(is_scatter)
+#       
+#       # 显示/隐藏颜色选择按钮和Colorbar样式
+#       # 对于散点图、带误差棒散点图和直方图，显示颜色选择按钮，隐藏Colorbar样式
+#       # 对于2D密度图，隐藏颜色选择按钮，显示Colorbar样式
+#       self.color_button.setVisible(not is_density)  # 非2D密度图时显示颜色选择按钮
+#       
+#       # 确保colorbar相关控件存在
+#       if hasattr(self, 'colorbar_label') and hasattr(self, 'colorbar_combo'):
+#           self.colorbar_label.setVisible(is_density)  # 仅2D密度图时显示Colorbar样式
+#           self.colorbar_combo.setVisible(is_density)
 
-        if plot_type == "散点图":
-            self.y_combo.setEnabled(True)
-            self.xerr_label.setVisible(False)
-            self.xerr_combo.setVisible(False)
-            self.yerr_label.setVisible(False)
-            self.yerr_combo.setVisible(False)
-            self.bins_label.setVisible(False)
-            self.bins_spin.setVisible(False)
-            
-        elif plot_type == "带误差棒的散点图":
-            self.y_combo.setEnabled(True)
-            self.xerr_label.setVisible(True)
-            self.xerr_combo.setVisible(True)
-            self.yerr_label.setVisible(True)
-            self.yerr_combo.setVisible(True)
-            self.bins_label.setVisible(False)
-            self.bins_spin.setVisible(False)
-            
-        elif plot_type == "直方图":
-            self.y_combo.setEnabled(False)
-            self.xerr_label.setVisible(False)
-            self.xerr_combo.setVisible(False)
-            self.yerr_label.setVisible(False)
-            self.yerr_combo.setVisible(False)
-            self.bins_label.setVisible(True)
-            self.bins_spin.setVisible(True)
-            
-        elif plot_type == "2D密度图":
-            self.y_combo.setEnabled(True)
-            self.xerr_label.setVisible(False)
-            self.xerr_combo.setVisible(False)
-            self.yerr_label.setVisible(False)
-            self.yerr_combo.setVisible(False)
-            self.color_button.setVisible(False)
-            self.bins_label.setVisible(True)
-            self.bins_spin.setVisible(True)
-            show_colorbar_controls = (plot_type == "2D密度图")
-            self.colorbar_label.setVisible(show_colorbar_controls)
-            self.colorbar_combo.setVisible(show_colorbar_controls)
-            
-            # 显示/隐藏颜色选择（2D密度图不需要）
-    
-    def choose_color(self):
-        """打开颜色选择对话框"""
-        color = QColorDialog.getColor(initial=QColor(self.selected_color))
-        if color.isValid():
-            self.selected_color = color.name()
-            self.color_button.setStyleSheet(f"background-color: {self.selected_color};")
+#       if plot_type == "散点图":
+#           self.y_combo.setEnabled(True)
+#           self.xerr_label.setVisible(False)
+#           self.xerr_combo.setVisible(False)
+#           self.yerr_label.setVisible(False)
+#           self.yerr_combo.setVisible(False)
+#           self.bins_label.setVisible(False)
+#           self.bins_spin.setVisible(False)
+#           
+#       elif plot_type == "带误差棒的散点图":
+#           self.y_combo.setEnabled(True)
+#           self.xerr_label.setVisible(True)
+#           self.xerr_combo.setVisible(True)
+#           self.yerr_label.setVisible(True)
+#           self.yerr_combo.setVisible(True)
+#           self.bins_label.setVisible(False)
+#           self.bins_spin.setVisible(False)
+#           
+#       elif plot_type == "直方图":
+#           self.y_combo.setEnabled(False)
+#           self.xerr_label.setVisible(False)
+#           self.xerr_combo.setVisible(False)
+#           self.yerr_label.setVisible(False)
+#           self.yerr_combo.setVisible(False)
+#           self.bins_label.setVisible(True)
+#           self.bins_spin.setVisible(True)
+#           
+#       elif plot_type == "2D密度图":
+#           self.y_combo.setEnabled(True)
+#           self.xerr_label.setVisible(False)
+#           self.xerr_combo.setVisible(False)
+#           self.yerr_label.setVisible(False)
+#           self.yerr_combo.setVisible(False)
+#           self.color_button.setVisible(False)
+#           self.bins_label.setVisible(True)
+#           self.bins_spin.setVisible(True)
+#           show_colorbar_controls = (plot_type == "2D密度图")
+#           self.colorbar_label.setVisible(show_colorbar_controls)
+#           self.colorbar_combo.setVisible(show_colorbar_controls)
+#           
+#           # 显示/隐藏颜色选择（2D密度图不需要）
+#   
+#   def choose_color(self):
+#       """打开颜色选择对话框"""
+#       color = QColorDialog.getColor(initial=QColor(self.selected_color))
+#       if color.isValid():
+#           self.selected_color = color.name()
+#           self.color_button.setStyleSheet(f"background-color: {self.selected_color};")
 
     # 在触发绘图的代码处传递颜色参数
-    def trigger_plot_action(self):
-        """触发绘图动作"""
-        # 需要从控件获取当前值
-        plot_type = self.plot_type_combo.currentText()
-        x_col = self.x_combo.currentText()
-        y_col = self.y_combo.currentText()
-        xerr_col = self.xerr_combo.currentText() if self.xerr_combo.currentText() != "无" else None
-        yerr_col = self.yerr_combo.currentText() if self.yerr_combo.currentText() != "无" else None
-        mark_style = self.mark_style_combo.currentText()
-        mark_size = self.mark_size_spin.value()
-        histtype = self.histtype_combo.currentText()
-        bins = self.bins_spin.value()
-        colormap = self.colorbar_combo.currentText() if plot_type == "2D密度图" else None     
-
-        self.plot_requested.emit(plot_type,
-            x_col,
-            y_col, 
-            self.selected_color,
-            xerr_col,
-            yerr_col,
-            mark_style,
-            mark_size,
-            histtype,
-            bins,
-            colormap
-    )
+#   def trigger_plot_action(self):
+#       """触发绘图动作 - 现在只转发到 PlotView"""
+#       try:
+#           # 获取主窗口
+#           main_window = self.window()
+#           if hasattr(main_window, 'plot_view') and main_window.plot_view:
+#               # 调用 PlotView 的绘图方法
+#               main_window.plot_view.request_plot()
+#               print("已将绘图请求转发到 PlotView")
+#           else:
+#               print("无法找到 PlotView 对象")
+#               QMessageBox.warning(self, "错误", "无法找到绘图视图组件")
+#       except Exception as e:
+#           print(f"绘图请求转发失败: {str(e)}")
+#           import traceback
+#           traceback.print_exc()        
  
     def request_plot(self):
-        """请求绘图"""
+        """请求绘图 - 将请求转发到 PlotView"""
         try:
-            if hasattr(self.data_manager, 'get_data') and hasattr(self.data_manager.get_data, '__call__'):
-                # 如果get_data方法支持filtered参数
-                if 'filtered' in self.data_manager.get_data.__code__.co_varnames:
-                    data = self.data_manager.get_data(filtered=True)
-                else:
-                    # 否则使用原来的逻辑
-                    if hasattr(self.data_manager, 'has_filter') and self.data_manager.has_filter():
-                        if hasattr(self.data_manager, 'get_filtered_data'):
-                            data = self.data_manager.get_filtered_data()
-                        else:
-                            data = self.data_manager.get_data()
-                    else:
-                        data = self.data_manager.get_data()
-            else:
-                QMessageBox.warning(self, "错误", "数据管理器不可用")
-                return
-
-            if data is None or data.empty:
-                QMessageBox.warning(self, "错误", "没有可用的数据进行绘图")
-                return
-            
-            # 获取绘图参数
-            x_col = self.x_combo.currentText()
-            y_col = self.y_combo.currentText()
-            plot_type = self.plot_type_combo.currentText()
-            
-            # 获取误差列
-            xerr_col = self.xerr_combo.currentText()
-            yerr_col = self.yerr_combo.currentText()
-            
-            # 如果选择了"无"，则设置为None
-            xerr_col = None if xerr_col == "无" else xerr_col
-            yerr_col = None if yerr_col == "无" else yerr_col
-            
-            # 获取样式参数
-            color = self.color_button.property("color") or "blue"
-            mark_style = self.mark_style_combo.currentText()
-            mark_size = self.mark_size_spin.value()
-            
-            # 获取分箱数量 - 确保直方图使用
-            bins = self.bins_spin.value()  # 确保这个控件存在
-            histtype = self.histtype_combo.currentText() if hasattr(self, 'histtype_combo') else 'bar'
-            # 构建绘图参数
-            colormap = self.colorbar_combo.currentText() if plot_type == "2D密度图" else None     
-
-            plot_params = {
-                'data': data,
-                'x_col': x_col,
-                'y_col': y_col,
-                'xerr_col': xerr_col,
-                'yerr_col': yerr_col,
-                'plot_type': plot_type,
-                'color': color,
-                'mark_style': mark_style,
-                'mark_size': mark_size,
-                'bins': bins, 
-                'histtype': histtype,
-                'colormap': colormap
-            }
-            
-            # 发送绘图请求信号
-            if plot_type == "直方图":
-                # 直方图特殊处理：将bins作为mark_size参数传递
-                self.plot_requested.emit(
-                    plot_type,
-                    x_col,
-                    "",  # 直方图不需要y轴
-                    self.selected_color,
-                    None,  # xerr
-                    None,  # yerr
-                    mark_style,
-                    mark_size,
-                    histtype,  # 用mark_style参数传递histtype
-                    bins,   # 用mark_size参数传递bins
-                    None
-                )
-            else:
-                # 其他图表类型正常传递参数
-                self.plot_requested.emit(
-                    plot_type,
-                    x_col,
-                    y_col,
-                    self.selected_color,
-                    xerr_col,
-                    yerr_col,
-                    mark_style,
-                    mark_size,
-                    histtype,
-                    bins,
-                    colormap
-                )
-
-            if (sip.isdeleted(self.x_combo) or 
-                sip.isdeleted(self.y_combo) or
-                sip.isdeleted(self.plot_type_combo)):
-                return        
-    
-            # 获取当前数据（使用筛选后的数据）
-            data = self.data_manager.get_data(filtered=True)
-    
-            # 获取当前选择的列和绘图类型
-            x_column = self.x_combo.currentText()
-            y_column = self.y_combo.currentText()
-            plot_type = self.plot_type_combo.currentText()
-    
-            # 获取误差列时应排除"无"选项
-            xerr_col = self.xerr_combo.currentText() if self.xerr_combo.currentText() != "无" else None
-            yerr_col = self.yerr_combo.currentText() if self.yerr_combo.currentText() != "无" else None
-            
-            # 根据图表类型检查必要的输入
-            if plot_type == "直方图":
-                if not x_column:
-                    QMessageBox.warning(self, "警告", "请选择要绘制的X轴列")
+            # 获取主窗口
+            main_window = self.window()
+            if hasattr(main_window, 'plot_view') and main_window.plot_view:
+                # 调用 PlotView 的绘图方法
+                print("正在请求绘图...")
+                # 防止重复调用
+                if hasattr(main_window.plot_view, '_is_plotting') and main_window.plot_view._is_plotting:
+                    print("绘图正在进行中，请稍候...")
                     return
-                # 直方图只需要X轴数据
-                y_column = ""
+                    
+                main_window.plot_view.request_plot()
+                print("已将绘图请求转发到 PlotView")
             else:
-                # 其他图表类型需要X轴和Y轴数据
-                y_column = self.y_combo.currentText()  # 修正变量名
-                if not x_column or not y_column:
-                    QMessageBox.warning(self, "警告", "请选择要绘制的X轴和Y轴列")
-                    return
-    
-            # 获取mark参数
-            mark_style = self.mark_style_combo.currentText()
-            mark_size = self.mark_size_spin.value()
-    
-            # 获取直方图参数
-            histtype = self.histtype_combo.currentText()
-            bins = self.bins_spin.value()           
-
-            # 获取colorbar样式（如果是2D密度图）
-            colormap = self.colorbar_combo.currentText() if self.plot_type_combo.currentText() == "2D密度图" else None
-
-            # 统一发出信号，确保提供所有11个参数
-            self.plot_requested.emit(
-                plot_type,
-                x_col,
-                y_col,
-                self.selected_color,
-                xerr_col,
-                yerr_col,
-                mark_style,
-                mark_size,
-                histtype,
-                bins,
-                colormap
-            )
-
+                print("无法找到 PlotView 对象")
+                QMessageBox.warning(self, "错误", "无法找到绘图视图组件")
+                return
         except Exception as e:
-            print(f"绘图请求失败: {str(e)}")
-            QMessageBox.warning(self, "错误", f"绘图请求失败: {str(e)}")            
+            print(f"绘图请求转发失败: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            QMessageBox.warning(self, "错误", f"绘图请求转发失败: {str(e)}")
+            return
 
     def apply_filter(self):
         """应用新的多条件筛选"""
@@ -819,16 +664,14 @@ class DataView(QWidget):
         try:
             # 更新数据视图
             self.update_data_view()
-            
-            # 启用绘图控制
-            self.plot_group.setEnabled(True)
-            
+
             # 启用筛选控制
-            self.filter_group.setEnabled(True)
-            
+            filter_group = self.findChild(QGroupBox, "数据筛选")
+            if filter_group:
+                filter_group.setEnabled(True)
+
         except Exception as e:
             print(f"数据加载后处理出错: {str(e)}")
-
 
     def load_data(self):
         """载入数据按钮点击事件处理"""
