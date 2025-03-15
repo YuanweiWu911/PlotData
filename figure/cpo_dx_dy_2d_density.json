@@ -1,6 +1,6 @@
 {
     "data_file_path": "C:/Users/len/ywwu_workspace/PlotData/data/EOP_2000.txt",
-    "filter_expr": "MJD < 60000",
+    "filter_expr": "",
     "x_col": "cpo_dy",
     "y_col": "cpo_dx",
     "xerr_col": "无",
@@ -11,7 +11,18 @@
     "mark_size": 5,
     "histtype": "barstacked",
     "bins": 50,
-    "title": "",
+    "colormap": "viridis",
+    "title": "cpo dX versus dY",
     "x_label": "cpo dX",
-    "y_label": "cpo dY"
+    "y_label": "cpo dY",
+    "x_major_ticks": 5,
+    "x_minor_ticks": 5,
+    "x_show_grid": true,
+    "y_major_ticks": 5,
+    "y_minor_ticks": 5,
+    "y_show_grid": true,
+    "x_min": -0.0005,
+    "x_max": 0.0005,
+    "y_min": -0.0005,
+    "y_max": 0.0005
 }

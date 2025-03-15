@@ -119,34 +119,57 @@ class PlotView(QWidget):
         # 添加刻度数量设置
         ticks_layout = QHBoxLayout()
 
-        self.major_ticks_spin = QSpinBox()
-        self.major_ticks_spin.setRange(0, 50)
-        self.major_ticks_spin.setValue(5)
-        ticks_layout.addWidget(QLabel("主刻度数:"))
-        ticks_layout.addWidget(self.major_ticks_spin)
+        # X轴刻度设置
+        x_ticks_group = QGroupBox("X轴刻度设置")
+        x_ticks_layout = QHBoxLayout()
         
-        self.minor_ticks_spin = QSpinBox()
-        self.minor_ticks_spin.setRange(0, 10)
-        self.minor_ticks_spin.setValue(1)
-        ticks_layout.addWidget(QLabel("次刻度数:"))
-        ticks_layout.addWidget(self.minor_ticks_spin)
+        self.x_major_ticks_spin = QSpinBox()
+        self.x_major_ticks_spin.setRange(0, 50)
+        self.x_major_ticks_spin.setValue(5)
+        x_ticks_layout.addWidget(QLabel("主刻度数:"))
+        x_ticks_layout.addWidget(self.x_major_ticks_spin)
         
-#       settings_layout.addRow("刻度设置", settings_layout)
+        self.x_minor_ticks_spin = QSpinBox()
+        self.x_minor_ticks_spin.setRange(0, 10)
+        self.x_minor_ticks_spin.setValue(1)
+        x_ticks_layout.addWidget(QLabel("次刻度数:"))
+        x_ticks_layout.addWidget(self.x_minor_ticks_spin)
         
-        # 添加网格线设置
-        self.grid_checkbox = QCheckBox("显示网格线")
-        self.grid_checkbox.setChecked(True)
-        ticks_layout.addWidget(self.grid_checkbox)
+        self.x_grid_checkbox = QCheckBox("显示网格线")
+        self.x_grid_checkbox.setChecked(True)
+        x_ticks_layout.addWidget(self.x_grid_checkbox)
+        
+        x_ticks_group.setLayout(x_ticks_layout)
+        ticks_layout.addWidget(x_ticks_group)
+        
+        # Y轴刻度设置
+        y_ticks_group = QGroupBox("Y轴刻度设置")
+        y_ticks_layout = QHBoxLayout()
+        
+        self.y_major_ticks_spin = QSpinBox()
+        self.y_major_ticks_spin.setRange(0, 50)
+        self.y_major_ticks_spin.setValue(5)
+        y_ticks_layout.addWidget(QLabel("主刻度数:"))
+        y_ticks_layout.addWidget(self.y_major_ticks_spin)
+        
+        self.y_minor_ticks_spin = QSpinBox()
+        self.y_minor_ticks_spin.setRange(0, 10)
+        self.y_minor_ticks_spin.setValue(1)
+        y_ticks_layout.addWidget(QLabel("次刻度数:"))
+        y_ticks_layout.addWidget(self.y_minor_ticks_spin)
+        
+        self.y_grid_checkbox = QCheckBox("显示网格线")
+        self.y_grid_checkbox.setChecked(True)
+        y_ticks_layout.addWidget(self.y_grid_checkbox)
+        
+        y_ticks_group.setLayout(y_ticks_layout)
+        ticks_layout.addWidget(y_ticks_group)
         
         settings_layout.addRow("", ticks_layout)
 
-#       # 添加应用刻度设置按钮
-#       self.apply_ticks_button = QPushButton("设置刻度")
-#       self.apply_ticks_button.clicked.connect(self.apply_ticks_settings)
-#       settings_layout.addRow("", self.apply_ticks_button)
-
+        # 删除原有的设置刻度按钮相关代码
         main_layout.addWidget(settings_group)
-        
+
         # 存储当前绘图参数
         self.current_plot_params = None
 
@@ -158,10 +181,31 @@ class PlotView(QWidget):
             QMessageBox.information(self, "提示", "请先生成图表后再应用设置")
             return
         
+        try:
+            x_min = float(self.x_ticks_min.text()) if self.x_ticks_min.text() else None
+            x_max = float(self.x_ticks_max.text()) if self.x_ticks_max.text() else None
+            y_min = float(self.y_ticks_min.text()) if self.y_ticks_min.text() else None
+            y_max = float(self.y_ticks_max.text()) if self.y_ticks_max.text() else None
+        except ValueError:
+            x_min, x_max, y_min, y_max = None, None, None, None
+            print("坐标轴范围设置格式无效，将使用自动范围")
+        
         # 更新当前参数中的设置
         self.current_plot_params['title'] = self.title_edit.text() or None
         self.current_plot_params['x_label'] = self.x_label_edit.text() or None
         self.current_plot_params['y_label'] = self.y_label_edit.text() or None
+        self.current_plot_params['x_min'] = x_min
+        self.current_plot_params['x_max'] = x_max
+        self.current_plot_params['y_min'] = y_min
+        self.current_plot_params['y_max'] = y_max
+        
+        # 添加刻度和网格线设置
+        self.current_plot_params['x_major_ticks'] = self.x_major_ticks_spin.value()
+        self.current_plot_params['x_minor_ticks'] = self.x_minor_ticks_spin.value()
+        self.current_plot_params['x_show_grid'] = self.x_grid_checkbox.isChecked()
+        self.current_plot_params['y_major_ticks'] = self.y_major_ticks_spin.value()
+        self.current_plot_params['y_minor_ticks'] = self.y_minor_ticks_spin.value()
+        self.current_plot_params['y_show_grid'] = self.y_grid_checkbox.isChecked()
         
         # 重新处理绘图请求 - 添加histtype和bins参数
         self.handle_plot_request(
@@ -174,7 +218,8 @@ class PlotView(QWidget):
             self.current_plot_params.get('mark_style', 'o'),
             self.current_plot_params.get('mark_size', 10),
             self.current_plot_params.get('histtype', 'bar'),  # 添加histtype参数
-            self.current_plot_params.get('bins', 10)          # 添加bins参数
+            self.current_plot_params.get('bins', 10),         # 添加bins参数
+            self.current_plot_params.get('colormap', 'viridis')  # 添加colormap参数
         )
    
     @pyqtSlot()
@@ -188,16 +233,26 @@ class PlotView(QWidget):
         main_window = self.window()
         data_view = main_window.data_view if hasattr(main_window, 'data_view') else None
     
-        # 获取当前数据文件路径 - 修复此处
+        # 获取当前数据文件路径
         current_file_path = ""
         if hasattr(self.data_manager, 'current_file') and self.data_manager.current_file:
             current_file_path = self.data_manager.current_file
         elif 'data_file_path' in self.current_plot_params:
             current_file_path = self.current_plot_params.get('data_file_path', '')
         
+        # 处理坐标轴范围设置
+        try:
+            x_min = float(self.x_ticks_min.text()) if self.x_ticks_min.text() else None
+            x_max = float(self.x_ticks_max.text()) if self.x_ticks_max.text() else None
+            y_min = float(self.y_ticks_min.text()) if self.y_ticks_min.text() else None
+            y_max = float(self.y_ticks_max.text()) if self.y_ticks_max.text() else None
+        except ValueError:
+            x_min, x_max, y_min, y_max = None, None, None, None
+            print("坐标轴范围设置格式无效，将使用None值")
+        
         # 提取需要保存的设置
         settings = {
-            # 数据文件信息 - 确保优先保存
+            # 数据文件信息
             'data_file_path': current_file_path,
             
             # 数据筛选参数
@@ -214,19 +269,32 @@ class PlotView(QWidget):
             'color': data_view.color_button.property("color") if data_view and data_view.color_button.property("color") else 'blue',
             'mark_style': data_view.mark_style_combo.currentText() if data_view else 'o',
             'mark_size': data_view.mark_size_spin.value() if data_view else 10,
-
+    
             # 直方图特有参数
             'histtype': data_view.histtype_combo.currentText() if data_view and hasattr(data_view, 'histtype_combo') else 'bar',
             'bins': self.current_plot_params.get('bins', 50),
-
+    
             # 2D densitymap 参数
-            'colormap': data_view.colorbar_combo.currentText() if data_view and hasattr(data_view, 'colorbar_combo') else 'viridis',  # 新增
-#           'bins': data_view.bins_spin.value() if hasattr(data_view, 'bins_spin') else 50,
-
+            'colormap': data_view.colorbar_combo.currentText() if data_view and hasattr(data_view, 'colorbar_combo') else 'viridis',
+            
             # 图表显示设置
             'title': self.title_edit.text(),
             'x_label': self.x_label_edit.text(),
-            'y_label': self.y_label_edit.text()
+            'y_label': self.y_label_edit.text(),
+            
+            # 新增坐标轴刻度和网格线设置
+            'x_major_ticks': self.x_major_ticks_spin.value(),
+            'x_minor_ticks': self.x_minor_ticks_spin.value(),
+            'x_show_grid': self.x_grid_checkbox.isChecked(),
+            'y_major_ticks': self.y_major_ticks_spin.value(),
+            'y_minor_ticks': self.y_minor_ticks_spin.value(),
+            'y_show_grid': self.y_grid_checkbox.isChecked(),
+            
+            # 新增坐标轴范围设置
+            'x_min': x_min,
+            'x_max': x_max,
+            'y_min': y_min,
+            'y_max': y_max
         }
         
         # 打印调试信息
@@ -353,6 +421,35 @@ class PlotView(QWidget):
                 self.x_label_edit.setText(settings.get('x_label', ''))
                 self.y_label_edit.setText(settings.get('y_label', ''))
                 
+                # 新增：加载坐标轴刻度和网格线设置
+                self.x_major_ticks_spin.setValue(settings.get('x_major_ticks', 5))
+                self.x_minor_ticks_spin.setValue(settings.get('x_minor_ticks', 1))
+                self.x_grid_checkbox.setChecked(settings.get('x_show_grid', True))
+                self.y_major_ticks_spin.setValue(settings.get('y_major_ticks', 5))
+                self.y_minor_ticks_spin.setValue(settings.get('y_minor_ticks', 1))
+                self.y_grid_checkbox.setChecked(settings.get('y_show_grid', True))
+                
+                # 新增：加载坐标轴范围设置
+                if 'x_min' in settings and settings['x_min'] is not None:
+                    self.x_ticks_min.setText(str(settings['x_min']))
+                else:
+                    self.x_ticks_min.clear()
+                    
+                if 'x_max' in settings and settings['x_max'] is not None:
+                    self.x_ticks_max.setText(str(settings['x_max']))
+                else:
+                    self.x_ticks_max.clear()
+                    
+                if 'y_min' in settings and settings['y_min'] is not None:
+                    self.y_ticks_min.setText(str(settings['y_min']))
+                else:
+                    self.y_ticks_min.clear()
+                    
+                if 'y_max' in settings and settings['y_max'] is not None:
+                    self.y_ticks_max.setText(str(settings['y_max']))
+                else:
+                    self.y_ticks_max.clear()
+                
                 # 5. 触发绘图
                 if data_view and self.data_manager.get_data() is not None:
                     data_view.request_plot()
@@ -401,9 +498,13 @@ class PlotView(QWidget):
         """处理绘图请求"""
         try:
             # 获取新增设置参数
-            major_ticks = self.major_ticks_spin.value()
-            minor_ticks = self.minor_ticks_spin.value()
-            show_grid = self.grid_checkbox.isChecked()
+            x_major_ticks = self.x_major_ticks_spin.value()
+            x_minor_ticks = self.x_minor_ticks_spin.value()
+            x_show_grid = self.x_grid_checkbox.isChecked()
+            
+            y_major_ticks = self.y_major_ticks_spin.value()
+            y_minor_ticks = self.y_minor_ticks_spin.value()
+            y_show_grid = self.y_grid_checkbox.isChecked()
 
             # 获取坐标轴范围设置并转换为浮点数
             try:
@@ -442,19 +543,22 @@ class PlotView(QWidget):
                 'x_label': x_label,
                 'y_label': y_label,
                 'colormap': colormap,
-                # 添加刻度设置参数
-                'x_ticks_min': x_min,
-                'x_ticks_max': x_max,
-                'y_ticks_min': y_min,
-                'y_ticks_max': y_max,
-                'major_ticks': major_ticks,
-                'minor_ticks': minor_ticks,
-                'show_grid': show_grid                
+                # 修正刻度设置参数名称，使用与save_plot_settings一致的键名
+                'x_min': x_min,
+                'x_max': x_max,
+                'y_min': y_min,
+                'y_max': y_max,
+                'x_major_ticks': x_major_ticks,
+                'x_minor_ticks': x_minor_ticks,
+                'x_show_grid': x_show_grid,
+                'y_major_ticks': y_major_ticks,
+                'y_minor_ticks': y_minor_ticks,
+                'y_show_grid': y_show_grid
             }
             
             # 根据图表类型调用不同的绘图方法
             if plot_type == "散点图":
-                # 散点图代码，添加坐标轴范围参数
+                # 散点图代码，添加坐标轴范围参数 - 修正参数名称
                 success, message = self.visualizer.scatter_plot(
                     data=data,
                     x_col=x_col,
@@ -465,16 +569,19 @@ class PlotView(QWidget):
                     color=color,
                     mark_size=mark_size,
                     mark_style=mark_style,
-                    major_ticks=major_ticks,
-                    minor_ticks=minor_ticks,
-                    show_grid=show_grid,
-                    x_min=x_min,  # 添加X轴最小值
-                    x_max=x_max,  # 添加X轴最大值
-                    y_min=y_min,  # 添加Y轴最小值
-                    y_max=y_max   # 添加Y轴最大值
+                    x_major_ticks=x_major_ticks,  # 修改为X轴主刻度
+                    x_minor_ticks=x_minor_ticks,  # 修改为X轴次刻度
+                    x_show_grid=x_show_grid,      # 修改为X轴网格线
+                    y_major_ticks=y_major_ticks,  # 添加Y轴主刻度
+                    y_minor_ticks=y_minor_ticks,  # 添加Y轴次刻度
+                    y_show_grid=y_show_grid,      # 添加Y轴网格线
+                    x_min=x_min,
+                    x_max=x_max,
+                    y_min=y_min,
+                    y_max=y_max
                 )
             elif plot_type == "带误差棒的散点图":
-                # 误差棒散点图代码，添加坐标轴范围参数
+                # 误差棒散点图代码，添加坐标轴范围参数 - 修正参数名称
                 success, message = self.visualizer.scatter_plot_with_error(
                     data=data,
                     x_col=x_col,
@@ -487,16 +594,19 @@ class PlotView(QWidget):
                     color=color,
                     mark_size=mark_size,
                     mark_style=mark_style,
-                    major_ticks=major_ticks,
-                    minor_ticks=minor_ticks,
-                    show_grid=show_grid,
-                    x_min=x_min,  # 添加X轴最小值
-                    x_max=x_max,  # 添加X轴最大值
-                    y_min=y_min,  # 添加Y轴最小值
-                    y_max=y_max   # 添加Y轴最大值
+                    x_major_ticks=x_major_ticks,
+                    x_minor_ticks=x_minor_ticks,
+                    x_show_grid=x_show_grid,
+                    y_major_ticks=y_major_ticks,
+                    y_minor_ticks=y_minor_ticks,
+                    y_show_grid=y_show_grid,
+                    x_min=x_min,
+                    x_max=x_max,
+                    y_min=y_min,
+                    y_max=y_max
                 )
             elif plot_type == "直方图":
-                # 直方图使用专门的参数，添加坐标轴范围参数
+                # 直方图使用专门的参数，添加坐标轴范围参数 - 修正参数名称
                 valid_histtypes = ['bar', 'barstacked', 'step', 'stepfilled']
                 # 验证histtype参数
                 valid_histtype = histtype if histtype in valid_histtypes else 'bar'
@@ -504,40 +614,46 @@ class PlotView(QWidget):
                 success, message = self.visualizer.histogram(
                     data=data,
                     col=x_col,
-                    bins=bins,  # 使用专门的bins参数
+                    bins=bins,
                     title=title,
                     x_label=x_label,
                     y_label=y_label,
                     color=color,
-                    histtype=valid_histtype,  # 使用专门的histtype参数
-                    edgecolor = 'black',
-                    hatch = '/',
-                    major_ticks=major_ticks,
-                    minor_ticks=minor_ticks,
-                    show_grid=show_grid,
-                    x_min=x_min,  # 添加X轴最小值
-                    x_max=x_max,  # 添加X轴最大值
-                    y_min=y_min,  # 添加Y轴最小值
-                    y_max=y_max   # 添加Y轴最大值
+                    histtype=valid_histtype,
+                    edgecolor='black',
+                    hatch='/',
+                    x_major_ticks=x_major_ticks,
+                    x_minor_ticks=x_minor_ticks,
+                    x_show_grid=x_show_grid,
+                    y_major_ticks=y_major_ticks,
+                    y_minor_ticks=y_minor_ticks,
+                    y_show_grid=y_show_grid,
+                    x_min=x_min,
+                    x_max=x_max,
+                    y_min=y_min,
+                    y_max=y_max
                 )
             elif plot_type == "2D密度图":
-                # 2D密度图代码，添加坐标轴范围参数
+                # 2D密度图代码，添加坐标轴范围参数 - 修正参数名称
                 success, message = self.visualizer.density_map_2d(
                     data=data,
                     x_col=x_col,
                     y_col=y_col,
-                    bins=bins,  # 使用专门的bins参数
+                    bins=bins,
                     title=title,
                     x_label=x_label,
                     y_label=y_label,
                     colormap=colormap,
-                    major_ticks=major_ticks,
-                    minor_ticks=minor_ticks,
-                    show_grid=show_grid,
-                    x_min=x_min,  # 添加X轴最小值
-                    x_max=x_max,  # 添加X轴最大值
-                    y_min=y_min,  # 添加Y轴最小值
-                    y_max=y_max   # 添加Y轴最大值
+                    x_major_ticks=x_major_ticks,
+                    x_minor_ticks=x_minor_ticks,
+                    x_show_grid=x_show_grid,
+                    y_major_ticks=y_major_ticks,
+                    y_minor_ticks=y_minor_ticks,
+                    y_show_grid=y_show_grid,
+                    x_min=x_min,
+                    x_max=x_max,
+                    y_min=y_min,
+                    y_max=y_max
                 )
             else:
                 QMessageBox.warning(self, "错误", f"不支持的图表类型: {plot_type}")
@@ -571,10 +687,10 @@ class PlotView(QWidget):
         self.current_plot_params['title'] = self.title_edit.text() or None
         self.current_plot_params['x_label'] = self.x_label_edit.text() or None
         self.current_plot_params['y_label'] = self.y_label_edit.text() or None
-        self.current_plot_params['x_ticks_min'] = x_min
-        self.current_plot_params['x_ticks_max'] = x_max
-        self.current_plot_params['y_ticks_min'] = y_min
-        self.current_plot_params['y_ticks_max'] = y_max
+        self.current_plot_params['x_min'] = x_min  # 修改为与save_plot_settings一致的键名
+        self.current_plot_params['x_max'] = x_max  # 修改为与save_plot_settings一致的键名
+        self.current_plot_params['y_min'] = y_min  # 修改为与save_plot_settings一致的键名
+        self.current_plot_params['y_max'] = y_max  # 修改为与save_plot_settings一致的键名
         
         # 应用刻度设置到图表
         if self.visualizer.canvas and self.visualizer.canvas.axes:

@@ -40,7 +40,7 @@ class Visualizer:
             self.canvas.fig.subplots_adjust(left=0.1, right=0.9, bottom=0.1, top=0.9)
             self.canvas.draw()
     
-    def scatter_plot(self, data,
+    def scatter_plot(self, data, 
         x_col,
         y_col,
         title=None,
@@ -50,12 +50,15 @@ class Visualizer:
         alpha=0.7,
         mark_size=10,
         mark_style='o',
-        major_ticks=5,
-        minor_ticks=5,
-        show_grid=True,
-        x_min=None, 
-        x_max=None, 
-        y_min=None, 
+        x_major_ticks=5,
+        x_minor_ticks=1,
+        x_show_grid=True,
+        y_major_ticks=5,
+        y_minor_ticks=1,
+        y_show_grid=True,
+        x_min=None,
+        x_max=None,
+        y_min=None,
         y_max=None):
 
         """绘制散点图"""
@@ -105,9 +108,12 @@ class Visualizer:
                 self.canvas.axes.set_ylim(y_min, y_max)
 
             self._configure_axes(self.canvas.axes, 
-                major_ticks, 
-                minor_ticks,
-                show_grid)
+                            x_major_ticks, 
+                            x_minor_ticks,
+                            x_show_grid,
+                            y_major_ticks,
+                            y_minor_ticks,
+                            y_show_grid)
 
             self.canvas.fig.tight_layout()
             self.canvas.draw()
@@ -128,9 +134,12 @@ class Visualizer:
         alpha=0.7, 
         mark_size=10,
         mark_style='o',
-        major_ticks=5,
-        minor_ticks=5,
-        show_grid=True,
+        x_major_ticks=5,  # 修改为X轴主刻度
+        x_minor_ticks=1,  # 修改为X轴次刻度
+        x_show_grid=True, # 修改为X轴网格线
+        y_major_ticks=5,  # 添加Y轴主刻度
+        y_minor_ticks=1,  # 添加Y轴次刻度
+        y_show_grid=True, # 添加Y轴网格线
         x_min=None, 
         x_max=None, 
         y_min=None, 
@@ -192,10 +201,12 @@ class Visualizer:
                 self.canvas.axes.set_ylim(y_min, y_max)
 
             self._configure_axes(self.canvas.axes, 
-                major_ticks, 
-                minor_ticks,
-                show_grid)
-
+                x_major_ticks,  # 修改参数
+                x_minor_ticks,  # 修改参数
+                x_show_grid,    # 修改参数
+                y_major_ticks,  # 添加参数
+                y_minor_ticks,  # 添加参数
+                y_show_grid)    # 添加参数
             self.canvas.fig.tight_layout()
             self.canvas.draw()
             
@@ -213,9 +224,12 @@ class Visualizer:
         alpha=0.7,
         edgecolor='black',
         hatch='/',
-        major_ticks=5,
-        minor_ticks=5,
-        show_grid=True,
+        x_major_ticks=5,  # 修改为X轴主刻度
+        x_minor_ticks=1,  # 修改为X轴次刻度
+        x_show_grid=True, # 修改为X轴网格线
+        y_major_ticks=5,  # 添加Y轴主刻度
+        y_minor_ticks=1,  # 添加Y轴次刻度
+        y_show_grid=True, # 添加Y轴网格线
         x_min=None, 
         x_max=None, 
         y_min=None, 
@@ -265,10 +279,12 @@ class Visualizer:
                 self.canvas.axes.set_ylim(y_min, y_max)
 
             self._configure_axes(self.canvas.axes, 
-                major_ticks, 
-                minor_ticks,
-                show_grid)
-
+                x_major_ticks,  # 修改参数
+                x_minor_ticks,  # 修改参数
+                x_show_grid,    # 修改参数
+                y_major_ticks,  # 添加参数
+                y_minor_ticks,  # 添加参数
+                y_show_grid)    # 添加参数
             self.canvas.fig.tight_layout()
             self.canvas.draw()
             
@@ -282,28 +298,17 @@ class Visualizer:
         x_label=None, 
         y_label=None, 
         colormap='viridis',
-        major_ticks=5,
-        minor_ticks=5,
+        x_major_ticks=5,  # 修改为X轴主刻度
+        x_minor_ticks=1,  # 修改为X轴次刻度
+        x_show_grid=True, # 修改为X轴网格线
+        y_major_ticks=5,  # 添加Y轴主刻度
+        y_minor_ticks=1,  # 添加Y轴次刻度
+        y_show_grid=True, # 添加Y轴网格线
         x_min=None, 
         x_max=None, 
         y_min=None, 
-        y_max=None,
-        show_grid=True):
-        """绘制2D密度图
+        y_max=None):
         
-        Args:
-            data: 数据DataFrame
-            x_col: X轴列名
-            y_col: Y轴列名
-            bins: 分箱数量
-            title: 图表标题
-            x_label: X轴标签
-            y_label: Y轴标签
-            colormap: 2d map 色表
-            
-        Returns:
-            (bool, str): 成功标志和消息
-        """
         try:
             # 使用标准清理方法代替直接操作fig
             self.clear_plot()  # 替换原有的fig.clear()
@@ -359,10 +364,12 @@ class Visualizer:
                 self.canvas.axes.set_ylabel(y_col)
             
             self._configure_axes(self.canvas.axes, 
-                major_ticks, 
-                minor_ticks,
-                show_grid)
-
+                x_major_ticks,  # 修改参数
+                x_minor_ticks,  # 修改参数
+                x_show_grid,    # 修改参数
+                y_major_ticks,  # 添加参数
+                y_minor_ticks,  # 添加参数
+                y_show_grid)    # 添加参数
             # 设置坐标轴范围
             if x_min is not None and x_max is not None and x_min != x_max:
                 self.canvas.axes.set_xlim(x_min, x_max)
@@ -387,17 +394,16 @@ class Visualizer:
         x_label=None, 
         y_label=None,
         color='blue',
-        major_ticks=5,
-        minor_ticks=5,
+        x_major_ticks=5,  # 修改为X轴主刻度
+        x_minor_ticks=1,  # 修改为X轴次刻度
+        x_show_grid=True, # 修改为X轴网格线
+        y_major_ticks=5,  # 添加Y轴主刻度
+        y_minor_ticks=1,  # 添加Y轴次刻度
+        y_show_grid=True, # 添加Y轴网格线
         x_min=None, 
         x_max=None, 
         y_min=None, 
-        y_max=None,
-        show_grid=True):
-
-        """绘制箱线图"""
-        if self.canvas is None:
-            return False, "画布未初始化"
+        y_max=None):
         
         try:
             self.canvas.axes.clear()
@@ -422,10 +428,12 @@ class Visualizer:
                 self.canvas.axes.set_ylim(y_min, y_max)
 
             self._configure_axes(self.canvas.axes, 
-                major_ticks, 
-                minor_ticks,
-                show_grid)
-
+                x_major_ticks,  # 修改参数
+                x_minor_ticks,  # 修改参数
+                x_show_grid,    # 修改参数
+                y_major_ticks,  # 添加参数
+                y_minor_ticks,  # 添加参数
+                y_show_grid)    # 添加参数
             self.canvas.fig.tight_layout()
             self.canvas.draw()
             
@@ -441,14 +449,17 @@ class Visualizer:
         marker='o', 
         linestyle='-', 
         linewidth=2,
-        major_ticks=5,
-        minor_ticks=5,
+        x_major_ticks=5,  # 修改为X轴主刻度
+        x_minor_ticks=1,  # 修改为X轴次刻度
+        x_show_grid=True, # 修改为X轴网格线
+        y_major_ticks=5,  # 添加Y轴主刻度
+        y_minor_ticks=1,  # 添加Y轴次刻度
+        y_show_grid=True, # 添加Y轴网格线
         x_min=None, 
         x_max=None, 
         y_min=None, 
-        y_max=None,
-        show_grid=True):
-
+        y_max=None):
+        
         """绘制折线图"""
         if self.canvas is None:
             return False, "画布未初始化"
@@ -480,9 +491,12 @@ class Visualizer:
                 self.canvas.axes.set_ylim(y_min, y_max)
 
             self._configure_axes(self.canvas.axes, 
-                major_ticks, 
-                minor_ticks,
-                show_grid)
+                x_major_ticks,  # 修改参数
+                x_minor_ticks,  # 修改参数
+                x_show_grid,    # 修改参数
+                y_major_ticks,  # 添加参数
+                y_minor_ticks,  # 添加参数
+                y_show_grid)    # 添加参数
 
             self.canvas.fig.tight_layout()
             self.canvas.draw()
@@ -491,20 +505,34 @@ class Visualizer:
         except Exception as e:
             return False, f"折线图绘制失败: {str(e)}"
 
-    def _configure_axes(self, axes, major_ticks, minor_ticks, show_grid):
+    def _configure_axes(self, axes, 
+                        x_major_ticks=5, x_minor_ticks=1, x_show_grid=True,
+                        y_major_ticks=5, y_minor_ticks=1, y_show_grid=True):
         """配置坐标轴刻度和网格"""
-        # 设置主刻度
-        if major_ticks > 0:
-            axes.xaxis.set_major_locator(ticker.MaxNLocator(major_ticks))
-            axes.yaxis.set_major_locator(ticker.MaxNLocator(major_ticks))
+        # 设置X轴主刻度
+        if x_major_ticks > 0:
+            axes.xaxis.set_major_locator(ticker.MaxNLocator(x_major_ticks))
         
-        # 设置次刻度
-        if minor_ticks > 0:
-            axes.xaxis.set_minor_locator(ticker.AutoMinorLocator(minor_ticks))
-            axes.yaxis.set_minor_locator(ticker.AutoMinorLocator(minor_ticks))
+        # 设置X轴次刻度
+        if x_minor_ticks > 0:
+            axes.xaxis.set_minor_locator(ticker.AutoMinorLocator(x_minor_ticks))
         
-        # 设置网格线
-        if show_grid:
-            axes.grid(visible=True, which='both', linestyle='--', alpha=0.5)
+        # 设置Y轴主刻度
+        if y_major_ticks > 0:
+            axes.yaxis.set_major_locator(ticker.MaxNLocator(y_major_ticks))
+        
+        # 设置Y轴次刻度
+        if y_minor_ticks > 0:
+            axes.yaxis.set_minor_locator(ticker.AutoMinorLocator(y_minor_ticks))
+        
+        # 设置X轴网格线
+        if x_show_grid:
+            axes.grid(visible=True, which='both', axis='x', linestyle='--', alpha=0.5)
         else:
-            axes.grid(visible=False)
+            axes.grid(visible=False, axis='x')
+            
+        # 设置Y轴网格线
+        if y_show_grid:
+            axes.grid(visible=True, which='both', axis='y', linestyle='--', alpha=0.5)
+        else:
+            axes.grid(visible=False, axis='y')
