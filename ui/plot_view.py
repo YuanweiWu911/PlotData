@@ -46,7 +46,7 @@ class PlotView(QWidget):
         self.toggle_settings_button = QPushButton("绘图设置")
         self.toggle_settings_button.setCheckable(True)  # 设置为可切换状态
         self.toggle_settings_button.setChecked(True)    # 默认为显示状态
-        self.toggle_settings_button.clicked.connect(self.toggle_settings_visibility)
+        self.toggle_settings_button.clicked.connect(self.toggle_settings_visibility)  # 这里需要确保方法名称正确
         self.toggle_settings_button.setIcon(self.style().standardIcon(self.style().StandardPixmap.SP_FileDialogDetailedView))
         toolbar_layout.addWidget(self.toggle_settings_button)
         
@@ -88,8 +88,8 @@ class PlotView(QWidget):
         main_layout.addWidget(plot_group)
         
         # 创建图表设置区域
-        settings_group = QGroupBox("绘图设置")
-        settings_layout = QFormLayout(settings_group)
+        self.settings_group = QGroupBox("绘图设置")
+        settings_layout = QFormLayout(self.settings_group)
         
         # 从data_view.py移动过来的绘图控制区域
         # 创建绘图控制区域
@@ -326,7 +326,7 @@ class PlotView(QWidget):
         settings_layout.addRow("", ticks_layout)
 
         # 删除原有的设置刻度按钮相关代码
-        main_layout.addWidget(settings_group)
+        main_layout.addWidget(self.settings_group)
 
         # 存储当前绘图参数
         self.current_plot_params = None
@@ -690,7 +690,6 @@ class PlotView(QWidget):
             return
         
         try:
-#           print(f"开始绘图: {plot_type}")
             QApplication.processEvents()  # 处理挂起的事件，防止界面卡死
             
             # 确保 alpha 值是有效的数值类型
@@ -714,11 +713,27 @@ class PlotView(QWidget):
             if yerr_col and yerr_col in plot_data.columns:
                 plot_data[yerr_col] = pd.to_numeric(plot_data[yerr_col], errors='coerce')
             
+            # 转换标记样式为matplotlib兼容格式
+            marker_style_map = {
+                "圆形": 'o',
+                "点": '.',
+                "方形": 's',
+                "三角形": '^',
+                "星形": '*',
+                "菱形": 'D',
+                "十字": 'x',
+                "加号": '+'
+            }
+            
+            # 获取matplotlib兼容的标记样式
+            matplotlib_marker = marker_style_map.get(mark_style, mark_style)
+#           print(f"使用标记样式: {mark_style} -> {matplotlib_marker}")
+            
             # 根据绘图类型调用不同的绘图方法
             if plot_type == "散点图":
-                self.visualizer.scatter_plot(plot_data, x_col, y_col, color, mark_style, mark_size, alpha=alpha)
+                self.visualizer.scatter_plot(plot_data, x_col, y_col, color, matplotlib_marker, mark_size, alpha=alpha)
             elif plot_type == "带误差棒的散点图":
-                self.visualizer.scatter_plot_with_error(plot_data, x_col, y_col, xerr_col, yerr_col, color, mark_style, mark_size, alpha=alpha)
+                self.visualizer.scatter_plot_with_error(plot_data, x_col, y_col, xerr_col, yerr_col, color, matplotlib_marker, mark_size, alpha=alpha)
             elif plot_type == "直方图":
                 self.visualizer.histogram(plot_data, x_col, bins, histtype, color, alpha=alpha)
             elif plot_type == "2D密度图":
@@ -808,8 +823,26 @@ class PlotView(QWidget):
             self.density_settings.setVisible(True)
         elif plot_type == "带误差棒的散点图":
             self.error_settings.setVisible(True)
-
+    
+        # 更新标记样式下拉框选项
+        self.update_marker_styles()
+        
         print(f"绘图类型已更改为: {plot_type}")
+    
+    def update_marker_styles(self):
+        """根据绘图类型更新标记样式选项"""
+        current_style = self.mark_style_combo.currentText()
+        self.mark_style_combo.clear()
+        
+        # 添加标记样式选项
+        marker_styles = ["圆形", "点", "方形", "三角形", "星形", "菱形", "十字", "加号"]
+        self.mark_style_combo.addItems(marker_styles)
+        
+        # 尝试恢复之前的选择
+        if current_style in marker_styles:
+            self.mark_style_combo.setCurrentText(current_style)
+        else:
+            self.mark_style_combo.setCurrentIndex(0)  # 默认选择第一个样式
     
     def choose_color(self):
         """打开颜色选择对话框"""
@@ -832,9 +865,9 @@ class PlotView(QWidget):
             print("PlotView 接收到绘图请求")
             
             # 防止重复调用
-#           if hasattr(self, '_is_plotting') and self._is_plotting:
-#               print("绘图正在进行中，请稍候...")
-#               return
+            if hasattr(self, '_is_plotting') and self._is_plotting:
+                print("绘图正在进行中，请稍候...")
+                return
                 
             self._is_plotting = True
             
@@ -898,7 +931,7 @@ class PlotView(QWidget):
             if not color or not isinstance(color, str):
                 color = "blue"  # 默认颜色
                 
-            print(f"准备绘图: 类型={plot_type}, X={x_col}, Y={y_col}, 颜色={color}")
+            print(f"准备绘图: 类型={plot_type}, X={x_col}, Y={y_col}, 颜色={color}, 标记样式={mark_style}")
             
             # 调用绘图方法
             self.handle_plot_request(
@@ -917,10 +950,10 @@ class PlotView(QWidget):
         finally:
             # 无论成功还是失败，都重置绘图状态
             self._is_plotting = False
-    
+
+    # 确保方法名称与信号连接中使用的名称一致
     def toggle_settings_visibility(self):
         """切换设置区域的显示状态"""
-        # 这个方法在原始代码中已经存在，但需要添加信号发射
         is_visible = self.toggle_settings_button.isChecked()
         
         # 设置设置区域的可见性
