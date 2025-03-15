@@ -165,113 +165,113 @@ class DataView(QWidget):
         plot_layout.setContentsMargins(1, 1, 1, 1)  # 减小内边距
         plot_layout.setSpacing(3)  # 减小控件间距
         
-        # 创建绘图类型选择
-        plot_type_layout = QHBoxLayout()
-        plot_type_layout.addWidget(QLabel("绘图类型:"))
-        self.plot_type_combo = QComboBox()
-        self.plot_type_combo.addItems(["散点图", "带误差棒的散点图", "直方图", "2D密度图"])
-        self.plot_type_combo.currentIndexChanged.connect(self.on_plot_type_changed)
-        plot_type_layout.addWidget(self.plot_type_combo)
+#       # 创建绘图类型选择
+#       plot_type_layout = QHBoxLayout()
+#       plot_type_layout.addWidget(QLabel("绘图类型:"))
+#       self.plot_type_combo = QComboBox()
+#       self.plot_type_combo.addItems(["散点图", "带误差棒的散点图", "直方图", "2D密度图"])
+#       self.plot_type_combo.currentIndexChanged.connect(self.on_plot_type_changed)
+#       plot_type_layout.addWidget(self.plot_type_combo)
 
-        # 添加颜色选择组件
-        plot_type_layout.addWidget(QLabel(""))
-        self.color_button = QPushButton("选择颜色")
-        self.color_button.clicked.connect(self.choose_color)
-        self.selected_color = "blue"  # 默认颜色
-        self.color_button.setStyleSheet(f"background-color: {self.selected_color};")
-        plot_type_layout.addWidget(self.color_button)
+#       # 添加颜色选择组件
+#       plot_type_layout.addWidget(QLabel(""))
+#       self.color_button = QPushButton("选择颜色")
+#       self.color_button.clicked.connect(self.choose_color)
+#       self.selected_color = "blue"  # 默认颜色
+#       self.color_button.setStyleSheet(f"background-color: {self.selected_color};")
+#       plot_type_layout.addWidget(self.color_button)
 
-        # 标记Marker样式设置
-        self.mark_style_label = QLabel("标记样式:")
-        self.mark_style_combo = QComboBox()
-        self.mark_style_combo.addItems(["圆形", "点", "方形", "三角", "星形"])
-        plot_type_layout.addWidget(self.mark_style_label)
-        plot_type_layout.addWidget(self.mark_style_combo)
-        
-        # 标记大小设置
-        self.mark_size_label = QLabel("标记大小:")
-        self.mark_size_spin = QSpinBox()
-        self.mark_size_spin.setRange(5, 50)
-        self.mark_size_spin.setValue(20)
-        plot_type_layout.addWidget(self.mark_size_label)
-        plot_type_layout.addWidget(self.mark_size_spin)
+#       # 标记Marker样式设置
+#       self.mark_style_label = QLabel("标记样式:")
+#       self.mark_style_combo = QComboBox()
+#       self.mark_style_combo.addItems(["圆形", "点", "方形", "三角", "星形"])
+#       plot_type_layout.addWidget(self.mark_style_label)
+#       plot_type_layout.addWidget(self.mark_style_combo)
+#       
+#       # 标记大小设置
+#       self.mark_size_label = QLabel("标记大小:")
+#       self.mark_size_spin = QSpinBox()
+#       self.mark_size_spin.setRange(5, 50)
+#       self.mark_size_spin.setValue(20)
+#       plot_type_layout.addWidget(self.mark_size_label)
+#       plot_type_layout.addWidget(self.mark_size_spin)
 
-        plot_layout.addLayout(plot_type_layout)
+#       plot_layout.addLayout(plot_type_layout)
 
-        # 创建数据选择表单
-        form_layout = QFormLayout()
-        
-        # X轴数据选择
-        self.x_combo = QComboBox()
-        form_layout.addRow("X轴数据:", self.x_combo)
-        
-        # Y轴数据选择
-        self.y_combo = QComboBox()
-        form_layout.addRow("Y轴数据:", self.y_combo)
-        
-        # X轴误差数据选择（初始隐藏）
-        self.xerr_combo = QComboBox()
-        self.xerr_combo.addItem("无")
-        self.xerr_label = QLabel("X轴误差:")
-        form_layout.addRow(self.xerr_label, self.xerr_combo)
-        
-        # Y轴误差数据选择（初始隐藏）
-        self.yerr_combo = QComboBox()
-        self.yerr_combo.addItem("无")
-        self.yerr_label = QLabel("Y轴误差:")
-        form_layout.addRow(self.yerr_label, self.yerr_combo)
-        
-        # 直方图的bins设置
-        self.bins_spin = QSpinBox()
-        self.bins_spin.setRange(2, 100)
-        self.bins_spin.setValue(10)
-        self.bins_label = QLabel("分箱数量:")
-        form_layout.addRow(self.bins_label, self.bins_spin)
+#       # 创建数据选择表单
+#       form_layout = QFormLayout()
+#       
+#       # X轴数据选择
+#       self.x_combo = QComboBox()
+#       form_layout.addRow("X轴数据:", self.x_combo)
+#       
+#       # Y轴数据选择
+#       self.y_combo = QComboBox()
+#       form_layout.addRow("Y轴数据:", self.y_combo)
+#       
+#       # X轴误差数据选择（初始隐藏）
+#       self.xerr_combo = QComboBox()
+#       self.xerr_combo.addItem("无")
+#       self.xerr_label = QLabel("X轴误差:")
+#       form_layout.addRow(self.xerr_label, self.xerr_combo)
+#       
+#       # Y轴误差数据选择（初始隐藏）
+#       self.yerr_combo = QComboBox()
+#       self.yerr_combo.addItem("无")
+#       self.yerr_label = QLabel("Y轴误差:")
+#       form_layout.addRow(self.yerr_label, self.yerr_combo)
+#       
+#       # 直方图的bins设置
+#       self.bins_spin = QSpinBox()
+#       self.bins_spin.setRange(2, 100)
+#       self.bins_spin.setValue(10)
+#       self.bins_label = QLabel("分箱数量:")
+#       form_layout.addRow(self.bins_label, self.bins_spin)
 
-        # 直方图类型设置
-        self.histtype_label = QLabel("直方图类型:")
-        self.histtype_combo = QComboBox()
-        self.histtype_combo.addItems(["bar", "barstacked", "step", "stepfilled"])
-        form_layout.addRow(self.histtype_label, self.histtype_combo)        
-        
-        plot_layout.addLayout(form_layout)
+#       # 直方图类型设置
+#       self.histtype_label = QLabel("直方图类型:")
+#       self.histtype_combo = QComboBox()
+#       self.histtype_combo.addItems(["bar", "barstacked", "step", "stepfilled"])
+#       form_layout.addRow(self.histtype_label, self.histtype_combo)        
+#       
+#       plot_layout.addLayout(form_layout)
 
 #       # 绘图按钮
 #       self.plot_button = QPushButton("生成图")
 #       self.plot_button.clicked.connect(self.request_plot)
 #       plot_layout.addWidget(self.plot_button)
 
-        # 添加绘图控制组到主布局
-        main_layout.addWidget(plot_group)
-        
-        # 初始化UI状态
-        self.on_plot_type_changed(0)  # 默认为散点图
+#       # 添加绘图控制组到主布局
+#       main_layout.addWidget(plot_group)
+#       
+#       # 初始化UI状态
+#       self.on_plot_type_changed(0)  # 默认为散点图
 
-        # 添加colorbar样式选择（初始隐藏）
-        self.colorbar_label = QLabel("Colorbar样式:")
-        self.colorbar_combo = QComboBox()
-        self.colorbar_combo.addItems(["viridis", "plasma", "inferno", "magma", "cividis", "jet", "rainbow", "coolwarm", "RdBu", "hot"])
-        self.colorbar_label.setVisible(False)
-        self.colorbar_combo.setVisible(False)
-        form_layout.addRow(self.colorbar_label, self.colorbar_combo)
+#       # 添加colorbar样式选择（初始隐藏）
+#       self.colorbar_label = QLabel("Colorbar样式:")
+#       self.colorbar_combo = QComboBox()
+#       self.colorbar_combo.addItems(["viridis", "plasma", "inferno", "magma", "cividis", "jet", "rainbow", "coolwarm", "RdBu", "hot"])
+#       self.colorbar_label.setVisible(False)
+#       self.colorbar_combo.setVisible(False)
+#       form_layout.addRow(self.colorbar_label, self.colorbar_combo)
 
-        # 在主布局的最下方添加绘图按钮
-        self.plot_button = QPushButton("生成图")
-        self.plot_button.setMinimumHeight(30)  # 设置更大的高度
-        self.plot_button.setStyleSheet("""
-            QPushButton {
-                background-color: #4CAF50;  /* 绿色 */
-                color: white;
-                font-weight: bold;
-                border-radius: 5px;
-                padding: 5px;
-            }
-            QPushButton:hover {
-                background-color: #45a049;  /* 鼠标悬停时的深绿色 */
-            }
-        """)
-        self.plot_button.clicked.connect(self.request_plot)
-        main_layout.addWidget(self.plot_button)
+#       # 在主布局的最下方添加绘图按钮
+#       self.plot_button = QPushButton("生成图")
+#       self.plot_button.setMinimumHeight(30)  # 设置更大的高度
+#       self.plot_button.setStyleSheet("""
+#           QPushButton {
+#               background-color: #4CAF50;  /* 绿色 */
+#               color: white;
+#               font-weight: bold;
+#               border-radius: 5px;
+#               padding: 5px;
+#           }
+#           QPushButton:hover {
+#               background-color: #45a049;  /* 鼠标悬停时的深绿色 */
+#           }
+#       """)
+#       self.plot_button.clicked.connect(self.request_plot)
+#       main_layout.addWidget(self.plot_button)
 
     # 确保on_plot_clicked是类方法（删除嵌套定义）
     def on_plot_clicked(self):
