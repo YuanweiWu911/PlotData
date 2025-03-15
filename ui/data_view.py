@@ -152,7 +152,7 @@ class DataView(QWidget):
         main_layout.addWidget(filter_group)
         
         # 创建绘图控制组 - 移到数据筛选后面
-        plot_group = QGroupBox("绘图控制")
+        plot_group = QGroupBox("绘图设置")
         
         plot_layout = QVBoxLayout(plot_group)
         plot_layout.setContentsMargins(1, 1, 1, 1)  # 减小内边距
@@ -229,10 +229,10 @@ class DataView(QWidget):
         
         plot_layout.addLayout(form_layout)
 
-        # 绘图按钮
-        self.plot_button = QPushButton("生成图")
-        self.plot_button.clicked.connect(self.request_plot)
-        plot_layout.addWidget(self.plot_button)
+#       # 绘图按钮
+#       self.plot_button = QPushButton("生成图")
+#       self.plot_button.clicked.connect(self.request_plot)
+#       plot_layout.addWidget(self.plot_button)
 
         # 添加绘图控制组到主布局
         main_layout.addWidget(plot_group)
@@ -247,6 +247,24 @@ class DataView(QWidget):
         self.colorbar_label.setVisible(False)
         self.colorbar_combo.setVisible(False)
         form_layout.addRow(self.colorbar_label, self.colorbar_combo)
+
+        # 在主布局的最下方添加绘图按钮
+        self.plot_button = QPushButton("生成图")
+        self.plot_button.setMinimumHeight(30)  # 设置更大的高度
+        self.plot_button.setStyleSheet("""
+            QPushButton {
+                background-color: #4CAF50;  /* 绿色 */
+                color: white;
+                font-weight: bold;
+                border-radius: 5px;
+                padding: 5px;
+            }
+            QPushButton:hover {
+                background-color: #45a049;  /* 鼠标悬停时的深绿色 */
+            }
+        """)
+        self.plot_button.clicked.connect(self.request_plot)
+        main_layout.addWidget(self.plot_button)
 
     # 确保on_plot_clicked是类方法（删除嵌套定义）
     def on_plot_clicked(self):

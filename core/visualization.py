@@ -1,5 +1,4 @@
-import matplotlib.pyplot as plt
-import numpy as np
+import matplotlib.ticker as ticker
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 
@@ -50,7 +49,15 @@ class Visualizer:
         color='blue',
         alpha=0.7,
         mark_size=10,
-        mark_style='o'):
+        mark_style='o',
+        major_ticks=5,
+        minor_ticks=5,
+        show_grid=True,
+        x_min=None, 
+        x_max=None, 
+        y_min=None, 
+        y_max=None):
+
         """绘制散点图"""
         if self.canvas is None:
             return False, "画布未初始化"
@@ -90,7 +97,18 @@ class Visualizer:
                 self.canvas.axes.set_ylabel(y_label)
             else:
                 self.canvas.axes.set_ylabel(y_col)
-            
+
+            # 设置坐标轴范围
+            if x_min is not None and x_max is not None and x_min != x_max:
+                self.canvas.axes.set_xlim(x_min, x_max)
+            if y_min is not None and y_max is not None and y_min != y_max:
+                self.canvas.axes.set_ylim(y_min, y_max)
+
+            self._configure_axes(self.canvas.axes, 
+                major_ticks, 
+                minor_ticks,
+                show_grid)
+
             self.canvas.fig.tight_layout()
             self.canvas.draw()
             
@@ -109,8 +127,14 @@ class Visualizer:
         color='blue',
         alpha=0.7, 
         mark_size=10,
-        mark_style='o'):
-
+        mark_style='o',
+        major_ticks=5,
+        minor_ticks=5,
+        show_grid=True,
+        x_min=None, 
+        x_max=None, 
+        y_min=None, 
+        y_max=None):
 
         """绘制带误差棒的散点图"""
         if self.canvas is None:
@@ -160,7 +184,18 @@ class Visualizer:
                 self.canvas.axes.set_ylabel(y_label)
             else:
                 self.canvas.axes.set_ylabel(y_col)
-            
+
+            # 设置坐标轴范围
+            if x_min is not None and x_max is not None and x_min != x_max:
+                self.canvas.axes.set_xlim(x_min, x_max)
+            if y_min is not None and y_max is not None and y_min != y_max:
+                self.canvas.axes.set_ylim(y_min, y_max)
+
+            self._configure_axes(self.canvas.axes, 
+                major_ticks, 
+                minor_ticks,
+                show_grid)
+
             self.canvas.fig.tight_layout()
             self.canvas.draw()
             
@@ -168,7 +203,24 @@ class Visualizer:
         except Exception as e:
             return False, f"带误差棒的散点图绘制失败: {str(e)}"
     
-    def histogram(self, data, col, bins=10, title=None, x_label=None, y_label="频率", color='blue', histtype='bar', alpha=0.7, edgecolor='black', hatch='/',**kwargs):
+    def histogram(self, data, col, 
+        bins=10,
+        title=None,
+        x_label=None,
+        y_label="频率",
+        color='blue',
+        histtype='bar',
+        alpha=0.7,
+        edgecolor='black',
+        hatch='/',
+        major_ticks=5,
+        minor_ticks=5,
+        show_grid=True,
+        x_min=None, 
+        x_max=None, 
+        y_min=None, 
+        y_max=None,
+        **kwargs):
         """绘制直方图
         Args:
             data: pandas DataFrame
@@ -206,6 +258,17 @@ class Visualizer:
                 self.canvas.axes.set_xlabel(col)
             self.canvas.axes.set_ylabel(y_label)
             
+            # 设置坐标轴范围
+            if x_min is not None and x_max is not None and x_min != x_max:
+                self.canvas.axes.set_xlim(x_min, x_max)
+            if y_min is not None and y_max is not None and y_min != y_max:
+                self.canvas.axes.set_ylim(y_min, y_max)
+
+            self._configure_axes(self.canvas.axes, 
+                major_ticks, 
+                minor_ticks,
+                show_grid)
+
             self.canvas.fig.tight_layout()
             self.canvas.draw()
             
@@ -214,7 +277,18 @@ class Visualizer:
             return False, f"直方图绘制失败: {str(e)}"
     
     def density_map_2d(self, data, x_col, y_col, 
-        bins=10, title=None, x_label=None, y_label=None, colormap='viridis'):
+        bins=10, 
+        title=None, 
+        x_label=None, 
+        y_label=None, 
+        colormap='viridis',
+        major_ticks=5,
+        minor_ticks=5,
+        x_min=None, 
+        x_max=None, 
+        y_min=None, 
+        y_max=None,
+        show_grid=True):
         """绘制2D密度图
         
         Args:
@@ -284,9 +358,17 @@ class Visualizer:
             else:
                 self.canvas.axes.set_ylabel(y_col)
             
-            # 添加网格
-            self.canvas.axes.grid(True, linestyle='--', alpha=0.7)
-            
+            self._configure_axes(self.canvas.axes, 
+                major_ticks, 
+                minor_ticks,
+                show_grid)
+
+            # 设置坐标轴范围
+            if x_min is not None and x_max is not None and x_min != x_max:
+                self.canvas.axes.set_xlim(x_min, x_max)
+            if y_min is not None and y_max is not None and y_min != y_max:
+                self.canvas.axes.set_ylim(y_min, y_max)
+
             # 确保坐标轴比例自动调整
             self.canvas.axes.set_aspect('auto')
             
@@ -300,7 +382,19 @@ class Visualizer:
             traceback.print_exc()  # 打印详细错误堆栈
             return False, f"绘制2D密度图时发生错误: {str(e)}"
 
-    def box_plot(self, data, column, title=None, x_label=None, y_label=None, color='blue'):
+    def box_plot(self, data, column, 
+        title=None, 
+        x_label=None, 
+        y_label=None,
+        color='blue',
+        major_ticks=5,
+        minor_ticks=5,
+        x_min=None, 
+        x_max=None, 
+        y_min=None, 
+        y_max=None,
+        show_grid=True):
+
         """绘制箱线图"""
         if self.canvas is None:
             return False, "画布未初始化"
@@ -321,6 +415,17 @@ class Visualizer:
             else:
                 self.canvas.axes.set_ylabel(column)
             
+            # 设置坐标轴范围
+            if x_min is not None and x_max is not None and x_min != x_max:
+                self.canvas.axes.set_xlim(x_min, x_max)
+            if y_min is not None and y_max is not None and y_min != y_max:
+                self.canvas.axes.set_ylim(y_min, y_max)
+
+            self._configure_axes(self.canvas.axes, 
+                major_ticks, 
+                minor_ticks,
+                show_grid)
+
             self.canvas.fig.tight_layout()
             self.canvas.draw()
             
@@ -328,8 +433,22 @@ class Visualizer:
         except Exception as e:
             return False, f"箱线图绘制失败: {str(e)}"
     
-    def line_plot(self, data, x_col, y_col, title=None, x_label=None, y_label=None, 
-                 color='blue', marker='o', linestyle='-', linewidth=2):
+    def line_plot(self, data, x_col, y_col, 
+        title=None, 
+        x_label=None, 
+        y_label=None, 
+        color='blue', 
+        marker='o', 
+        linestyle='-', 
+        linewidth=2,
+        major_ticks=5,
+        minor_ticks=5,
+        x_min=None, 
+        x_max=None, 
+        y_min=None, 
+        y_max=None,
+        show_grid=True):
+
         """绘制折线图"""
         if self.canvas is None:
             return False, "画布未初始化"
@@ -354,9 +473,38 @@ class Visualizer:
             else:
                 self.canvas.axes.set_ylabel(y_col)
             
+            # 设置坐标轴范围
+            if x_min is not None and x_max is not None and x_min != x_max:
+                self.canvas.axes.set_xlim(x_min, x_max)
+            if y_min is not None and y_max is not None and y_min != y_max:
+                self.canvas.axes.set_ylim(y_min, y_max)
+
+            self._configure_axes(self.canvas.axes, 
+                major_ticks, 
+                minor_ticks,
+                show_grid)
+
             self.canvas.fig.tight_layout()
             self.canvas.draw()
             
             return True, "折线图绘制成功"
         except Exception as e:
             return False, f"折线图绘制失败: {str(e)}"
+
+    def _configure_axes(self, axes, major_ticks, minor_ticks, show_grid):
+        """配置坐标轴刻度和网格"""
+        # 设置主刻度
+        if major_ticks > 0:
+            axes.xaxis.set_major_locator(ticker.MaxNLocator(major_ticks))
+            axes.yaxis.set_major_locator(ticker.MaxNLocator(major_ticks))
+        
+        # 设置次刻度
+        if minor_ticks > 0:
+            axes.xaxis.set_minor_locator(ticker.AutoMinorLocator(minor_ticks))
+            axes.yaxis.set_minor_locator(ticker.AutoMinorLocator(minor_ticks))
+        
+        # 设置网格线
+        if show_grid:
+            axes.grid(visible=True, which='both', linestyle='--', alpha=0.5)
+        else:
+            axes.grid(visible=False)
