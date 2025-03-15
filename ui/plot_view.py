@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
                             QGroupBox, QFormLayout, QLineEdit, QApplication,
                             QMessageBox, QFileDialog, QProgressDialog, 
@@ -689,21 +690,39 @@ class PlotView(QWidget):
             return
         
         try:
-            print(f"开始绘图: {plot_type}")
+#           print(f"开始绘图: {plot_type}")
             QApplication.processEvents()  # 处理挂起的事件，防止界面卡死
             
             # 确保 alpha 值是有效的数值类型
             alpha = 1.0  # 默认不透明
             
+            # 预处理数据，确保数据类型正确
+            # 创建数据的副本以避免修改原始数据
+            plot_data = data.copy()
+            
+            # 确保X和Y列是数值类型
+            if x_col in plot_data.columns:
+                plot_data[x_col] = pd.to_numeric(plot_data[x_col], errors='coerce')
+            
+            if y_col in plot_data.columns:
+                plot_data[y_col] = pd.to_numeric(plot_data[y_col], errors='coerce')
+            
+            # 处理误差列
+            if xerr_col and xerr_col in plot_data.columns:
+                plot_data[xerr_col] = pd.to_numeric(plot_data[xerr_col], errors='coerce')
+            
+            if yerr_col and yerr_col in plot_data.columns:
+                plot_data[yerr_col] = pd.to_numeric(plot_data[yerr_col], errors='coerce')
+            
             # 根据绘图类型调用不同的绘图方法
             if plot_type == "散点图":
-                self.visualizer.scatter_plot(data, x_col, y_col, color, mark_style, mark_size, alpha=alpha)
+                self.visualizer.scatter_plot(plot_data, x_col, y_col, color, mark_style, mark_size, alpha=alpha)
             elif plot_type == "带误差棒的散点图":
-                self.visualizer.scatter_plot_with_error(data, x_col, y_col, xerr_col, yerr_col, color, mark_style, mark_size, alpha=alpha)
+                self.visualizer.scatter_plot_with_error(plot_data, x_col, y_col, xerr_col, yerr_col, color, mark_style, mark_size, alpha=alpha)
             elif plot_type == "直方图":
-                self.visualizer.histogram(data, x_col, bins, histtype, color, alpha=alpha)
+                self.visualizer.histogram(plot_data, x_col, bins, histtype, color, alpha=alpha)
             elif plot_type == "2D密度图":
-                self.visualizer.density_map_2d(data, x_col, y_col, bins, colormap)
+                self.visualizer.density_map_2d(plot_data, x_col, y_col, bins, colormap)
             else:
                 QMessageBox.warning(self, "错误", f"不支持的绘图类型: {plot_type}")
                 return
@@ -813,9 +832,9 @@ class PlotView(QWidget):
             print("PlotView 接收到绘图请求")
             
             # 防止重复调用
-            if hasattr(self, '_is_plotting') and self._is_plotting:
-                print("绘图正在进行中，请稍候...")
-                return
+#           if hasattr(self, '_is_plotting') and self._is_plotting:
+#               print("绘图正在进行中，请稍候...")
+#               return
                 
             self._is_plotting = True
             

@@ -74,4 +74,6 @@ if __name__ == "__main__":
         import ctypes
         app_id = 'yuanweiwu911.plotdata.1.0'  # 应用程序ID格式：公司名.产品名.版本
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
+    import sys
+    sys.setrecursionlimit(3000)  # 默认是1000，增加到3000
     main()
