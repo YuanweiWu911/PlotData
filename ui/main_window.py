@@ -2,7 +2,8 @@ import os
 from PyQt6 import sip  # 新增导入
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
                             QSplitter, QFileDialog, QMessageBox, QToolBar, 
-                            QStatusBar, QLabel, QDialog, QApplication, QInputDialog)
+                            QStatusBar, QLabel, QDialog, QApplication, 
+                            QPushButton, QGroupBox, QInputDialog)
 from PyQt6.QtCore import Qt, QSize  # 添加 QSize 导入
 from PyQt6.QtGui import QIcon, QPalette, QColor, QAction  # 从 QtGui 导入 QAction
 from .plot_view import PlotView
@@ -48,6 +49,11 @@ class MainWindow(QMainWindow):
         # 创建主布局
         main_layout = QVBoxLayout(central_widget)
         
+        # 创建左侧工具栏并添加到主布局
+        left_toolbar_layout = self.create_left_toolbar()
+        if left_toolbar_layout:
+            main_layout.addLayout(left_toolbar_layout)
+        
         # 创建分割器
         splitter = QSplitter(Qt.Orientation.Horizontal)
         
@@ -64,7 +70,12 @@ class MainWindow(QMainWindow):
         
         # 添加分割器到主布局
         main_layout.addWidget(splitter)
-        
+
+        # 在UI初始化完成后调用一次切换函数，确保初始状态正确
+        # 现在可以安全调用，因为按钮已经创建
+        if hasattr(self, 'preview_toggle_button'):
+            self.toggle_data_preview()
+
         # 设置窗口大小
         if self.config_manager:
             window_size = self.config_manager.get("window_size", [800, 600])
@@ -448,6 +459,52 @@ class MainWindow(QMainWindow):
         from ui.help_dialog import HelpDialog
         dialog = HelpDialog(self)
         dialog.exec()
+
+    def create_left_toolbar(self):
+        """创建左侧工具栏"""
+        left_toolbar = QHBoxLayout()
+        
+#       # 导入数据按钮
+#       self.import_button = QPushButton("导入数据")
+#       self.import_button.clicked.connect(self.open_file)  # 修正为正确的方法名
+#       left_toolbar.addWidget(self.import_button)
+        
+        # 添加数据预览切换按钮
+        self.preview_toggle_button = QPushButton("数据预览")
+        self.preview_toggle_button.setCheckable(True)  # 设置为可切换状态
+        self.preview_toggle_button.setChecked(True)    # 默认为显示状态
+        self.preview_toggle_button.clicked.connect(self.toggle_data_preview)
+        left_toolbar.addWidget(self.preview_toggle_button)
+        
+        # 返回布局以便添加到主布局
+        return left_toolbar
+
+    def toggle_data_preview(self):
+        """切换数据预览和筛选区域的显示状态"""
+        # 确保按钮已创建
+        if not hasattr(self, 'preview_toggle_button'):
+            return
+            
+        is_visible = self.preview_toggle_button.isChecked()
+        
+        # 获取数据视图中的相关控件
+        if hasattr(self, 'data_view'):
+            # 获取数据表格视图
+            if hasattr(self.data_view, 'table_view'):
+                self.data_view.table_view.setVisible(is_visible)
+                
+            # 获取数据筛选区域 - 根据data_view.py中的实际代码
+            filter_group = None
+            for child in self.data_view.children():
+                if isinstance(child, QGroupBox) and child.title() == "数据筛选":
+                    filter_group = child
+                    break
+                    
+            if filter_group:
+                filter_group.setVisible(is_visible)
+        
+        # 更新按钮文本，提供更好的用户反馈
+        self.preview_toggle_button.setText("数据预览 ✓" if is_visible else "数据预览")
 
     def closeEvent(self, event):
         """窗口关闭事件"""
