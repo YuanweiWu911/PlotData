@@ -217,23 +217,7 @@ class PlotView(QWidget):
         self.density_settings.setVisible(False)  # 默认隐藏
         plot_control_layout.addWidget(self.density_settings)
         
-        # 绘图按钮
-        self.plot_button = QPushButton("生成图表")
-        self.plot_button.setMinimumHeight(30)  # 设置更大的高度
-        self.plot_button.setStyleSheet("""
-            QPushButton {
-                background-color: #4CAF50;  /* 绿色 */
-                color: white;
-                font-weight: bold;
-                border-radius: 5px;
-                padding: 5px;
-            }
-            QPushButton:hover {
-                background-color: #45a049;  /* 鼠标悬停时的深绿色 */
-            }
-        """)
-        self.plot_button.clicked.connect(self.request_plot)
-        plot_control_layout.addWidget(self.plot_button)
+        # 绘图按钮已移至主布局底部
         
         # 将绘图控制添加到设置布局
         settings_layout.addRow("", plot_control_layout)
@@ -341,6 +325,25 @@ class PlotView(QWidget):
 
         # 删除原有的设置刻度按钮相关代码
         main_layout.addWidget(self.settings_group)
+        
+        # 添加生成图表按钮到主布局的底部
+        self.plot_button = QPushButton("生成图表")
+        self.plot_button.setMinimumHeight(40)  # 设置更大的高度
+        self.plot_button.setStyleSheet("""
+            QPushButton {
+                background-color: #4CAF50;  /* 绿色 */
+                color: white;
+                font-weight: bold;
+                border-radius: 5px;
+                padding: 5px;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #45a049;  /* 鼠标悬停时的深绿色 */
+            }
+        """)
+        self.plot_button.clicked.connect(self.request_plot)
+        main_layout.addWidget(self.plot_button)  # 添加到主布局底部
 
         # 存储当前绘图参数
         self.current_plot_params = None
