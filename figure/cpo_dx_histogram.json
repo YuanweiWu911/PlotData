@@ -10,8 +10,19 @@
     "mark_style": "点",
     "mark_size": 5,
     "histtype": "barstacked",
-    "bins": 10,
+    "bins": 50,
+    "colormap": "viridis",
     "title": "",
     "x_label": "",
-    "y_label": ""
+    "y_label": "",
+    "x_major_ticks": 5,
+    "x_minor_ticks": 1,
+    "x_show_grid": true,
+    "y_major_ticks": 5,
+    "y_minor_ticks": 1,
+    "y_show_grid": true,
+    "x_min": null,
+    "x_max": null,
+    "y_min": null,
+    "y_max": null
 }

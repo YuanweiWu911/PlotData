@@ -189,7 +189,7 @@ class PlotWorker(QRunnable):
         alpha = self.kwargs.get('alpha', 0.7)
         title = self.kwargs.get('title')
         x_label = self.kwargs.get('x_label')
-        y_label = self.kwargs.get('y_label', '频率')
+        y_label = self.kwargs.get('y_label', '次数')
         x_min = self.kwargs.get('x_min')
         x_max = self.kwargs.get('x_max')
         y_min = self.kwargs.get('y_min')

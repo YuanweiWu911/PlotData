@@ -218,7 +218,7 @@ class Visualizer:
         bins=10,
         title=None,
         x_label=None,
-        y_label="频率",
+        y_label="次数",
         color='blue',
         histtype='bar',
         alpha=0.7,

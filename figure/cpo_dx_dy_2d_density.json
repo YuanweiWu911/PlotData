@@ -1,6 +1,6 @@
 {
     "data_file_path": "C:/Users/len/ywwu_workspace/PlotData/data/EOP_2000.txt",
-    "filter_expr": "",
+    "filter_expr": "MJD < 60000",
     "x_col": "cpo_dy",
     "y_col": "cpo_dx",
     "xerr_col": "无",
