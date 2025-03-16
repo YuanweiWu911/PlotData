@@ -133,7 +133,8 @@ class PlotView(QWidget):
         # 标记样式
         style_layout.addWidget(QLabel("Marker样式"))
         self.mark_style_combo = QComboBox()
-        self.mark_style_combo.addItems([".", "o", "s", "^", "v", "D", "*", "+", "x"])
+#       self.mark_style_combo.addItems([".", "o", "s", "^", "v", "D", "*", "+", "x"])
+        self.mark_style_combo.addItems(["圆形", "点", "方形", "三角形", "星形", "菱形", "十字", "加号", "叉号"])
         style_layout.addWidget(self.mark_style_combo)
         
         # 标记大小
@@ -671,7 +672,10 @@ class PlotView(QWidget):
                 QMessageBox.critical(self, "错误", f"保存图表失败: {str(e)}")
 
     @pyqtSlot(str, str, str, str, str, str, str, int, str, int)
-    def handle_plot_request(self, plot_type, x_col, y_col, color, xerr_col=None, yerr_col=None, mark_style='o', mark_size=10, histtype='bar', bins=50, colormap='viridis'):
+    def handle_plot_request(self, plot_type, 
+        x_col, y_col, color, xerr_col=None, yerr_col=None, 
+        mark_style='o', mark_size=10, histtype='bar', 
+        bins=50, colormap='viridis', line_style='-'):
         """处理绘图请求，使用工作线程进行绘图操作"""
         # 保存当前绘图参数
         self.current_plot_params = {
@@ -685,7 +689,8 @@ class PlotView(QWidget):
             'mark_size': mark_size,
             'histtype': histtype,
             'bins': bins,
-            'colormap': colormap
+            'colormap': colormap,
+            'line_style': line_style
         }
         
         # 获取数据
@@ -767,7 +772,8 @@ class PlotView(QWidget):
                 y_major_ticks=y_major_ticks,
                 y_minor_ticks=y_minor_ticks,
                 y_show_grid=y_show_grid,
-                alpha=0.7  # 默认透明度
+                alpha=0.7,  # 默认透明度
+                line_style = line_style
             )
             
             # 连接信号
@@ -898,7 +904,7 @@ class PlotView(QWidget):
         self.mark_style_combo.clear()
         
         # 添加标记样式选项
-        marker_styles = ["圆形", "点", "方形", "三角形", "星形", "菱形", "十字", "加号"]
+        marker_styles = ["无标记","点", "圆形", "方形", "三角形", "星形", "菱形", "十字", "加号"]
         self.mark_style_combo.addItems(marker_styles)
         
         # 尝试恢复之前的选择
@@ -924,6 +930,16 @@ class PlotView(QWidget):
     
     def request_plot(self):
         """处理绘图请求，使用防抖动机制"""
+        # 如果定时器已经在运行，重置它
+        if self.debounce_timer.isActive():
+            self.debounce_timer.stop()
+        
+        # 获取当前参数并存储
+        self._prepare_plot_request()
+        
+        # 启动定时器，防抖动处理
+        self.debounce_timer.start()        
+
         try:
             print("PlotView 接收到绘图请求")
             
@@ -969,7 +985,8 @@ class PlotView(QWidget):
                 QMessageBox.warning(self, "错误", f"Y误差列 '{yerr_col}' 不存在于数据中")
                 return
                 
-            mark_style = self.mark_style_combo.currentText()
+#           mark_style = self.mark_style_combo.currentText()
+            mark_style = self.current_request['mark_style'] 
             mark_size = self.mark_size_spin.value()
             line_style = self.line_style_combo.currentText() if plot_type == "线图" else None
             histtype = self.histtype_combo.currentText()
@@ -983,20 +1000,21 @@ class PlotView(QWidget):
                 
             print(f"准备绘图: 类型={plot_type}, X={x_col}, Y={y_col}, 颜色={color}, 标记样式={mark_style}")
             
-            # 存储当前请求参数
-            self.current_request = {
-                'plot_type': plot_type,
-                'x_col': x_col,
-                'y_col': y_col,
-                'color': color,
-                'xerr_col': xerr_col,
-                'yerr_col': yerr_col,
-                'mark_style': mark_style,
-                'mark_size': mark_size,
-                'histtype': histtype,
-                'bins': bins,
-                'colormap': colormap
-            }
+#           # 存储当前请求参数
+#           self.current_request = {
+#               'plot_type': plot_type,
+#               'x_col': x_col,
+#               'y_col': y_col,
+#               'color': color,
+#               'xerr_col': xerr_col,
+#               'yerr_col': yerr_col,
+#               'mark_style': mark_style,
+#               'mark_size': mark_size,
+#               'histtype': histtype,
+#               'bins': bins,
+#               'colormap': colormap,
+#               'line_style': line_style
+#           }
             
             # 重置定时器，实现防抖动
             self.debounce_timer.stop()
@@ -1007,7 +1025,65 @@ class PlotView(QWidget):
             import traceback
             traceback.print_exc()
             QMessageBox.warning(self, "错误", f"绘图请求处理失败: {str(e)}")
-    
+
+    def _prepare_plot_request(self):
+        """准备绘图请求参数"""
+        # 从控件获取当前值
+        plot_type = self.plot_type_combo.currentText()
+        x_col = self.x_combo.currentText()
+        y_col = self.y_combo.currentText()
+        
+        # 获取其他参数
+        xerr_col = self.xerr_combo.currentText() if self.xerr_combo.currentText() != "无" else None
+        yerr_col = self.yerr_combo.currentText() if self.yerr_combo.currentText() != "无" else None
+        
+        # 获取标记样式并转换为matplotlib兼容格式
+        mark_style = self.mark_style_combo.currentText()
+        # 添加标记样式映射
+        marker_style_map = {
+            "无标记": '',
+            "圆形": 'o',
+            "点": '.',
+            "方形": 's',
+            "三角形": '^',
+            "星形": '*',
+            "菱形": 'D',
+            "十字": 'x',
+            "加号": '+',
+            "叉号": 'X'
+        }
+        # 获取matplotlib兼容的标记样式
+        matplotlib_marker = marker_style_map.get(mark_style, 'o')  # 默认使用圆形
+        
+        mark_size = self.mark_size_spin.value()
+        histtype = self.histtype_combo.currentText()
+        bins = self.bins_spin.value()
+        colormap = self.colorbar_combo.currentText() if plot_type == "2D密度图" else None
+        
+        # 获取线型
+        line_style = self.line_style_combo.currentText() if hasattr(self, 'line_style_combo') else '-'
+        
+        # 获取颜色
+        color = self.color_button.property("color")
+        if not color or not isinstance(color, str):
+            color = "blue"  # 默认颜色
+        
+        # 存储当前请求参数
+        self.current_request = {
+            'plot_type': plot_type,
+            'x_col': x_col,
+            'y_col': y_col,
+            'color': color,
+            'xerr_col': xerr_col,
+            'yerr_col': yerr_col,
+            'mark_style': matplotlib_marker,  # 使用转换后的标记样式
+            'mark_size': mark_size,
+            'histtype': histtype,
+            'bins': bins,
+            'colormap': colormap,
+            'line_style': line_style
+        }
+
     def _execute_plot_request(self):
         """实际执行绘图请求，由防抖动定时器触发"""
         if not self.current_request:
@@ -1033,12 +1109,13 @@ class PlotView(QWidget):
             histtype = self.current_request['histtype']
             bins = self.current_request['bins']
             colormap = self.current_request['colormap']
-            
+            line_style = self.current_request.get('line_style', '-')            
             # 调用绘图方法
             self.handle_plot_request(
                 plot_type, x_col, y_col, color, 
                 xerr_col, yerr_col, mark_style, 
-                mark_size, histtype, bins, colormap
+                mark_size, histtype, bins, colormap,
+                line_style
             )
             
             print(f"绘图请求处理完成")
