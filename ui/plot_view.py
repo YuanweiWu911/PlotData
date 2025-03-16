@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
                             QMessageBox, QFileDialog, QProgressDialog, 
                             QDoubleSpinBox, QLabel, QSpinBox, QCheckBox,
                             QComboBox, QColorDialog)
-from PyQt6.QtCore import Qt, pyqtSlot, pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSlot, pyqtSignal, QThreadPool, QTimer
 import matplotlib
 from PyQt6.QtGui import QDoubleValidator, QColor
 matplotlib.use('QtAgg')
@@ -24,6 +24,20 @@ class PlotView(QWidget):
         
         self.data_manager = data_manager
         self.visualizer = visualizer
+        
+        # 初始化线程池
+        self.thread_pool = QThreadPool()
+        self.thread_pool.setMaxThreadCount(4)  # 设置最大线程数
+        
+        # 初始化防抖动定时器
+        from PyQt6.QtCore import QTimer
+        self.debounce_timer = QTimer()
+        self.debounce_timer.setSingleShot(True)  # 设置为单次触发
+        self.debounce_timer.setInterval(300)    # 设置防抖动间隔为300毫秒
+        self.debounce_timer.timeout.connect(self._execute_plot_request)
+        
+        # 存储当前绘图请求参数
+        self.current_request = None
         
         # 初始化UI
         self.init_ui()
@@ -649,7 +663,7 @@ class PlotView(QWidget):
 
     @pyqtSlot(str, str, str, str, str, str, str, int, str, int)
     def handle_plot_request(self, plot_type, x_col, y_col, color, xerr_col=None, yerr_col=None, mark_style='o', mark_size=10, histtype='bar', bins=50, colormap='viridis'):
-        """处理绘图请求"""
+        """处理绘图请求，使用工作线程进行绘图操作"""
         # 保存当前绘图参数
         self.current_plot_params = {
             'plot_type': plot_type,
@@ -690,67 +704,89 @@ class PlotView(QWidget):
             return
         
         try:
-            QApplication.processEvents()  # 处理挂起的事件，防止界面卡死
+            # 获取标题和标签设置
+            title = self.title_edit.text() or None
+            x_label = self.x_label_edit.text() or None
+            y_label = self.y_label_edit.text() or None
             
-            # 确保 alpha 值是有效的数值类型
-            alpha = 1.0  # 默认不透明
+            # 获取坐标轴范围设置
+            try:
+                x_min = float(self.x_ticks_min.text()) if self.x_ticks_min.text() else None
+                x_max = float(self.x_ticks_max.text()) if self.x_ticks_max.text() else None
+                y_min = float(self.y_ticks_min.text()) if self.y_ticks_min.text() else None
+                y_max = float(self.y_ticks_max.text()) if self.y_ticks_max.text() else None
+            except ValueError:
+                x_min, x_max, y_min, y_max = None, None, None, None
+                print("坐标轴范围设置格式无效，将使用自动范围")
             
-            # 预处理数据，确保数据类型正确
-            # 创建数据的副本以避免修改原始数据
-            plot_data = data.copy()
+            # 获取刻度和网格线设置
+            x_major_ticks = self.x_major_ticks_spin.value()
+            x_minor_ticks = self.x_minor_ticks_spin.value()
+            x_show_grid = self.x_grid_checkbox.isChecked()
+            y_major_ticks = self.y_major_ticks_spin.value()
+            y_minor_ticks = self.y_minor_ticks_spin.value()
+            y_show_grid = self.y_grid_checkbox.isChecked()
             
-            # 确保X和Y列是数值类型
-            if x_col in plot_data.columns:
-                plot_data[x_col] = pd.to_numeric(plot_data[x_col], errors='coerce')
+            # 创建绘图工作线程
+            from core.plot_worker import PlotWorker
             
-            if y_col in plot_data.columns:
-                plot_data[y_col] = pd.to_numeric(plot_data[y_col], errors='coerce')
+            # 创建工作线程
+            worker = PlotWorker(
+                self.visualizer,
+                plot_type,
+                data,
+                x_col=x_col,
+                y_col=y_col,
+                xerr_col=xerr_col,
+                yerr_col=yerr_col,
+                color=color,
+                mark_style=mark_style,
+                mark_size=mark_size,
+                histtype=histtype,
+                bins=bins,
+                colormap=colormap,
+                title=title,
+                x_label=x_label,
+                y_label=y_label,
+                x_min=x_min,
+                x_max=x_max,
+                y_min=y_min,
+                y_max=y_max,
+                x_major_ticks=x_major_ticks,
+                x_minor_ticks=x_minor_ticks,
+                x_show_grid=x_show_grid,
+                y_major_ticks=y_major_ticks,
+                y_minor_ticks=y_minor_ticks,
+                y_show_grid=y_show_grid,
+                alpha=0.7  # 默认透明度
+            )
             
-            # 处理误差列
-            if xerr_col and xerr_col in plot_data.columns:
-                plot_data[xerr_col] = pd.to_numeric(plot_data[xerr_col], errors='coerce')
+            # 连接信号
+            worker.signals.finished.connect(self._on_plot_finished)
+            worker.signals.error.connect(self._on_plot_error)
             
-            if yerr_col and yerr_col in plot_data.columns:
-                plot_data[yerr_col] = pd.to_numeric(plot_data[yerr_col], errors='coerce')
+            # 启动工作线程
+            self.thread_pool.start(worker)
             
-            # 转换标记样式为matplotlib兼容格式
-            marker_style_map = {
-                "圆形": 'o',
-                "点": '.',
-                "方形": 's',
-                "三角形": '^',
-                "星形": '*',
-                "菱形": 'D',
-                "十字": 'x',
-                "加号": '+'
-            }
-            
-            # 获取matplotlib兼容的标记样式
-            matplotlib_marker = marker_style_map.get(mark_style, mark_style)
-#           print(f"使用标记样式: {mark_style} -> {matplotlib_marker}")
-            
-            # 根据绘图类型调用不同的绘图方法
-            if plot_type == "散点图":
-                self.visualizer.scatter_plot(plot_data, x_col, y_col, color, matplotlib_marker, mark_size, alpha=alpha)
-            elif plot_type == "带误差棒的散点图":
-                self.visualizer.scatter_plot_with_error(plot_data, x_col, y_col, xerr_col, yerr_col, color, matplotlib_marker, mark_size, alpha=alpha)
-            elif plot_type == "直方图":
-                self.visualizer.histogram(plot_data, x_col, bins, histtype, color, alpha=alpha)
-            elif plot_type == "2D密度图":
-                self.visualizer.density_map_2d(plot_data, x_col, y_col, bins, colormap)
-            else:
-                QMessageBox.warning(self, "错误", f"不支持的绘图类型: {plot_type}")
-                return
-                
-            # 应用图表设置
-            self.apply_settings()
-            
-            print(f"绘图成功: {plot_type}")
+            print(f"绘图请求已提交到工作线程: {plot_type}")
             
         except Exception as e:
             QMessageBox.critical(self, "绘图错误", f"绘图过程中发生错误:\n{str(e)}")
             import traceback
             traceback.print_exc()
+    
+    def _on_plot_finished(self, success, message):
+        """绘图完成回调函数"""
+        if success:
+            print(f"绘图成功: {message}")
+        else:
+            QMessageBox.warning(self, "绘图警告", f"绘图过程中发生问题:\n{message}")
+    
+    def _on_plot_error(self, error_message):
+        """绘图错误回调函数"""
+        QMessageBox.critical(self, "绘图错误", f"绘图过程中发生错误:\n{error_message}")
+        import traceback
+        traceback.print_exc()
 
     def update_columns(self):
         """更新列选择下拉框"""
@@ -860,22 +896,14 @@ class PlotView(QWidget):
             self.color_button.setProperty("color", color.name())
     
     def request_plot(self):
-        """处理绘图请求"""
+        """处理绘图请求，使用防抖动机制"""
         try:
             print("PlotView 接收到绘图请求")
-            
-            # 防止重复调用
-            if hasattr(self, '_is_plotting') and self._is_plotting:
-                print("绘图正在进行中，请稍候...")
-                return
-                
-            self._is_plotting = True
             
             # 检查数据是否存在
             data = self.data_manager.get_data()
             if data is None or data.empty:
                 QMessageBox.warning(self, "错误", "没有可用的数据")
-                self._is_plotting = False
                 return
                 
             # 从控件获取当前值
@@ -885,24 +913,20 @@ class PlotView(QWidget):
             # 检查必要的列是否选择
             if not x_col:
                 QMessageBox.warning(self, "警告", "请先选择X轴列")
-                self._is_plotting = False
                 return
                 
             y_col = self.y_combo.currentText()
             if plot_type != "直方图" and not y_col:
                 QMessageBox.warning(self, "警告", "请先选择Y轴列")
-                self._is_plotting = False
                 return
                 
             # 检查列是否存在于数据中
             if x_col not in data.columns:
                 QMessageBox.warning(self, "错误", f"X轴列 '{x_col}' 不存在于数据中")
-                self._is_plotting = False
                 return
                 
             if plot_type != "直方图" and y_col not in data.columns:
                 QMessageBox.warning(self, "错误", f"Y轴列 '{y_col}' 不存在于数据中")
-                self._is_plotting = False
                 return
                 
             # 获取其他参数
@@ -912,12 +936,10 @@ class PlotView(QWidget):
             # 检查误差列是否存在
             if xerr_col and xerr_col not in data.columns:
                 QMessageBox.warning(self, "错误", f"X误差列 '{xerr_col}' 不存在于数据中")
-                self._is_plotting = False
                 return
                 
             if yerr_col and yerr_col not in data.columns:
                 QMessageBox.warning(self, "错误", f"Y误差列 '{yerr_col}' 不存在于数据中")
-                self._is_plotting = False
                 return
                 
             mark_style = self.mark_style_combo.currentText()
@@ -932,6 +954,57 @@ class PlotView(QWidget):
                 color = "blue"  # 默认颜色
                 
             print(f"准备绘图: 类型={plot_type}, X={x_col}, Y={y_col}, 颜色={color}, 标记样式={mark_style}")
+            
+            # 存储当前请求参数
+            self.current_request = {
+                'plot_type': plot_type,
+                'x_col': x_col,
+                'y_col': y_col,
+                'color': color,
+                'xerr_col': xerr_col,
+                'yerr_col': yerr_col,
+                'mark_style': mark_style,
+                'mark_size': mark_size,
+                'histtype': histtype,
+                'bins': bins,
+                'colormap': colormap
+            }
+            
+            # 重置定时器，实现防抖动
+            self.debounce_timer.stop()
+            self.debounce_timer.start()
+            
+        except Exception as e:
+            print(f"绘图请求处理失败: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            QMessageBox.warning(self, "错误", f"绘图请求处理失败: {str(e)}")
+    
+    def _execute_plot_request(self):
+        """实际执行绘图请求，由防抖动定时器触发"""
+        if not self.current_request:
+            return
+            
+        try:
+            # 防止重复调用
+            if hasattr(self, '_is_plotting') and self._is_plotting:
+                print("绘图正在进行中，请稍候...")
+                return
+                
+            self._is_plotting = True
+            
+            # 从当前请求中获取参数
+            plot_type = self.current_request['plot_type']
+            x_col = self.current_request['x_col']
+            y_col = self.current_request['y_col']
+            color = self.current_request['color']
+            xerr_col = self.current_request['xerr_col']
+            yerr_col = self.current_request['yerr_col']
+            mark_style = self.current_request['mark_style']
+            mark_size = self.current_request['mark_size']
+            histtype = self.current_request['histtype']
+            bins = self.current_request['bins']
+            colormap = self.current_request['colormap']
             
             # 调用绘图方法
             self.handle_plot_request(
