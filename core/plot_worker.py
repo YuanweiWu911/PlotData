@@ -53,6 +53,8 @@ class PlotWorker(QRunnable):
                 result, message = self._draw_histogram()
             elif self.plot_type == "2D密度图":
                 result, message = self._draw_density_map_2d()
+            elif self.plot_type == "线图":
+                result, message = self._draw_line()
             else:
                 message = f"不支持的绘图类型: {self.plot_type}"
                 self.logger.error(message)
@@ -249,6 +251,51 @@ class PlotWorker(QRunnable):
             x_label=x_label, 
             y_label=y_label, 
             colormap=colormap,
+            x_major_ticks=x_major_ticks,
+            x_minor_ticks=x_minor_ticks,
+            x_show_grid=x_show_grid,
+            y_major_ticks=y_major_ticks,
+            y_minor_ticks=y_minor_ticks,
+            y_show_grid=y_show_grid,
+            x_min=x_min,
+            x_max=x_max,
+            y_min=y_min,
+            y_max=y_max
+        )
+    
+    def _draw_line(self):
+        """绘制线图"""
+        x_col = self.kwargs.get('x_col')
+        y_col = self.kwargs.get('y_col')
+        color = self.kwargs.get('color', 'blue')
+        mark_style = self.kwargs.get('mark_style', 'o')
+        line_style = self.kwargs.get('line_style', '-')
+        linewidth = self.kwargs.get('linewidth', 2)
+        mark_size = self.kwargs.get('mark_size', 10)
+        alpha = self.kwargs.get('alpha', 0.7)
+        title = self.kwargs.get('title')
+        x_label = self.kwargs.get('x_label')
+        y_label = self.kwargs.get('y_label')
+        x_min = self.kwargs.get('x_min')
+        x_max = self.kwargs.get('x_max')
+        y_min = self.kwargs.get('y_min')
+        y_max = self.kwargs.get('y_max')
+        x_major_ticks = self.kwargs.get('x_major_ticks', 5)
+        x_minor_ticks = self.kwargs.get('x_minor_ticks', 1)
+        x_show_grid = self.kwargs.get('x_show_grid', True)
+        y_major_ticks = self.kwargs.get('y_major_ticks', 5)
+        y_minor_ticks = self.kwargs.get('y_minor_ticks', 1)
+        y_show_grid = self.kwargs.get('y_show_grid', True)
+        
+        return self.visualizer.line_plot(
+            self.data, x_col, y_col, 
+            title=title, 
+            x_label=x_label, 
+            y_label=y_label, 
+            color=color, 
+            marker=mark_style,
+            linestyle=line_style,
+            linewidth=linewidth,
             x_major_ticks=x_major_ticks,
             x_minor_ticks=x_minor_ticks,
             x_show_grid=x_show_grid,

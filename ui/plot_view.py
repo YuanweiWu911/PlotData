@@ -117,7 +117,7 @@ class PlotView(QWidget):
         style_layout.addWidget(QLabel("绘图类型:"))
         
         self.plot_type_combo = QComboBox()
-        self.plot_type_combo.addItems(["散点图", "带误差棒的散点图", "直方图", "2D密度图"])
+        self.plot_type_combo.addItems(["散点图", "带误差棒的散点图", "直方图", "2D密度图", "线图"])
         self.plot_type_combo.currentIndexChanged.connect(self.on_plot_type_changed)
         style_layout.addWidget(self.plot_type_combo)
         
@@ -133,7 +133,7 @@ class PlotView(QWidget):
         # 标记样式
         style_layout.addWidget(QLabel("Marker样式"))
         self.mark_style_combo = QComboBox()
-        self.mark_style_combo.addItems(["o", "s", "^", "v", "D", "*", "+", "x"])
+        self.mark_style_combo.addItems([".", "o", "s", "^", "v", "D", "*", "+", "x"])
         style_layout.addWidget(self.mark_style_combo)
         
         # 标记大小
@@ -142,6 +142,12 @@ class PlotView(QWidget):
         self.mark_size_spin.setRange(1, 30)
         self.mark_size_spin.setValue(10)
         style_layout.addWidget(self.mark_size_spin)
+        
+        # 线型设置
+        style_layout.addWidget(QLabel("线型"))
+        self.line_style_combo = QComboBox()
+        self.line_style_combo.addItems(["-", "--", ":", "-."])
+        style_layout.addWidget(self.line_style_combo)
         
         plot_control_layout.addLayout(style_layout)
        
@@ -965,6 +971,7 @@ class PlotView(QWidget):
                 
             mark_style = self.mark_style_combo.currentText()
             mark_size = self.mark_size_spin.value()
+            line_style = self.line_style_combo.currentText() if plot_type == "线图" else None
             histtype = self.histtype_combo.currentText()
             bins = self.bins_spin.value()
             colormap = self.colorbar_combo.currentText() if plot_type == "2D密度图" else None
