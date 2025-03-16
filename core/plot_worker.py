@@ -97,6 +97,7 @@ class PlotWorker(QRunnable):
         x_col = self.kwargs.get('x_col')
         y_col = self.kwargs.get('y_col')
         color = self.kwargs.get('color', 'blue')
+        alpha = self.kwargs.get('alpha', 0.7)
         mark_style = self.kwargs.get('mark_style', 'o')
         mark_size = self.kwargs.get('mark_size', 10)
         alpha = self.kwargs.get('alpha', 0.7)
@@ -142,6 +143,7 @@ class PlotWorker(QRunnable):
         xerr_col = self.kwargs.get('xerr_col')
         yerr_col = self.kwargs.get('yerr_col')
         color = self.kwargs.get('color', 'blue')
+        alpha = self.kwargs.get('alpha', 0.7)
         mark_style = self.kwargs.get('mark_style', 'o')
         mark_size = self.kwargs.get('mark_size', 10)
         alpha = self.kwargs.get('alpha', 0.7)
@@ -210,8 +212,8 @@ class PlotWorker(QRunnable):
             x_label=x_label, 
             y_label=y_label, 
             color=color, 
-            histtype=histtype, 
             alpha=alpha,
+            histtype=histtype, 
             x_major_ticks=x_major_ticks,
             x_minor_ticks=x_minor_ticks,
             x_show_grid=x_show_grid,
@@ -230,6 +232,7 @@ class PlotWorker(QRunnable):
         y_col = self.kwargs.get('y_col')
         bins = self.kwargs.get('bins', 50)
         colormap = self.kwargs.get('colormap', 'viridis')
+#       alpha = self.kwargs.get('alpha', 0.7)
         title = self.kwargs.get('title')
         x_label = self.kwargs.get('x_label')
         y_label = self.kwargs.get('y_label')
@@ -251,6 +254,7 @@ class PlotWorker(QRunnable):
             x_label=x_label, 
             y_label=y_label, 
             colormap=colormap,
+#           alpha=alpha,
             x_major_ticks=x_major_ticks,
             x_minor_ticks=x_minor_ticks,
             x_show_grid=x_show_grid,
@@ -268,11 +272,11 @@ class PlotWorker(QRunnable):
         x_col = self.kwargs.get('x_col')
         y_col = self.kwargs.get('y_col')
         color = self.kwargs.get('color', 'blue')
-        mark_style = self.kwargs.get('mark_style', 'o')
-        line_style = self.kwargs.get('line_style', '-')
-        linewidth = self.kwargs.get('linewidth', 2)
-        mark_size = self.kwargs.get('mark_size', 10)
         alpha = self.kwargs.get('alpha', 0.7)
+        mark_style = self.kwargs.get('mark_style', 'o')
+        mark_size = self.kwargs.get('mark_size', 10)
+        line_style = self.kwargs.get('line_style', '-')
+        line_width = self.kwargs.get('line_width', 2)
         title = self.kwargs.get('title')
         x_label = self.kwargs.get('x_label')
         y_label = self.kwargs.get('y_label')
@@ -293,9 +297,11 @@ class PlotWorker(QRunnable):
             x_label=x_label, 
             y_label=y_label, 
             color=color, 
+            alpha=alpha,
             marker=mark_style,
+            marker_size = mark_size,
             linestyle=line_style,
-            linewidth=linewidth,
+            linewidth=line_width,
             x_major_ticks=x_major_ticks,
             x_minor_ticks=x_minor_ticks,
             x_show_grid=x_show_grid,

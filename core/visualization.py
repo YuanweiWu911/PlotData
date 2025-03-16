@@ -308,7 +308,13 @@ class Visualizer:
         x_max=None, 
         y_min=None, 
         y_max=None):
-        
+
+        if self.canvas is None:
+            return False, "画布未初始化"
+
+        # 先清除之前的图表
+        self.clear_plot()
+ 
         try:
             # 使用标准清理方法代替直接操作fig
             self.clear_plot()  # 替换原有的fig.clear()
@@ -446,7 +452,9 @@ class Visualizer:
         x_label=None, 
         y_label=None, 
         color='blue', 
+        alpha=0.7,
         marker='o', 
+        marker_size=5, 
         linestyle='-', 
         linewidth=2,
         x_major_ticks=5,  # 修改为X轴主刻度
@@ -463,14 +471,23 @@ class Visualizer:
         """绘制折线图"""
         if self.canvas is None:
             return False, "画布未初始化"
-        
+
+        # 先清除之前的图表
+        self.clear_plot()
+
         try:
             x = data[x_col]
             y = data[y_col]
             
             self.canvas.axes.clear()
-            self.canvas.axes.plot(x, y, marker=marker, linestyle=linestyle, 
-                                linewidth=linewidth, color=color)
+            self.canvas.axes.plot(x, y, 
+                marker=marker,
+                markersize=marker_size,
+                linestyle=linestyle, 
+                linewidth=linewidth,
+                color=color,
+                alpha=alpha
+            )
             
             # 设置标题和标签
             if title:

@@ -129,7 +129,16 @@ class PlotView(QWidget):
         self.color_button.setProperty("color", "blue")  # 存储颜色值
         self.color_button.clicked.connect(self.choose_color)
         style_layout.addWidget(self.color_button)
-        
+
+        # 添加透明度设置控件
+        style_layout.addWidget(QLabel("透明度"))
+        self.alpha_spin = QDoubleSpinBox()
+        self.alpha_spin.setRange(0.1, 1.0)
+        self.alpha_spin.setSingleStep(0.1)
+        self.alpha_spin.setValue(0.7)  # 默认透明度为0.7
+        self.alpha_spin.setToolTip("设置图形的透明度")
+        style_layout.addWidget(self.alpha_spin)
+
         # 标记样式
         style_layout.addWidget(QLabel("Marker样式"))
         self.mark_style_combo = QComboBox()
@@ -149,7 +158,15 @@ class PlotView(QWidget):
         self.line_style_combo = QComboBox()
         self.line_style_combo.addItems(["-", "--", ":", "-."])
         style_layout.addWidget(self.line_style_combo)
-        
+
+        # 添加线宽设置
+        style_layout.addWidget(QLabel("线宽"))
+        self.line_width_spin = QSpinBox()
+        self.line_width_spin.setRange(1, 10)
+        self.line_width_spin.setValue(2)  # 默认线宽为2
+#       self.line_width_spin.setToolTip("设置线图的线宽")
+        style_layout.addWidget(self.line_width_spin)        
+
         plot_control_layout.addLayout(style_layout)
        
         # 数据列选择
@@ -223,10 +240,6 @@ class PlotView(QWidget):
         
         self.density_settings.setVisible(False)  # 默认隐藏
         plot_control_layout.addWidget(self.density_settings)
-        
-        # 绘图按钮已移至主布局底部
-        
-        # 将绘图控制添加到设置布局
         settings_layout.addRow("", plot_control_layout)
         
         # 标题设置
@@ -399,9 +412,11 @@ class PlotView(QWidget):
             self.current_plot_params.get('yerr_col', None),
             self.current_plot_params.get('mark_style', 'o'),
             self.current_plot_params.get('mark_size', 10),
-            self.current_plot_params.get('histtype', 'bar'),  # 添加histtype参数
-            self.current_plot_params.get('bins', 10),         # 添加bins参数
-            self.current_plot_params.get('colormap', 'viridis')  # 添加colormap参数
+            self.current_plot_params.get('histtype', 'bar'),
+            self.current_plot_params.get('bins', 10),
+            self.current_plot_params.get('colormap', 'viridis'),
+            self.current_plot_params.get('line_style', '-'),
+            self.current_plot_params.get('line_width', 2)            
         )
    
     @pyqtSlot()
@@ -436,34 +451,30 @@ class PlotView(QWidget):
         settings = {
             # 数据文件信息
             'data_file_path': current_file_path,
-            
             # 数据筛选参数
             'filter_expr': data_view.filter_expr_edit.toPlainText() if data_view else '',
-            
             # 绘图控制参数 - 修改为使用self的控件
             'x_col': self.x_combo.currentText(),
             'y_col': self.y_combo.currentText(),
             'xerr_col': self.xerr_combo.currentText(),
             'yerr_col': self.yerr_combo.currentText(),
-            
             # 图表样式参数 - 修改为使用self的控件
             'plot_type': self.plot_type_combo.currentText(),
             'color': self.color_button.property("color") if self.color_button.property("color") else 'blue',
+            'alpha': self.alpha_spin.value(),
             'mark_style': self.mark_style_combo.currentText(),
             'mark_size': self.mark_size_spin.value(),
-    
+            'line_style': self.line_style_combo.currentText() if hasattr(self, 'line_style_combo') else '-',
+            'line_width': self.line_width_spin.value() if hasattr(self, 'line_width_spin') else 2,            
             # 直方图特有参数 - 修改为使用self的控件
             'histtype': self.histtype_combo.currentText() if hasattr(self, 'histtype_combo') else 'bar',
             'bins': self.bins_spin.value() if hasattr(self, 'bins_spin') else 50,
-    
             # 2D densitymap 参数 - 修改为使用self的控件
             'colormap': self.colorbar_combo.currentText() if hasattr(self, 'colorbar_combo') else 'viridis',
-            
             # 图表显示设置
             'title': self.title_edit.text(),
             'x_label': self.x_label_edit.text(),
             'y_label': self.y_label_edit.text(),
-            
             # 新增坐标轴刻度和网格线设置
             'x_major_ticks': self.x_major_ticks_spin.value(),
             'x_minor_ticks': self.x_minor_ticks_spin.value(),
@@ -519,126 +530,135 @@ class PlotView(QWidget):
             "JSON文件 (*.json);;所有文件 (*.*)"
         )
         
-        if file_path:
-            try:
-                import json
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    settings = json.load(f)
-                
-                # 获取主窗口中的data_view实例
-                main_window = self.window()
-                data_view = main_window.data_view if hasattr(main_window, 'data_view') else None
+        try:
+            import json
+            with open(file_path, 'r', encoding='utf-8') as f:
+                settings = json.load(f)
+            
+            # 获取主窗口中的data_view实例
+            main_window = self.window()
+            data_view = main_window.data_view if hasattr(main_window, 'data_view') else None
 
-                # 1. 首先加载数据文件 - 优先处理
-                data_file_path = settings.get('data_file_path')
-                if data_file_path:
-                    if os.path.exists(data_file_path):
-                        # 显示加载进度对话框
-                        progress = QProgressDialog("正在加载数据文件...", "取消", 0, 100, self)
-                        progress.setWindowTitle("加载中")
-                        progress.setWindowModality(Qt.WindowModality.WindowModal)
-                        progress.show()
-                        progress.setValue(10)
-                        
-                        # 加载文件
-                        main_window.open_file(data_file_path)
-                        progress.setValue(50)
-                        QApplication.processEvents()  # 等待数据加载完成
-                        progress.setValue(100)
-                    else:
-                        QMessageBox.warning(
-                            self, 
-                            "文件不存在", 
-                            f"无法找到原始数据文件:\n{data_file_path}\n\n将继续加载其他设置。"
-                        )
+            # 1. 首先加载数据文件 - 优先处理
+            data_file_path = settings.get('data_file_path')
+            if data_file_path:
+                if os.path.exists(data_file_path):
+                    # 显示加载进度对话框
+                    progress = QProgressDialog("正在加载数据文件...", "取消", 0, 100, self)
+                    progress.setWindowTitle("加载中")
+                    progress.setWindowModality(Qt.WindowModality.WindowModal)
+                    progress.show()
+                    progress.setValue(10)
+                    
+                    # 加载文件
+                    main_window.open_file(data_file_path)
+                    progress.setValue(50)
+                    QApplication.processEvents()  # 等待数据加载完成
+                    progress.setValue(100)
+                else:
+                    QMessageBox.warning(
+                        self, 
+                        "文件不存在", 
+                        f"无法找到原始数据文件:\n{data_file_path}\n\n将继续加载其他设置。"
+                    )
 
-                # 2. 应用筛选条件
-                if data_view and self.data_manager.get_data() is not None:
-                    filter_expr = settings.get('filter_expr')
-                    if filter_expr:
-                        data_view.filter_expr_edit.setPlainText(filter_expr)
-                        data_view.apply_filter()
-                        QApplication.processEvents()
+            # 2. 应用筛选条件
+            if data_view and self.data_manager.get_data() is not None:
+                filter_expr = settings.get('filter_expr')
+                if filter_expr:
+                    data_view.filter_expr_edit.setPlainText(filter_expr)
+                    data_view.apply_filter()
+                    QApplication.processEvents()
 
-                # 3. 设置绘图参数 - 修改为使用self的控件
-                # 设置颜色并保存属性
-                color = settings.get('color', 'blue')
-                self.color_button.setStyleSheet(f"background-color: {color};")
-                self.color_button.setProperty("color", color)
-                
-                # 设置其他参数
-                self.plot_type_combo.setCurrentText(settings.get('plot_type', '散点图'))
-                self.mark_style_combo.setCurrentText(settings.get('mark_style', 'o'))
-                self.mark_size_spin.setValue(settings.get('mark_size', 10))
+            # 3. 设置绘图参数 - 修改为使用self的控件
+            # 设置颜色并保存属性
+            color = settings.get('color', 'blue')
+            self.color_button.setStyleSheet(f"background-color: {color};")
+            self.color_button.setProperty("color", color)
+            self.alpha_spin.setValue(settings.get('alpha', 0.7))  #透明度
+            
+            # 设置其他参数
+            self.plot_type_combo.setCurrentText(settings.get('plot_type', '散点图'))
+            self.mark_style_combo.setCurrentText(settings.get('mark_style', 'o'))
+            self.mark_size_spin.setValue(settings.get('mark_size', 10))
 
-                # 设置直方图特有参数
-                histtype = settings.get('histtype', 'bar')
-                index = self.histtype_combo.findText(histtype)
+            # 设置线型和线宽
+            if hasattr(self, 'line_style_combo'):
+                line_style = settings.get('line_style', '-')
+                index = self.line_style_combo.findText(line_style)
                 if index >= 0:
-                    self.histtype_combo.setCurrentIndex(index)
-            
-                # 设置分箱数量（适用于直方图和2D密度图）
-                self.bins_spin.setValue(settings.get('bins', 50))
-                
-                # 设置Colorbar样式（2D密度图）
-                colormap = settings.get('colormap')
-                if colormap:
-                    index = self.colorbar_combo.findText(colormap)
-                    if index >= 0:
-                        self.colorbar_combo.setCurrentIndex(index)
-            
-                # 触发绘图类型变更事件以更新界面
-                self.on_plot_type_changed(self.plot_type_combo.currentIndex())
+                    self.line_style_combo.setCurrentIndex(index)
+            if hasattr(self, 'line_width_spin'):
+                self.line_width_spin.setValue(settings.get('line_width', 2))        
 
-                # 设置数据列
-                self.x_combo.setCurrentText(settings.get('x_col', ''))
-                self.y_combo.setCurrentText(settings.get('y_col', ''))
-                self.xerr_combo.setCurrentText(settings.get('xerr_col', ''))
-                self.yerr_combo.setCurrentText(settings.get('yerr_col', ''))
+            # 设置直方图特有参数
+            histtype = settings.get('histtype', 'bar')
+            index = self.histtype_combo.findText(histtype)
+            if index >= 0:
+                self.histtype_combo.setCurrentIndex(index)
+        
+            # 设置分箱数量（适用于直方图和2D密度图）
+            self.bins_spin.setValue(settings.get('bins', 50))
+            
+            # 设置Colorbar样式（2D密度图）
+            colormap = settings.get('colormap')
+            if colormap:
+                index = self.colorbar_combo.findText(colormap)
+                if index >= 0:
+                    self.colorbar_combo.setCurrentIndex(index)
+        
+            # 触发绘图类型变更事件以更新界面
+            self.on_plot_type_changed(self.plot_type_combo.currentIndex())
 
-                # 4. 更新图表显示设置
-                self.title_edit.setText(settings.get('title', ''))
-                self.x_label_edit.setText(settings.get('x_label', ''))
-                self.y_label_edit.setText(settings.get('y_label', ''))
+            # 设置数据列
+            self.x_combo.setCurrentText(settings.get('x_col', ''))
+            self.y_combo.setCurrentText(settings.get('y_col', ''))
+            self.xerr_combo.setCurrentText(settings.get('xerr_col', ''))
+            self.yerr_combo.setCurrentText(settings.get('yerr_col', ''))
+
+            # 4. 更新图表显示设置
+            self.title_edit.setText(settings.get('title', ''))
+            self.x_label_edit.setText(settings.get('x_label', ''))
+            self.y_label_edit.setText(settings.get('y_label', ''))
+            
+            # 新增：加载坐标轴刻度和网格线设置
+            self.x_major_ticks_spin.setValue(settings.get('x_major_ticks', 5))
+            self.x_minor_ticks_spin.setValue(settings.get('x_minor_ticks', 1))
+            self.x_grid_checkbox.setChecked(settings.get('x_show_grid', True))
+            self.y_major_ticks_spin.setValue(settings.get('y_major_ticks', 5))
+            self.y_minor_ticks_spin.setValue(settings.get('y_minor_ticks', 1))
+            self.y_grid_checkbox.setChecked(settings.get('y_show_grid', True))
+            
+            # 新增：加载坐标轴范围设置
+            if 'x_min' in settings and settings['x_min'] is not None:
+                self.x_ticks_min.setText(str(settings['x_min']))
+            else:
+                self.x_ticks_min.clear()
                 
-                # 新增：加载坐标轴刻度和网格线设置
-                self.x_major_ticks_spin.setValue(settings.get('x_major_ticks', 5))
-                self.x_minor_ticks_spin.setValue(settings.get('x_minor_ticks', 1))
-                self.x_grid_checkbox.setChecked(settings.get('x_show_grid', True))
-                self.y_major_ticks_spin.setValue(settings.get('y_major_ticks', 5))
-                self.y_minor_ticks_spin.setValue(settings.get('y_minor_ticks', 1))
-                self.y_grid_checkbox.setChecked(settings.get('y_show_grid', True))
+            if 'x_max' in settings and settings['x_max'] is not None:
+                self.x_ticks_max.setText(str(settings['x_max']))
+            else:
+                self.x_ticks_max.clear()
                 
-                # 新增：加载坐标轴范围设置
-                if 'x_min' in settings and settings['x_min'] is not None:
-                    self.x_ticks_min.setText(str(settings['x_min']))
-                else:
-                    self.x_ticks_min.clear()
-                    
-                if 'x_max' in settings and settings['x_max'] is not None:
-                    self.x_ticks_max.setText(str(settings['x_max']))
-                else:
-                    self.x_ticks_max.clear()
-                    
-                if 'y_min' in settings and settings['y_min'] is not None:
-                    self.y_ticks_min.setText(str(settings['y_min']))
-                else:
-                    self.y_ticks_min.clear()
-                    
-                if 'y_max' in settings and settings['y_max'] is not None:
-                    self.y_ticks_max.setText(str(settings['y_max']))
-                else:
-                    self.y_ticks_max.clear()
+            if 'y_min' in settings and settings['y_min'] is not None:
+                self.y_ticks_min.setText(str(settings['y_min']))
+            else:
+                self.y_ticks_min.clear()
                 
-                # 5. 触发绘图
-                if data_view and self.data_manager.get_data() is not None:
-                    data_view.request_plot()
-                    QMessageBox.information(self, "成功", "设置已完整加载并应用")
-                else:
-                    QMessageBox.information(self, "部分成功", "图表设置已加载，但未能加载数据或生成图表")
-                
-            except Exception as e:
-                QMessageBox.critical(self, "错误", f"加载设置失败: {str(e)}")
+            if 'y_max' in settings and settings['y_max'] is not None:
+                self.y_ticks_max.setText(str(settings['y_max']))
+            else:
+                self.y_ticks_max.clear()
+            
+            # 5. 触发绘图
+            if data_view and self.data_manager.get_data() is not None:
+                data_view.request_plot()
+                QMessageBox.information(self, "成功", "设置已完整加载并应用")
+            else:
+                QMessageBox.information(self, "部分成功", "图表设置已加载，但未能加载数据或生成图表")
+            
+        except Exception as e:
+            QMessageBox.critical(self, "错误", f"加载设置失败: {str(e)}")
     
     @pyqtSlot()
     def save_plot(self):
@@ -675,7 +695,8 @@ class PlotView(QWidget):
     def handle_plot_request(self, plot_type, 
         x_col, y_col, color, xerr_col=None, yerr_col=None, 
         mark_style='o', mark_size=10, histtype='bar', 
-        bins=50, colormap='viridis', line_style='-'):
+        bins=50, colormap='viridis', line_style='-',
+        line_width=2, alpha=0.7):
         """处理绘图请求，使用工作线程进行绘图操作"""
         # 保存当前绘图参数
         self.current_plot_params = {
@@ -683,6 +704,7 @@ class PlotView(QWidget):
             'x_col': x_col,
             'y_col': y_col,
             'color': color,
+            'alpha': alpha,
             'xerr_col': xerr_col,
             'yerr_col': yerr_col,
             'mark_style': mark_style,
@@ -690,7 +712,8 @@ class PlotView(QWidget):
             'histtype': histtype,
             'bins': bins,
             'colormap': colormap,
-            'line_style': line_style
+            'line_style': line_style,
+            'line_width': line_width
         }
         
         # 获取数据
@@ -772,8 +795,9 @@ class PlotView(QWidget):
                 y_major_ticks=y_major_ticks,
                 y_minor_ticks=y_minor_ticks,
                 y_show_grid=y_show_grid,
-                alpha=0.7,  # 默认透明度
-                line_style = line_style
+                alpha=alpha,  # 默认透明度
+                line_style = line_style,
+                line_width = line_width
             )
             
             # 连接信号
@@ -892,7 +916,7 @@ class PlotView(QWidget):
             self.density_settings.setVisible(True)
         elif plot_type == "带误差棒的散点图":
             self.error_settings.setVisible(True)
-    
+
         # 更新标记样式下拉框选项
         self.update_marker_styles()
         
@@ -1062,11 +1086,13 @@ class PlotView(QWidget):
         
         # 获取线型
         line_style = self.line_style_combo.currentText() if hasattr(self, 'line_style_combo') else '-'
+        line_width = self.line_width_spin.value() if hasattr(self, 'line_width_spin') else 2
         
         # 获取颜色
         color = self.color_button.property("color")
         if not color or not isinstance(color, str):
             color = "blue"  # 默认颜色
+        alpha = self.alpha_spin.value()
         
         # 存储当前请求参数
         self.current_request = {
@@ -1074,6 +1100,7 @@ class PlotView(QWidget):
             'x_col': x_col,
             'y_col': y_col,
             'color': color,
+            'alpha': alpha,
             'xerr_col': xerr_col,
             'yerr_col': yerr_col,
             'mark_style': matplotlib_marker,  # 使用转换后的标记样式
@@ -1081,7 +1108,8 @@ class PlotView(QWidget):
             'histtype': histtype,
             'bins': bins,
             'colormap': colormap,
-            'line_style': line_style
+            'line_style': line_style,
+            'line_width': line_width
         }
 
     def _execute_plot_request(self):
@@ -1102,6 +1130,7 @@ class PlotView(QWidget):
             x_col = self.current_request['x_col']
             y_col = self.current_request['y_col']
             color = self.current_request['color']
+            alpha = self.current_request.get('alpha', 0.7) 
             xerr_col = self.current_request['xerr_col']
             yerr_col = self.current_request['yerr_col']
             mark_style = self.current_request['mark_style']
@@ -1110,12 +1139,13 @@ class PlotView(QWidget):
             bins = self.current_request['bins']
             colormap = self.current_request['colormap']
             line_style = self.current_request.get('line_style', '-')            
+            line_width = self.current_request.get('line_width', 2)
             # 调用绘图方法
             self.handle_plot_request(
                 plot_type, x_col, y_col, color, 
                 xerr_col, yerr_col, mark_style, 
                 mark_size, histtype, bins, colormap,
-                line_style
+                line_style, line_width, alpha
             )
             
             print(f"绘图请求处理完成")
