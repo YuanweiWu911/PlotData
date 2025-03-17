@@ -3,7 +3,7 @@ import pandas as pd
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
                             QGroupBox, QFormLayout, QLineEdit, QApplication,
                             QMessageBox, QFileDialog, QProgressDialog, 
-                            QDoubleSpinBox, QLabel, QSpinBox,
+                            QDoubleSpinBox, QLabel, QSpinBox, QCheckBox,
                             QComboBox, QColorDialog)
 from PyQt6.QtCore import Qt, pyqtSlot, pyqtSignal, QThreadPool, QTimer
 import matplotlib
@@ -528,6 +528,11 @@ class PlotView(QWidget):
         self.x_minor_ticks_spin.setValue(1)
         ticks_layout.addWidget(self.x_minor_ticks_spin)
 
+                # 添加X轴网格线复选框
+        self.x_grid_checkbox = QCheckBox("X轴网格")
+        self.x_grid_checkbox.setChecked(True)
+        ticks_layout.addWidget(self.x_grid_checkbox)
+
         ticks_layout.addWidget(QLabel("y_majorticks:"))
         self.y_major_ticks_spin = QSpinBox()
         self.y_major_ticks_spin.setRange(0, 20)
@@ -540,10 +545,14 @@ class PlotView(QWidget):
         self.y_minor_ticks_spin.setRange(0, 10)
         self.y_minor_ticks_spin.setValue(1)
         ticks_layout.addWidget(self.y_minor_ticks_spin)
-        settings_layout.addRow("",ticks_layout)
-#       UIHelper.add_widgets_to_layout(ticks_layout,[("Y轴主刻度:", self.x_minor_ticks_spin)])
 
-#       axis_group_layout.addWidget(ticks_group)
+        # 添加Y轴网格线复选框
+        self.y_grid_checkbox = QCheckBox("Y轴网格")
+        self.y_grid_checkbox.setChecked(True)
+        ticks_layout.addWidget(self.y_grid_checkbox)
+
+        settings_layout.addRow("",ticks_layout)
+
     @pyqtSlot()  # 修改装饰器，移除dict参数
     def apply_settings(self):
         """应用新的图表设置"""

@@ -21,7 +21,15 @@ class DataManager:
                 # 自动检测分隔符（多个空格、逗号、竖线）
                 if sep is None:
                     sep = r'\s+|,|\|'  # 正则表达式匹配多个空格/逗号/竖线
-                self.data = pd.read_csv(file_path, delimiter=sep, engine='python', comment = '#')  # 添加engine参数
+                self.data = pd.read_csv(file_path, 
+                delimiter=sep, 
+                engine='python',
+                skip_blank_lines=True,
+                quotechar='"',  # 添加引号处理
+                quoting=0,     # 0=QUOTE_MINIMAL
+                on_bad_lines='skip', # 跳过格式错误行
+                keep_default_na=False
+                )  # 添加engine参数
 
             elif file_path.endswith(('.xlsx', '.xls')):
                 self.data = pd.read_excel(file_path)

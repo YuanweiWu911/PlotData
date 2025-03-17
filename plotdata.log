@@ -1,0 +1,39 @@
+2025-03-17 12:56:26,581 - PlotData - INFO - 启动应用程序
+2025-03-17 12:56:27,240 - PlotData.ConfigManager - INFO - 配置文件加载成功
+2025-03-17 12:56:32,807 - PlotData - INFO - 应用程序界面已加载
+2025-03-17 12:59:50,097 - PlotData.ConfigManager - INFO - 配置已保存
+2025-03-17 14:15:35,250 - PlotData - INFO - 启动应用程序
+2025-03-17 14:15:35,619 - PlotData.ConfigManager - INFO - 配置文件加载成功
+2025-03-17 14:15:40,366 - PlotData - INFO - 应用程序界面已加载
+2025-03-17 14:22:18,461 - PlotData.ConfigManager - INFO - 配置已保存
+2025-03-17 14:22:38,414 - PlotData - INFO - 启动应用程序
+2025-03-17 14:22:38,830 - PlotData.ConfigManager - INFO - 配置文件加载成功
+2025-03-17 14:23:08,190 - PlotData - INFO - 启动应用程序
+2025-03-17 14:23:08,318 - PlotData.ConfigManager - INFO - 配置文件加载成功
+2025-03-17 14:23:09,512 - PlotData - INFO - 应用程序界面已加载
+2025-03-17 14:24:31,073 - PlotData.PlotWorker - INFO - 创建绘图工作线程: 散点图
+2025-03-17 14:24:31,073 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 散点图
+2025-03-17 14:24:41,771 - PlotData.PlotWorker - INFO - 创建绘图工作线程: 散点图
+2025-03-17 14:24:41,771 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 散点图
+2025-03-17 14:24:43,134 - PlotData.PlotWorker - INFO - 创建绘图工作线程: 散点图
+2025-03-17 14:24:43,134 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 散点图
+2025-03-17 14:24:43,696 - PlotData.PlotWorker - INFO - 创建绘图工作线程: 散点图
+2025-03-17 14:24:43,696 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 散点图
+2025-03-17 14:25:02,219 - PlotData.PlotWorker - INFO - 创建绘图工作线程: 2D密度图
+2025-03-17 14:25:02,219 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 2D密度图
+2025-03-17 14:25:11,195 - PlotData.PlotWorker - INFO - 创建绘图工作线程: 带误差棒的散点图
+2025-03-17 14:25:11,195 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 带误差棒的散点图
+2025-03-17 14:25:23,952 - PlotData.PlotWorker - INFO - 创建绘图工作线程: 带误差棒的散点图
+2025-03-17 14:25:23,952 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 带误差棒的散点图
+2025-03-17 14:26:10,284 - PlotData.PlotWorker - INFO - 创建绘图工作线程: 线图
+2025-03-17 14:26:10,291 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 线图
+2025-03-17 14:26:21,099 - PlotData.PlotWorker - INFO - 创建绘图工作线程: 直方图
+2025-03-17 14:26:21,099 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 直方图
+2025-03-17 14:26:30,304 - PlotData.PlotWorker - INFO - 创建绘图工作线程: 散点图
+2025-03-17 14:26:30,308 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 散点图
+2025-03-17 14:26:43,635 - PlotData.PlotWorker - INFO - 创建绘图工作线程: 线图
+2025-03-17 14:26:43,635 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 线图
+2025-03-17 14:26:51,521 - PlotData.PlotWorker - INFO - 创建绘图工作线程: 2D密度图
+2025-03-17 14:26:51,521 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 2D密度图
+2025-03-17 14:27:00,917 - PlotData.PlotWorker - INFO - 创建绘图工作线程: 线图
+2025-03-17 14:27:00,920 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 线图
