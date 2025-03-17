@@ -165,6 +165,26 @@ class DataView(QWidget):
         plot_layout.setContentsMargins(1, 1, 1, 1)  # 减小内边距
         plot_layout.setSpacing(3)  # 减小控件间距
         
+        # 添加生成图表按钮
+        self.plot_button = QPushButton("生成图表")
+        self.plot_button.setMinimumHeight(30)  # 设置更大的高度
+        self.plot_button.setStyleSheet("""
+            QPushButton {
+                background-color: #4CAF50;  /* 绿色 */
+                color: white;
+                font-weight: bold;
+                border-radius: 5px;
+                padding: 5px;
+            }
+            QPushButton:hover {
+                background-color: #45a049;  /* 鼠标悬停时的深绿色 */
+            }
+        """)
+        self.plot_button.clicked.connect(self.request_plot)
+        plot_layout.addWidget(self.plot_button)
+        
+        # 添加绘图控制组到主布局
+        main_layout.addWidget(plot_group)
 #       # 创建绘图类型选择
 #       plot_type_layout = QHBoxLayout()
 #       plot_type_layout.addWidget(QLabel("绘图类型:"))
