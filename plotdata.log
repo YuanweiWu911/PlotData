@@ -1847,3 +1847,7 @@ TypeError: Visualizer.density_map_2d() got an unexpected keyword argument 'alpha
 2025-03-17 11:42:32,003 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 线图
 2025-03-17 11:42:34,835 - PlotData.PlotWorker - INFO - 创建绘图工作线程: 线图
 2025-03-17 11:42:34,836 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 线图
+2025-03-17 12:48:38,752 - PlotData - INFO - 启动应用程序
+2025-03-17 12:48:38,952 - PlotData.ConfigManager - INFO - 配置文件加载成功
+2025-03-17 12:48:40,253 - PlotData - INFO - 应用程序界面已加载
+2025-03-17 12:48:48,428 - PlotData.ConfigManager - INFO - 配置已保存
