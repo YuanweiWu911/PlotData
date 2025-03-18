@@ -307,7 +307,7 @@ class PlotView(QWidget):
         
         # 使用辅助方法创建工具栏按钮
         self.toggle_settings_button = UIHelper.create_button(
-            "绘图设置", 
+            "Plot Settings", 
             icon=self.style().standardIcon(self.style().StandardPixmap.SP_FileDialogDetailedView),
             slot=self.toggle_settings_visibility,
             checkable=True,
@@ -356,7 +356,7 @@ class PlotView(QWidget):
         main_layout.addWidget(plot_group)
         
         # 创建图表设置区域
-        self.settings_group = QGroupBox("绘图设置")
+        self.settings_group = QGroupBox("Plot Settings")
         settings_layout = QFormLayout(self.settings_group)
         
         # 创建绘图控制区域
@@ -1162,65 +1162,64 @@ class PlotView(QWidget):
             # 无论成功还是失败，都重置绘图状态
             self._is_plotting = False
 
-    # 确保方法名称与信号连接中使用的名称一致
-    def toggle_settings_visibility(self):
+    @pyqtSlot(bool)
+    def toggle_settings_visibility(self, checked=None):
         """切换设置区域的显示状态"""
-        is_visible = self.toggle_settings_button.isChecked()
+        if checked is None:
+            checked = not self.toggle_settings_button.isChecked()
+            self.toggle_settings_button.setChecked(checked)
         
-        # 设置设置区域的可见性
+        # 直接控制设置区域的可见性
         if hasattr(self, 'settings_group'):
-            self.settings_group.setVisible(is_visible)
+            self.settings_group.setVisible(checked)
         
-        # 发送信号通知其他组件
-        self.settings_visibility_changed.emit(is_visible)
+        # 发出信号通知主窗口
+        self.settings_visibility_changed.emit(checked)
+        
+        # 更新按钮文本
+        if checked:
+            self.toggle_settings_button.setText("Plot Settings ✓")
+            self.toggle_settings_button.setStyleSheet("background-color: #4CAF50;")
+        else:
+            self.toggle_settings_button.setText("Plot Settings")
+            self.toggle_settings_button.setStyleSheet("")
         
         # 调整窗口大小以适应内容变化
         self.adjustSize()
         if self.parent():
             self.parent().adjustSize()
 
-        # 更新按钮文本
-        self.toggle_settings_button.setText("绘图设置 ✓" if is_visible else "绘图设置")
-        
-        # 设置按钮背景色
-        if is_visible:
-            self.toggle_settings_button.setStyleSheet("background-color: #4CAF50;")
-        else:
-            self.toggle_settings_button.setStyleSheet("")
-
-
-
     def on_plot_type_changed(self, index):
-        """处理绘图类型变更"""
-        plot_type = self.plot_type_combo.currentText()
-        
-        # 隐藏所有特殊设置
-        self.error_settings.setVisible(False)
-        self.hist_settings.setVisible(False)
-        self.density_settings.setVisible(False)
-        
-        # 根据绘图类型显示相应设置
-        if plot_type == "直方图":
-            self.hist_settings.setVisible(True)
-            # 隐藏Y轴数据选择控件，但保留Y轴标签
-            self.y_combo.setVisible(False)
-            # 找到Y轴数据标签并保持其可见
-            for i in range(self.y_combo.parentWidget().layout().count()):
-                item = self.y_combo.parentWidget().layout().itemAt(i)
-                if item.widget() and isinstance(item.widget(), QLabel) and item.widget().text() == "Y轴数据:":
-                    item.widget().setVisible(False)
-                    break
-        else:
-            # 对于其他图表类型，显示Y轴数据选择控件
-            self.y_combo.setVisible(True)
-            # 显示Y轴数据标签
-            for i in range(self.y_combo.parentWidget().layout().count()):
-                item = self.y_combo.parentWidget().layout().itemAt(i)
-                if item.widget() and isinstance(item.widget(), QLabel) and item.widget().text() == "Y轴数据:":
-                    item.widget().setVisible(True)
-                    break
-            
-        if plot_type == "2D密度图":
-            self.density_settings.setVisible(True)
-        elif plot_type == "带误差棒的散点图":
-            self.error_settings.setVisible(True)
+       """处理绘图类型变更"""
+       plot_type = self.plot_type_combo.currentText()
+       
+       # 隐藏所有特殊设置
+       self.error_settings.setVisible(False)
+       self.hist_settings.setVisible(False)
+       self.density_settings.setVisible(False)
+       
+       # 根据绘图类型显示相应设置
+       if plot_type == "直方图":
+           self.hist_settings.setVisible(True)
+           # 隐藏Y轴数据选择控件，但保留Y轴标签
+           self.y_combo.setVisible(False)
+           # 找到Y轴数据标签并保持其可见
+           for i in range(self.y_combo.parentWidget().layout().count()):
+               item = self.y_combo.parentWidget().layout().itemAt(i)
+               if item.widget() and isinstance(item.widget(), QLabel) and item.widget().text() == "Y轴数据:":
+                   item.widget().setVisible(False)
+                   break
+       else:
+           # 对于其他图表类型，显示Y轴数据选择控件
+           self.y_combo.setVisible(True)
+           # 显示Y轴数据标签
+           for i in range(self.y_combo.parentWidget().layout().count()):
+               item = self.y_combo.parentWidget().layout().itemAt(i)
+               if item.widget() and isinstance(item.widget(), QLabel) and item.widget().text() == "Y轴数据:":
+                   item.widget().setVisible(True)
+                   break
+           
+       if plot_type == "2D密度图":
+           self.density_settings.setVisible(True)
+       elif plot_type == "带误差棒的散点图":
+           self.error_settings.setVisible(True)

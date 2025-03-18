@@ -93,6 +93,8 @@ class MainWindow(QMainWindow):
             )
         )
 
+        self.plot_view.settings_visibility_changed.connect(self.toggle_plot_settings)
+
     def create_actions(self):
         # 文件操作
         self.open_action = QAction("载入数据", self)
@@ -485,24 +487,68 @@ class MainWindow(QMainWindow):
             
         is_visible = self.preview_toggle_button.isChecked()
         
-        # 获取数据视图中的相关控件
-        if hasattr(self, 'data_view'):
-            # 获取数据表格视图
-            if hasattr(self.data_view, 'table_view'):
-                self.data_view.table_view.setVisible(is_visible)
-                
-            # 获取数据筛选区域 - 根据data_view.py中的实际代码
-            filter_group = None
-            for child in self.data_view.children():
-                if isinstance(child, QGroupBox) and child.title() == "数据筛选":
-                    filter_group = child
-                    break
-                    
-            if filter_group:
-                filter_group.setVisible(is_visible)
+        # 显示/隐藏数据预览
+        self.data_view.setVisible(is_visible)
         
-        # 更新按钮文本，提供更好的用户反馈
-        self.preview_toggle_button.setText("数据预览 ✓" if is_visible else "数据预览")
+        # 隐藏/显示绘图设置
+        self.plot_settings_container.setVisible(not is_visible)
+        
+        # 同步绘图设置toggle按钮状态
+        if hasattr(self, 'plot_view') and hasattr(self.plot_view, 'toggle_settings_button'):
+            self.plot_view.toggle_settings_button.setChecked(not is_visible)
+            
+            # 更新按钮文本和样式
+            if not is_visible:
+                self.plot_view.toggle_settings_button.setText("绘图设置 ✓")
+                self.plot_view.toggle_settings_button.setStyleSheet("background-color: #4CAF50;")
+            else:
+                self.plot_view.toggle_settings_button.setText("绘图设置")
+                self.plot_view.toggle_settings_button.setStyleSheet("")
+        
+        # 更新按钮文本
+        if is_visible:
+            self.preview_toggle_button.setText("数据预览 ✓")
+            self.preview_toggle_button.setStyleSheet("background-color: #4CAF50;")
+        else:
+            self.preview_toggle_button.setText("数据预览")
+            self.preview_toggle_button.setStyleSheet("")
+
+    def toggle_plot_settings(self, visible):
+        # 如果要显示绘图设置，则隐藏数据预览
+        if visible:
+            if hasattr(self, 'data_view'):
+                self.data_view.setVisible(False)
+            if hasattr(self, 'plot_settings_container'):
+                self.plot_settings_container.setVisible(True)
+        else:
+            # 显示数据预览，隐藏绘图设置
+            if hasattr(self, 'data_view'):
+                self.data_view.setVisible(True)
+            if hasattr(self, 'plot_settings_container'):
+                self.plot_settings_container.setVisible(False)
+
+#   def toggle_plot_settings(self, visible):
+#       # 如果需要显示绘图设置，请隐藏数据预览
+#       if visible:
+#           self.data_view.setVisible(False)
+#           self.plot_settings_container.setVisible(True)
+#           
+#           # 如果绘图设置容器中没有控件，则将绘图设置控件移动到容器中
+#           if not self.plot_settings_container.layout().count():
+#               # 获取绘图设置控件
+#               settings_group = self.plot_view.settings_group
+#               # 将控件从原位置移除并添加到新容器
+#               if settings_group.parent():
+#                   settings_group.parent().layout().removeWidget(settings_group)
+#               self.plot_settings_container.layout().addWidget(settings_group)
+#       else:
+#           # 显示数据预览，隐藏绘图设置
+#           self.data_view.setVisible(True)
+#           self.plot_settings_container.setVisible(False)
+#       
+#       # 确保数据预览toggle按钮状态与绘图设置toggle按钮状态相反
+#       if hasattr(self, 'preview_toggle_button'):
+#           self.preview_toggle_button.setChecked(not visible)
 
     def closeEvent(self, event):
         """窗口关闭事件"""

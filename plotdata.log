@@ -37,3 +37,21 @@
 2025-03-17 14:26:51,521 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 2D密度图
 2025-03-17 14:27:00,917 - PlotData.PlotWorker - INFO - 创建绘图工作线程: 线图
 2025-03-17 14:27:00,920 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 线图
+2025-03-17 14:37:53,440 - PlotData.ConfigManager - INFO - 配置已保存
+2025-03-17 14:39:40,716 - PlotData - INFO - 启动应用程序
+2025-03-17 14:39:41,004 - PlotData.ConfigManager - INFO - 配置文件加载成功
+2025-03-17 14:39:42,370 - PlotData - INFO - 应用程序界面已加载
+2025-03-17 14:40:15,902 - PlotData.PlotWorker - INFO - 创建绘图工作线程: 散点图
+2025-03-17 14:40:15,913 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 散点图
+2025-03-17 14:43:11,316 - PlotData.ConfigManager - INFO - 配置已保存
+2025-03-17 14:49:30,058 - PlotData - INFO - 启动应用程序
+2025-03-17 14:49:30,261 - PlotData.ConfigManager - INFO - 配置文件加载成功
+2025-03-17 14:49:33,202 - PlotData - INFO - 应用程序界面已加载
+2025-03-17 14:50:42,593 - PlotData.ConfigManager - INFO - 配置已保存
+2025-03-18 15:34:17,975 - PlotData - INFO - 启动应用程序
+2025-03-18 15:34:18,418 - PlotData.ConfigManager - INFO - 配置文件加载成功
+2025-03-18 15:34:20,946 - PlotData - INFO - 应用程序界面已加载
+2025-03-18 15:37:40,857 - PlotData.ConfigManager - INFO - 配置已保存
+2025-03-18 15:37:47,411 - PlotData - INFO - 启动应用程序
+2025-03-18 15:37:47,664 - PlotData.ConfigManager - INFO - 配置文件加载成功
+2025-03-18 15:37:49,361 - PlotData - INFO - 应用程序界面已加载
