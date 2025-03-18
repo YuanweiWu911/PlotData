@@ -57,7 +57,7 @@ class PlotView(QWidget):
         toolbar_layout = QHBoxLayout()
         
         # 添加绘图设置切换按钮到工具栏
-        self.toggle_settings_button = QPushButton("绘图设置")
+        self.toggle_settings_button = QPushButton("PlotSettings")
         self.toggle_settings_button.setCheckable(True)  # 设置为可切换状态
         self.toggle_settings_button.setChecked(True)    # 默认为显示状态
         self.toggle_settings_button.clicked.connect(self.toggle_settings_visibility)  # 这里需要确保方法名称正确
@@ -101,8 +101,8 @@ class PlotView(QWidget):
         
         main_layout.addWidget(plot_group)
         
-        # 创建图表设置区域
-        self.settings_group = QGroupBox("绘图设置")
+        # 创建图表设置区域 - 作为独立组件
+        self.settings_group = QGroupBox("PlotSettings")
         settings_layout = QFormLayout(self.settings_group)
         
         # 从data_view.py移动过来的绘图控制区域
@@ -1177,7 +1177,7 @@ class PlotView(QWidget):
             self.parent().adjustSize()
 
         # 更新按钮文本
-        self.toggle_settings_button.setText("绘图设置 ✓" if is_visible else "绘图设置")
+        self.toggle_settings_button.setText("PlotSettings ✓" if is_visible else "PlotSettings")
         
         # 设置按钮背景色
         if is_visible:

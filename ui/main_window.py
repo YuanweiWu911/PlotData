@@ -1,7 +1,7 @@
 import os
 from PyQt6 import sip  # 新增导入
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
-                            QSplitter, QFileDialog, QMessageBox, QToolBar, 
+                            QSplitter, QFileDialog, QMessageBox, QTabWidget, 
                             QStatusBar, QLabel, QDialog, QApplication, 
                             QPushButton, QGroupBox, QInputDialog)
 from PyQt6.QtCore import Qt, QSize  # 添加 QSize 导入
@@ -57,12 +57,29 @@ class MainWindow(QMainWindow):
         # 创建分割器
         splitter = QSplitter(Qt.Orientation.Horizontal)
         
-        # 创建数据视图
+        # 创建左侧标签页容器
+        self.tab_widget = QTabWidget()
+        
+        # 创建数据预览标签页
         self.data_view = DataView(self.data_manager)
-        splitter.addWidget(self.data_view)
+        self.tab_widget.addTab(self.data_view, "数据预览")
+        
+        # 创建绘图设置标签页
+        self.plot_settings = QWidget()
+        self.plot_settings_layout = QVBoxLayout(self.plot_settings)
+        self.plot_settings_layout.setContentsMargins(5, 5, 5, 5)
+        self.plot_settings_layout.setSpacing(3)
+        self.tab_widget.addTab(self.plot_settings, "绘图设置")
         
         # 创建绘图视图
         self.plot_view = PlotView(self.data_manager, self.visualizer)
+        
+        # 将绘图设置区域移动到左侧标签页
+        if hasattr(self.plot_view, 'settings_group'):
+            self.plot_settings_layout.addWidget(self.plot_view.settings_group)
+        
+        # 添加组件到分割器
+        splitter.addWidget(self.tab_widget)
         splitter.addWidget(self.plot_view)
         
         # 设置分割器初始大小

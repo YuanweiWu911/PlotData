@@ -158,12 +158,7 @@ class DataView(QWidget):
         # 添加筛选区域到主布局
         main_layout.addWidget(filter_group)
         
-        # 创建绘图控制组 - 移到数据筛选后面
-        plot_group = QGroupBox("绘图设置")
-        
-        plot_layout = QVBoxLayout(plot_group)
-        plot_layout.setContentsMargins(1, 1, 1, 1)  # 减小内边距
-        plot_layout.setSpacing(3)  # 减小控件间距
+        # 移除绘图控制组，因为已经移动到独立的标签页中
         
 #       # 创建绘图类型选择
 #       plot_type_layout = QHBoxLayout()
