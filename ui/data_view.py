@@ -82,12 +82,7 @@ class DataView(QWidget):
         self.load_data_button.clicked.connect(self.load_data)
         toolbar_layout.addWidget(self.load_data_button)
         
-        # 新增数据预览切换按钮
-        self.preview_toggle_button = QPushButton("数据预览 ✓")
-        self.preview_toggle_button.setCheckable(True)
-        self.preview_toggle_button.setChecked(True)
-        self.preview_toggle_button.clicked.connect(self.toggle_preview)
-        toolbar_layout.addWidget(self.preview_toggle_button)
+
         
         # 添加导出数据按钮到工具栏
         self.export_data_button = QPushButton("导出数据")
@@ -708,39 +703,3 @@ class DataView(QWidget):
         button_layout.addWidget(self.export_button)
 
         return button_layout
-
-    def toggle_preview(self):
-        """切换数据预览和筛选区域的显示状态"""
-        is_visible = self.preview_toggle_button.isChecked()
-        # 控制表格视图可见性
-        if hasattr(self, 'table_view'):
-            self.table_view.setVisible(is_visible)
-        # 控制筛选区域可见性
-        filter_group = None
-        for child in self.children():
-            if isinstance(child, QGroupBox) and child.title() == "数据筛选":
-                filter_group = child
-                break
-        if filter_group:
-            filter_group.setVisible(is_visible)
-        # 控制筛选结果信息的显示状态
-        if hasattr(self, 'table_label'):
-            if not is_visible:
-                # 当预览关闭时，隐藏筛选结果信息
-                self.table_label.setText("")
-            elif self.data_manager and self.data_manager.get_data() is not None:
-                # 当预览打开且有数据时，显示筛选结果信息
-                raw_data = self.data_manager.get_data(filtered=False)
-                display_data = self.data_manager.get_display_data()
-                if len(raw_data) != len(display_data):
-                    info_msg = f"筛选结果: {len(display_data)} 行 (原始数据 {len(raw_data)} 行)"
-                    self.table_label.setText(info_msg)
-                else:
-                    self.table_label.setText("数据预览")
-        # 更新按钮文本
-        self.preview_toggle_button.setText("数据预览 ✓" if is_visible else "数据预览")
-        # 设置按钮背景色
-        if is_visible:
-            self.preview_toggle_button.setStyleSheet("background-color: #4CAF50;")
-        else:
-            self.preview_toggle_button.setStyleSheet("")

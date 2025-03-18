@@ -56,13 +56,7 @@ class PlotView(QWidget):
         # 创建工具栏
         toolbar_layout = QHBoxLayout()
         
-        # 添加绘图设置切换按钮到工具栏
-        self.toggle_settings_button = QPushButton("PlotSettings")
-        self.toggle_settings_button.setCheckable(True)  # 设置为可切换状态
-        self.toggle_settings_button.setChecked(True)    # 默认为显示状态
-        self.toggle_settings_button.clicked.connect(self.toggle_settings_visibility)  # 这里需要确保方法名称正确
-        self.toggle_settings_button.setIcon(self.style().standardIcon(self.style().StandardPixmap.SP_FileDialogDetailedView))
-        toolbar_layout.addWidget(self.toggle_settings_button)
+
         
         # 添加保存设置按钮到工具栏
         self.save_settings_toolbar_button = QPushButton("保存设置")
@@ -102,7 +96,7 @@ class PlotView(QWidget):
         main_layout.addWidget(plot_group)
         
         # 创建图表设置区域 - 作为独立组件
-        self.settings_group = QGroupBox("PlotSettings")
+        self.settings_group = QGroupBox("")
         settings_layout = QFormLayout(self.settings_group)
         
         # 从data_view.py移动过来的绘图控制区域
@@ -1160,27 +1154,3 @@ class PlotView(QWidget):
             self._is_plotting = False
 
     # 确保方法名称与信号连接中使用的名称一致
-    def toggle_settings_visibility(self):
-        """切换设置区域的显示状态"""
-        is_visible = self.toggle_settings_button.isChecked()
-        
-        # 设置设置区域的可见性
-        if hasattr(self, 'settings_group'):
-            self.settings_group.setVisible(is_visible)
-        
-        # 发送信号通知其他组件
-        self.settings_visibility_changed.emit(is_visible)
-        
-        # 调整窗口大小以适应内容变化
-        self.adjustSize()
-        if self.parent():
-            self.parent().adjustSize()
-
-        # 更新按钮文本
-        self.toggle_settings_button.setText("PlotSettings ✓" if is_visible else "PlotSettings")
-        
-        # 设置按钮背景色
-        if is_visible:
-            self.toggle_settings_button.setStyleSheet("background-color: #4CAF50;")
-        else:
-            self.toggle_settings_button.setStyleSheet("")
