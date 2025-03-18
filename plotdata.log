@@ -110,3 +110,23 @@
 2025-03-18 20:26:44,509 - PlotData.PlotWorker - INFO - 创建绘图工作线程: 2D密度图
 2025-03-18 20:26:44,511 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 2D密度图
 2025-03-18 20:27:27,815 - PlotData.ConfigManager - INFO - 配置已保存
+2025-03-18 20:27:34,182 - PlotData - INFO - 启动应用程序
+2025-03-18 20:27:34,308 - PlotData.ConfigManager - INFO - 配置文件加载成功
+2025-03-18 20:27:34,799 - PlotData - INFO - 应用程序界面已加载
+2025-03-18 20:31:21,557 - PlotData.ConfigManager - INFO - 配置已保存
+2025-03-18 20:31:26,570 - PlotData - INFO - 启动应用程序
+2025-03-18 20:31:26,712 - PlotData.ConfigManager - INFO - 配置文件加载成功
+2025-03-18 20:31:27,169 - PlotData - INFO - 应用程序界面已加载
+2025-03-18 20:31:37,885 - PlotData.PlotWorker - INFO - 创建绘图工作线程: 线图
+2025-03-18 20:31:37,885 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 线图
+2025-03-18 20:33:01,016 - PlotData.PlotWorker - INFO - 创建绘图工作线程: 线图
+2025-03-18 20:33:01,019 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 线图
+2025-03-18 20:33:07,324 - PlotData.PlotWorker - INFO - 创建绘图工作线程: 线图
+2025-03-18 20:33:07,324 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 线图
+2025-03-18 20:33:14,804 - PlotData.PlotWorker - INFO - 创建绘图工作线程: 线图
+2025-03-18 20:33:14,804 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 线图
+2025-03-18 20:33:18,512 - PlotData.PlotWorker - INFO - 创建绘图工作线程: 线图
+2025-03-18 20:33:18,512 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 线图
+2025-03-18 20:33:32,976 - PlotData.PlotWorker - INFO - 创建绘图工作线程: 线图
+2025-03-18 20:33:32,976 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 线图
+2025-03-18 20:33:53,401 - PlotData.ConfigManager - INFO - 配置已保存

@@ -53,29 +53,8 @@ class PlotView(QWidget):
         # 创建主布局
         main_layout = QVBoxLayout(self)
         
-        # 创建工具栏
+        # 创建工具栏（空的，因为按钮已移动到绘图设置区域）
         toolbar_layout = QHBoxLayout()
-        
-
-        
-        # 添加保存设置按钮到工具栏
-        self.save_settings_toolbar_button = QPushButton("保存设置")
-        self.save_settings_toolbar_button.setIcon(self.style().standardIcon(self.style().StandardPixmap.SP_DialogSaveButton))
-        self.save_settings_toolbar_button.clicked.connect(self.save_plot_settings)
-        toolbar_layout.addWidget(self.save_settings_toolbar_button)
-        
-        # 添加加载设置按钮到工具栏
-        self.load_settings_toolbar_button = QPushButton("加载设置")
-        self.load_settings_toolbar_button.setIcon(self.style().standardIcon(self.style().StandardPixmap.SP_DialogOpenButton))
-        self.load_settings_toolbar_button.clicked.connect(self.load_plot_settings)
-        toolbar_layout.addWidget(self.load_settings_toolbar_button)
-        
-        # 添加保存图表按钮到工具栏
-        self.save_plot_toolbar_button = QPushButton("保存图表")
-        self.save_plot_toolbar_button.setIcon(self.style().standardIcon(self.style().StandardPixmap.SP_DialogSaveButton))
-        self.save_plot_toolbar_button.clicked.connect(self.save_plot)
-        toolbar_layout.addWidget(self.save_plot_toolbar_button)
-        
         toolbar_layout.addStretch()
         main_layout.addLayout(toolbar_layout)
         
@@ -102,6 +81,29 @@ class PlotView(QWidget):
         # 从data_view.py移动过来的绘图控制区域
         # 创建绘图控制区域
         plot_control_layout = QVBoxLayout()
+        
+        # 添加按钮布局
+        buttons_layout = QHBoxLayout()
+        
+        # 添加保存设置按钮
+        self.save_settings_toolbar_button = QPushButton("保存设置")
+        self.save_settings_toolbar_button.setIcon(self.style().standardIcon(self.style().StandardPixmap.SP_DialogSaveButton))
+        self.save_settings_toolbar_button.clicked.connect(self.save_plot_settings)
+        buttons_layout.addWidget(self.save_settings_toolbar_button)
+        
+        # 添加加载设置按钮
+        self.load_settings_toolbar_button = QPushButton("加载设置")
+        self.load_settings_toolbar_button.setIcon(self.style().standardIcon(self.style().StandardPixmap.SP_DialogOpenButton))
+        self.load_settings_toolbar_button.clicked.connect(self.load_plot_settings)
+        buttons_layout.addWidget(self.load_settings_toolbar_button)
+        
+        # 添加保存图表按钮
+        self.save_plot_toolbar_button = QPushButton("保存图表")
+        self.save_plot_toolbar_button.setIcon(self.style().standardIcon(self.style().StandardPixmap.SP_DialogSaveButton))
+        self.save_plot_toolbar_button.clicked.connect(self.save_plot)
+        buttons_layout.addWidget(self.save_plot_toolbar_button)
+        
+        plot_control_layout.addLayout(buttons_layout)
 
         # 样式设置
         style_layout = QHBoxLayout()
