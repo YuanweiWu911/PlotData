@@ -10,254 +10,6 @@ import matplotlib
 from PyQt6.QtGui import QDoubleValidator, QColor
 matplotlib.use('QtAgg')
 
-# 辅助函数和常量定义
-MARKER_STYLE_MAP = {
-    "无标记": '',
-    "圆形": 'o',
-    "点": '.',
-    "方形": 's',
-    "三角形": '^',
-    "星形": '*',
-    "菱形": 'D',
-    "十字": 'x',
-    "加号": '+',
-    "叉号": 'X'
-}
-
-# 绘图辅助类，提供参数处理和绘图相关的辅助方法
-class PlotHelper:
-    """绘图辅助类，提供参数处理和绘图相关的辅助方法"""
-    
-    @staticmethod
-    def get_plot_params(plot_view):
-        """从绘图视图中获取绘图参数
-        
-        Args:
-            plot_view: 绘图视图实例
-            
-        Returns:
-            dict: 包含绘图参数的字典
-        """
-        # 从控件获取当前值
-        plot_type = plot_view.plot_type_combo.currentText()
-        x_col = plot_view.x_combo.currentText()
-        y_col = plot_view.y_combo.currentText()
-        
-        # 获取其他参数
-        xerr_col = plot_view.xerr_combo.currentText() if plot_view.xerr_combo.currentText() != "无" else None
-        yerr_col = plot_view.yerr_combo.currentText() if plot_view.yerr_combo.currentText() != "无" else None
-        
-        # 获取标记样式并转换为matplotlib兼容格式
-        mark_style = plot_view.mark_style_combo.currentText()
-        # 获取matplotlib兼容的标记样式
-        matplotlib_marker = MARKER_STYLE_MAP.get(mark_style, 'o')  # 默认使用圆形
-        
-        mark_size = plot_view.mark_size_spin.value()
-        histtype = plot_view.histtype_combo.currentText()
-        bins = plot_view.bins_spin.value()
-        colormap = plot_view.colorbar_combo.currentText() if plot_type == "2D密度图" else None
-        
-        # 获取线型
-        line_style = plot_view.line_style_combo.currentText() if hasattr(plot_view, 'line_style_combo') else '-'
-        line_width = plot_view.line_width_spin.value() if hasattr(plot_view, 'line_width_spin') else 2
-        
-        # 获取颜色
-        color = plot_view.color_button.property("color")
-        if not color or not isinstance(color, str):
-            color = "blue"  # 默认颜色
-        alpha = plot_view.alpha_spin.value()
-        
-        # 返回参数字典
-        return {
-            'plot_type': plot_type,
-            'x_col': x_col,
-            'y_col': y_col,
-            'color': color,
-            'alpha': alpha,
-            'xerr_col': xerr_col,
-            'yerr_col': yerr_col,
-            'mark_style': matplotlib_marker,  # 使用转换后的标记样式
-            'mark_size': mark_size,
-            'histtype': histtype,
-            'bins': bins,
-            'colormap': colormap,
-            'line_style': line_style,
-            'line_width': line_width
-        }
-    
-    @staticmethod
-    def get_axis_settings(plot_view):
-        """从绘图视图中获取坐标轴设置
-        
-        Args:
-            plot_view: 绘图视图实例
-            
-        Returns:
-            dict: 包含坐标轴设置的字典
-        """
-        # 获取标题和标签设置
-        title = plot_view.title_edit.text() or None
-        x_label = plot_view.x_label_edit.text() or None
-        y_label = plot_view.y_label_edit.text() or None
-        
-        # 获取坐标轴范围设置
-        try:
-            x_min = float(plot_view.x_ticks_min.text()) if plot_view.x_ticks_min.text() else None
-            x_max = float(plot_view.x_ticks_max.text()) if plot_view.x_ticks_max.text() else None
-            y_min = float(plot_view.y_ticks_min.text()) if plot_view.y_ticks_min.text() else None
-            y_max = float(plot_view.y_ticks_max.text()) if plot_view.y_ticks_max.text() else None
-        except ValueError:
-            x_min, x_max, y_min, y_max = None, None, None, None
-            print("坐标轴范围设置格式无效，将使用自动范围")
-        
-        # 获取刻度和网格线设置
-        x_major_ticks = plot_view.x_major_ticks_spin.value()
-        x_minor_ticks = plot_view.x_minor_ticks_spin.value()
-        x_show_grid = plot_view.x_grid_checkbox.isChecked()
-        y_major_ticks = plot_view.y_major_ticks_spin.value()
-        y_minor_ticks = plot_view.y_minor_ticks_spin.value()
-        y_show_grid = plot_view.y_grid_checkbox.isChecked()
-        
-        return {
-            'title': title,
-            'x_label': x_label,
-            'y_label': y_label,
-            'x_min': x_min,
-            'x_max': x_max,
-            'y_min': y_min,
-            'y_max': y_max,
-            'x_major_ticks': x_major_ticks,
-            'x_minor_ticks': x_minor_ticks,
-            'x_show_grid': x_show_grid,
-            'y_major_ticks': y_major_ticks,
-            'y_minor_ticks': y_minor_ticks,
-            'y_show_grid': y_show_grid
-        }
-    
-    @staticmethod
-    def validate_plot_request(data, plot_type, x_col, y_col, xerr_col=None, yerr_col=None):
-        """验证绘图请求参数
-        
-        Args:
-            data: 数据
-            plot_type: 绘图类型
-            x_col: X轴列名
-            y_col: Y轴列名
-            xerr_col: X误差列名
-            yerr_col: Y误差列名
-            
-        Returns:
-            tuple: (是否有效, 错误消息)
-        """
-        if data is None or data.empty:
-            return False, "没有可用的数据"
-            
-        # 检查列是否存在
-        if x_col not in data.columns:
-            return False, f"X轴列 '{x_col}' 不存在"
-            
-        if y_col not in data.columns and plot_type != "直方图":
-            return False, f"Y轴列 '{y_col}' 不存在"
-            
-        # 检查误差棒列
-        if xerr_col and xerr_col not in data.columns:
-            return False, f"X误差列 '{xerr_col}' 不存在"
-            
-        if yerr_col and yerr_col not in data.columns:
-            return False, f"Y误差列 '{yerr_col}' 不存在"
-            
-        return True, ""
-
-class UIHelper:
-    """UI辅助类，提供创建UI元素的静态方法"""
-    
-    @staticmethod
-    def create_button(text, icon=None, slot=None, checkable=False, checked=False, tooltip=None, fixed_width=None):
-        """创建按钮的辅助方法"""
-        button = QPushButton(text)
-        if icon:
-            button.setIcon(icon)
-        if slot:
-            button.clicked.connect(slot)
-        if checkable:
-            button.setCheckable(True)
-            button.setChecked(checked)
-        if tooltip:
-            button.setToolTip(tooltip)
-        if fixed_width:
-            button.setFixedWidth(fixed_width)
-        return button
-    
-    @staticmethod
-    def create_spin_box(min_val, max_val, default_val, step=1, tooltip=None, suffix=None):
-        """创建数字输入框的辅助方法"""
-        spin_box = QSpinBox()
-        spin_box.setRange(min_val, max_val)
-        spin_box.setValue(default_val)
-        spin_box.setSingleStep(step)
-        if tooltip:
-            spin_box.setToolTip(tooltip)
-        if suffix:
-            spin_box.setSuffix(suffix)
-        return spin_box
-    
-    @staticmethod
-    def create_double_spin_box(min_val, max_val, default_val, step=0.1, decimals=1, tooltip=None):
-        """创建浮点数输入框的辅助方法"""
-        spin_box = QDoubleSpinBox()
-        spin_box.setRange(min_val, max_val)
-        spin_box.setValue(default_val)
-        spin_box.setSingleStep(step)
-        spin_box.setDecimals(decimals)
-        if tooltip:
-            spin_box.setToolTip(tooltip)
-        return spin_box
-    
-    @staticmethod
-    def create_combo_box(items, current_index=0, slot=None, tooltip=None):
-        """创建下拉框的辅助方法"""
-        combo_box = QComboBox()
-        combo_box.addItems(items)
-        combo_box.setCurrentIndex(current_index)
-        if slot:
-            combo_box.currentIndexChanged.connect(slot)
-        if tooltip:
-            combo_box.setToolTip(tooltip)
-        return combo_box
-    
-    @staticmethod
-    def create_line_edit(placeholder=None, validator=None, tooltip=None):
-        """创建文本输入框的辅助方法"""
-        line_edit = QLineEdit()
-        if placeholder:
-            line_edit.setPlaceholderText(placeholder)
-        if validator:
-            line_edit.setValidator(validator)
-        if tooltip:
-            line_edit.setToolTip(tooltip)
-        return line_edit
-    
-    @staticmethod
-    def add_widgets_to_layout(layout, widgets_with_labels):
-        """向布局中添加带标签的控件
-        
-        Args:
-            layout: 要添加到的布局
-            widgets_with_labels: 列表，每个元素是(label_text, widget)元组
-        """
-        for label_text, widget in widgets_with_labels:
-            if label_text:
-                layout.addWidget(QLabel(label_text))
-            layout.addWidget(widget)
-    
-    @staticmethod
-    def create_container_with_layout(layout_type=QHBoxLayout, margin=0):
-        """创建带有指定布局的容器控件"""
-        container = QWidget()
-        layout = layout_type(container)
-        layout.setContentsMargins(margin, margin, margin, margin)
-        return container, layout
-
 class PlotView(QWidget):
     """绘图视图组件"""
     
@@ -278,7 +30,7 @@ class PlotView(QWidget):
         self.thread_pool.setMaxThreadCount(4)  # 设置最大线程数
         
         # 初始化防抖动定时器
-#       from PyQt6.QtCore import QTimer
+        from PyQt6.QtCore import QTimer
         self.debounce_timer = QTimer()
         self.debounce_timer.setSingleShot(True)  # 设置为单次触发
         self.debounce_timer.setInterval(300)    # 设置防抖动间隔为300毫秒
@@ -286,7 +38,6 @@ class PlotView(QWidget):
         
         # 存储当前绘图请求参数
         self.current_request = None
-        self.current_plot_params = None  # 初始化current_plot_params属性
         
         # 初始化UI
         self.init_ui()
@@ -327,6 +78,7 @@ class PlotView(QWidget):
         self.settings_group = QGroupBox("")
         settings_layout = QFormLayout(self.settings_group)
         
+        # 从data_view.py移动过来的绘图控制区域
         # 创建绘图控制区域
         plot_control_layout = QVBoxLayout()
         
@@ -368,26 +120,34 @@ class PlotView(QWidget):
 
       
         # 数据列选择
-        columns_container, columns_layout = UIHelper.create_container_with_layout()
+        columns_container = QWidget()  # 创建一个容器来包含列选择布局
+        columns_layout = QHBoxLayout(columns_container)
+        columns_layout.setContentsMargins(0, 0, 0, 0)  # 移除内边距
         
         # X轴列选择
-        self.x_combo = UIHelper.create_combo_box([])
-        UIHelper.add_widgets_to_layout(columns_layout, [("X轴数据:", self.x_combo)])
+        columns_layout.addWidget(QLabel("X轴数据:"))
+        self.x_combo = QComboBox()
+        columns_layout.addWidget(self.x_combo)
         
         # Y轴列选择
-        self.y_combo = UIHelper.create_combo_box([])
-        UIHelper.add_widgets_to_layout(columns_layout, [("Y轴数据:", self.y_combo)])
+        columns_layout.addWidget(QLabel("Y轴数据:"))
+        self.y_combo = QComboBox()
+        columns_layout.addWidget(self.y_combo)
         
-        plot_control_layout.addWidget(columns_container)
+        plot_control_layout.addWidget(columns_container)  # 添加容器而不是布局
 
-        # 误差棒列选择
-        self.error_settings, error_layout = UIHelper.create_container_with_layout()
+        # 误差棒列选择 - 将其放入单独的容器中
+        self.error_settings = QWidget()
+        error_layout = QHBoxLayout(self.error_settings)
+        error_layout.setContentsMargins(0, 0, 0, 0)  # 移除内边距，确保与columns_container一致
         
-        self.xerr_combo = UIHelper.create_combo_box([])
-        UIHelper.add_widgets_to_layout(error_layout, [("X轴误差:", self.xerr_combo)])
+        error_layout.addWidget(QLabel("X轴误差:"))
+        self.xerr_combo = QComboBox()
+        error_layout.addWidget(self.xerr_combo)
         
-        self.yerr_combo = UIHelper.create_combo_box([])
-        UIHelper.add_widgets_to_layout(error_layout, [("Y轴误差:", self.yerr_combo)])
+        error_layout.addWidget(QLabel("Y轴误差:"))
+        self.yerr_combo = QComboBox()
+        error_layout.addWidget(self.yerr_combo)
         
         plot_control_layout.addWidget(self.error_settings)
 
@@ -445,37 +205,49 @@ class PlotView(QWidget):
         plot_control_layout.addLayout(linestyle_layout)
         
         # 直方图特有设置
-        self.hist_settings, hist_layout = UIHelper.create_container_with_layout()
+        self.hist_settings = QWidget()
+        hist_layout = QHBoxLayout(self.hist_settings)
         
-        self.histtype_combo = UIHelper.create_combo_box(["bar", "barstacked", "step", "stepfilled"])
-        UIHelper.add_widgets_to_layout(hist_layout, [("直方图类型:", self.histtype_combo)])
+        hist_layout.addWidget(QLabel("直方图类型:"))
+        self.histtype_combo = QComboBox()
+        self.histtype_combo.addItems(["bar", "barstacked", "step", "stepfilled"])
+        hist_layout.addWidget(self.histtype_combo)
         
-        self.bins_spin = UIHelper.create_spin_box(5, 200, 50)
-        UIHelper.add_widgets_to_layout(hist_layout, [("分箱数:", self.bins_spin)])
+        hist_layout.addWidget(QLabel("分箱数:"))
+        self.bins_spin = QSpinBox()
+        self.bins_spin.setRange(5, 200)
+        self.bins_spin.setValue(50)
+        hist_layout.addWidget(self.bins_spin)
         
         self.hist_settings.setVisible(False)  # 默认隐藏
         plot_control_layout.addWidget(self.hist_settings)
         
         # 2D密度图特有设置
-        self.density_settings, density_layout = UIHelper.create_container_with_layout()
+        self.density_settings = QWidget()
+        density_layout = QHBoxLayout(self.density_settings)
         
-        colormap_options = ["viridis", "plasma", "inferno", "magma", "cividis", 
-                          "Greys", "Purples", "Blues", "Greens", "Oranges", "Reds",
-                          "YlOrBr", "YlOrRd", "OrRd", "PuRd", "RdPu", "BuPu",
-                          "GnBu", "PuBu", "YlGnBu", "PuBuGn", "BuGn", "YlGn",
-                          "jet", "turbo", "rainbow", "coolwarm", "bwr", "seismic"]
-        self.colorbar_combo = UIHelper.create_combo_box(colormap_options)
-        UIHelper.add_widgets_to_layout(density_layout, [("颜色映射:", self.colorbar_combo)])
+        density_layout.addWidget(QLabel("颜色映射:"))
+        self.colorbar_combo = QComboBox()
+        self.colorbar_combo.addItems(["viridis", "plasma", "inferno", "magma", "cividis", 
+                                     "Greys", "Purples", "Blues", "Greens", "Oranges", "Reds",
+                                     "YlOrBr", "YlOrRd", "OrRd", "PuRd", "RdPu", "BuPu",
+                                     "GnBu", "PuBu", "YlGnBu", "PuBuGn", "BuGn", "YlGn",
+                                     "jet", "turbo", "rainbow", "coolwarm", "bwr", "seismic"])
+        density_layout.addWidget(self.colorbar_combo)
         
-        self.density_bins_spin = UIHelper.create_spin_box(10, 500, 100)
-        UIHelper.add_widgets_to_layout(density_layout, [("分辨率:", self.density_bins_spin)])
+        density_layout.addWidget(QLabel("分辨率:"))
+        self.density_bins_spin = QSpinBox()
+        self.density_bins_spin.setRange(10, 500)
+        self.density_bins_spin.setValue(100)
+        density_layout.addWidget(self.density_bins_spin)
         
         self.density_settings.setVisible(False)  # 默认隐藏
         plot_control_layout.addWidget(self.density_settings)
         settings_layout.addRow("", plot_control_layout)
         
         # 标题设置
-        self.title_edit = UIHelper.create_line_edit(placeholder="标题:")
+        self.title_edit = QLineEdit()
+        self.title_edit.setPlaceholderText("标题:")
         settings_layout.addRow("", self.title_edit)
         
         # 添加X轴刻度设置
@@ -523,7 +295,7 @@ class PlotView(QWidget):
 
         settings_layout.addRow("", y_label_layout)
 
-        # 坐标轴刻度设置
+        # 添加刻度数量设置
         ticks_layout = QHBoxLayout()
 
         # X轴刻度设置
@@ -531,7 +303,7 @@ class PlotView(QWidget):
         x_ticks_layout = QHBoxLayout()
         
         self.x_major_ticks_spin = QSpinBox()
-        self.x_major_ticks_spin.setRange(0, 20)
+        self.x_major_ticks_spin.setRange(0, 50)
         self.x_major_ticks_spin.setValue(5)
         x_ticks_layout.addWidget(QLabel("X主刻度数:"))
         x_ticks_layout.addWidget(self.x_major_ticks_spin)
@@ -555,7 +327,7 @@ class PlotView(QWidget):
         y_ticks_layout = QHBoxLayout()
         
         self.y_major_ticks_spin = QSpinBox()
-        self.y_major_ticks_spin.setRange(0, 20)
+        self.y_major_ticks_spin.setRange(0, 50)
         self.y_major_ticks_spin.setValue(5)
         y_ticks_layout.addWidget(QLabel("Y主刻度数:"))
         y_ticks_layout.addWidget(self.y_major_ticks_spin)
@@ -600,7 +372,6 @@ class PlotView(QWidget):
         # 存储当前绘图参数
         self.current_plot_params = None
 
-        settings_layout.addRow("",ticks_layout)
 
     @pyqtSlot()  # 修改装饰器，移除dict参数
     def apply_settings(self):
@@ -609,11 +380,31 @@ class PlotView(QWidget):
             QMessageBox.information(self, "提示", "请先生成图表后再应用设置")
             return
         
-        # 使用PlotHelper获取坐标轴设置
-        axis_settings = PlotHelper.get_axis_settings(self)
+        try:
+            x_min = float(self.x_ticks_min.text()) if self.x_ticks_min.text() else None
+            x_max = float(self.x_ticks_max.text()) if self.x_ticks_max.text() else None
+            y_min = float(self.y_ticks_min.text()) if self.y_ticks_min.text() else None
+            y_max = float(self.y_ticks_max.text()) if self.y_ticks_max.text() else None
+        except ValueError:
+            x_min, x_max, y_min, y_max = None, None, None, None
+            print("坐标轴范围设置格式无效，将使用自动范围")
         
         # 更新当前参数中的设置
-        self.current_plot_params.update(axis_settings)
+        self.current_plot_params['title'] = self.title_edit.text() or None
+        self.current_plot_params['x_label'] = self.x_label_edit.text() or None
+        self.current_plot_params['y_label'] = self.y_label_edit.text() or None
+        self.current_plot_params['x_min'] = x_min
+        self.current_plot_params['x_max'] = x_max
+        self.current_plot_params['y_min'] = y_min
+        self.current_plot_params['y_max'] = y_max
+        
+        # 添加刻度和网格线设置
+        self.current_plot_params['x_major_ticks'] = self.x_major_ticks_spin.value()
+        self.current_plot_params['x_minor_ticks'] = self.x_minor_ticks_spin.value()
+        self.current_plot_params['x_show_grid'] = self.x_grid_checkbox.isChecked()
+        self.current_plot_params['y_major_ticks'] = self.y_major_ticks_spin.value()
+        self.current_plot_params['y_minor_ticks'] = self.y_minor_ticks_spin.value()
+        self.current_plot_params['y_show_grid'] = self.y_grid_checkbox.isChecked()
         
         # 重新处理绘图请求 - 添加histtype和bins参数
         self.handle_plot_request(
@@ -650,21 +441,58 @@ class PlotView(QWidget):
         elif 'data_file_path' in self.current_plot_params:
             current_file_path = self.current_plot_params.get('data_file_path', '')
         
-        # 使用PlotHelper获取绘图参数和坐标轴设置
-        plot_params = PlotHelper.get_plot_params(self)
-        axis_settings = PlotHelper.get_axis_settings(self)
+        # 处理坐标轴范围设置
+        try:
+            x_min = float(self.x_ticks_min.text()) if self.x_ticks_min.text() else None
+            x_max = float(self.x_ticks_max.text()) if self.x_ticks_max.text() else None
+            y_min = float(self.y_ticks_min.text()) if self.y_ticks_min.text() else None
+            y_max = float(self.y_ticks_max.text()) if self.y_ticks_max.text() else None
+        except ValueError:
+            x_min, x_max, y_min, y_max = None, None, None, None
+            print("坐标轴范围设置格式无效，将使用None值")
         
-        # 提取需要保存的设置
+        # 提取需要保存的设置 - 修改为使用当前类(self)的控件而不是data_view的控件
         settings = {
             # 数据文件信息
             'data_file_path': current_file_path,
             # 数据筛选参数
-            'filter_expr': data_view.filter_expr_edit.toPlainText() if data_view else ''
+            'filter_expr': data_view.filter_expr_edit.toPlainText() if data_view else '',
+            # 绘图控制参数 - 修改为使用self的控件
+            'x_col': self.x_combo.currentText(),
+            'y_col': self.y_combo.currentText(),
+            'xerr_col': self.xerr_combo.currentText(),
+            'yerr_col': self.yerr_combo.currentText(),
+            # 图表样式参数 - 修改为使用self的控件
+            'plot_type': self.plot_type_combo.currentText(),
+            'color': self.color_button.property("color") if self.color_button.property("color") else 'blue',
+            'alpha': self.alpha_spin.value(),
+            'mark_style': self.mark_style_combo.currentText(),
+            'mark_size': self.mark_size_spin.value(),
+            'line_style': self.line_style_combo.currentText() if hasattr(self, 'line_style_combo') else '-',
+            'line_width': self.line_width_spin.value() if hasattr(self, 'line_width_spin') else 2,            
+            # 直方图特有参数 - 修改为使用self的控件
+            'histtype': self.histtype_combo.currentText() if hasattr(self, 'histtype_combo') else 'bar',
+            'bins': self.bins_spin.value() if hasattr(self, 'bins_spin') else 50,
+            # 2D densitymap 参数 - 修改为使用self的控件
+            'colormap': self.colorbar_combo.currentText() if hasattr(self, 'colorbar_combo') else 'viridis',
+            # 图表显示设置
+            'title': self.title_edit.text(),
+            'x_label': self.x_label_edit.text(),
+            'y_label': self.y_label_edit.text(),
+            # 新增坐标轴刻度和网格线设置
+            'x_major_ticks': self.x_major_ticks_spin.value(),
+            'x_minor_ticks': self.x_minor_ticks_spin.value(),
+            'x_show_grid': self.x_grid_checkbox.isChecked(),
+            'y_major_ticks': self.y_major_ticks_spin.value(),
+            'y_minor_ticks': self.y_minor_ticks_spin.value(),
+            'y_show_grid': self.y_grid_checkbox.isChecked(),
+            
+            # 新增坐标轴范围设置
+            'x_min': x_min,
+            'x_max': x_max,
+            'y_min': y_min,
+            'y_max': y_max
         }
-        
-        # 合并绘图参数和坐标轴设置
-        settings.update(plot_params)
-        settings.update(axis_settings)
         
         # 打印调试信息
         print(f"保存设置 - 数据文件路径: {settings['data_file_path']}")
@@ -890,38 +718,55 @@ class PlotView(QWidget):
             'colormap': colormap,
             'line_style': line_style,
             'line_width': line_width
-        }        
-
+        }
+        
         # 获取数据
         data = self.data_manager.get_data()
-        
-        # 验证绘图请求参数
-        is_valid, error_message = PlotHelper.validate_plot_request(
-            data, plot_type, x_col, y_col, xerr_col, yerr_col
-        )
-        
-        if not is_valid:
-            QMessageBox.warning(self, "错误", error_message)
+        if data is None or data.empty:
+            QMessageBox.warning(self, "错误", "没有可用的数据")
+            return
+            
+        # 检查列是否存在
+        if x_col not in data.columns:
+            QMessageBox.warning(self, "错误", f"X轴列 '{x_col}' 不存在")
+            return
+            
+        if y_col not in data.columns and plot_type != "直方图":
+            QMessageBox.warning(self, "错误", f"Y轴列 '{y_col}' 不存在")
+            return
+            
+        # 检查误差棒列
+        if xerr_col and xerr_col not in data.columns:
+            QMessageBox.warning(self, "错误", f"X误差列 '{xerr_col}' 不存在")
+            return
+            
+        if yerr_col and yerr_col not in data.columns:
+            QMessageBox.warning(self, "错误", f"Y误差列 '{yerr_col}' 不存在")
             return
         
         try:
-            # 获取坐标轴设置
-            axis_settings = PlotHelper.get_axis_settings(self)
+            # 获取标题和标签设置
+            title = self.title_edit.text() or None
+            x_label = self.x_label_edit.text() or None
+            y_label = self.y_label_edit.text() or None
             
-            # 提取设置值
-            title = axis_settings['title']
-            x_label = axis_settings['x_label']
-            y_label = axis_settings['y_label']
-            x_min = axis_settings['x_min']
-            x_max = axis_settings['x_max']
-            y_min = axis_settings['y_min']
-            y_max = axis_settings['y_max']
-            x_major_ticks = axis_settings['x_major_ticks']
-            x_minor_ticks = axis_settings['x_minor_ticks']
-            x_show_grid = axis_settings['x_show_grid']
-            y_major_ticks = axis_settings['y_major_ticks']
-            y_minor_ticks = axis_settings['y_minor_ticks']
-            y_show_grid = axis_settings['y_show_grid']
+            # 获取坐标轴范围设置
+            try:
+                x_min = float(self.x_ticks_min.text()) if self.x_ticks_min.text() else None
+                x_max = float(self.x_ticks_max.text()) if self.x_ticks_max.text() else None
+                y_min = float(self.y_ticks_min.text()) if self.y_ticks_min.text() else None
+                y_max = float(self.y_ticks_max.text()) if self.y_ticks_max.text() else None
+            except ValueError:
+                x_min, x_max, y_min, y_max = None, None, None, None
+                print("坐标轴范围设置格式无效，将使用自动范围")
+            
+            # 获取刻度和网格线设置
+            x_major_ticks = self.x_major_ticks_spin.value()
+            x_minor_ticks = self.x_minor_ticks_spin.value()
+            x_show_grid = self.x_grid_checkbox.isChecked()
+            y_major_ticks = self.y_major_ticks_spin.value()
+            y_minor_ticks = self.y_minor_ticks_spin.value()
+            y_show_grid = self.y_grid_checkbox.isChecked()
             
             # 创建绘图工作线程
             from core.plot_worker import PlotWorker
@@ -1086,8 +931,8 @@ class PlotView(QWidget):
         current_style = self.mark_style_combo.currentText()
         self.mark_style_combo.clear()
         
-        # 添加标记样式选项，使用全局定义的MARKER_STYLE_MAP的键
-        marker_styles = list(MARKER_STYLE_MAP.keys())
+        # 添加标记样式选项
+        marker_styles = ["无标记","点", "圆形", "方形", "三角形", "星形", "菱形", "十字", "加号"]
         self.mark_style_combo.addItems(marker_styles)
         
         # 尝试恢复之前的选择
@@ -1117,42 +962,90 @@ class PlotView(QWidget):
         if self.debounce_timer.isActive():
             self.debounce_timer.stop()
         
+        # 获取当前参数并存储
+        self._prepare_plot_request()
+        
+        # 启动定时器，防抖动处理
+        self.debounce_timer.start()        
+
         try:
             print("PlotView 接收到绘图请求")
             
-            # 获取数据
+            # 检查数据是否存在
             data = self.data_manager.get_data()
-            
-            # 获取绘图参数
-            plot_params = PlotHelper.get_plot_params(self)
-            
-            # 验证绘图请求参数
-            is_valid, error_message = PlotHelper.validate_plot_request(
-                data, 
-                plot_params['plot_type'], 
-                plot_params['x_col'], 
-                plot_params['y_col'], 
-                plot_params['xerr_col'], 
-                plot_params['yerr_col']
-            )
-            
-            if not is_valid:
-                QMessageBox.warning(self, "错误", error_message)
+            if data is None or data.empty:
+                QMessageBox.warning(self, "错误", "没有可用的数据")
                 return
+                
+            # 从控件获取当前值
+            plot_type = self.plot_type_combo.currentText()
+            x_col = self.x_combo.currentText()
             
-            # 准备绘图参数
-            self._prepare_plot_request()
+            # 检查必要的列是否选择
+            if not x_col:
+                QMessageBox.warning(self, "警告", "请先选择X轴列")
+                return
+                
+            y_col = self.y_combo.currentText()
+            if plot_type != "直方图" and not y_col:
+                QMessageBox.warning(self, "警告", "请先选择Y轴列")
+                return
+                
+            # 检查列是否存在于数据中
+            if x_col not in data.columns:
+                QMessageBox.warning(self, "错误", f"X轴列 '{x_col}' 不存在于数据中")
+                return
+                
+            if plot_type != "直方图" and y_col not in data.columns:
+                QMessageBox.warning(self, "错误", f"Y轴列 '{y_col}' 不存在于数据中")
+                return
+                
+            # 获取其他参数
+            xerr_col = self.xerr_combo.currentText() if self.xerr_combo.currentText() != "无" else None
+            yerr_col = self.yerr_combo.currentText() if self.yerr_combo.currentText() != "无" else None
             
-            # 获取当前请求中的参数用于日志输出
-            plot_type = self.current_request['plot_type']
-            x_col = self.current_request['x_col']
-            y_col = self.current_request['y_col']
-            mark_style = self.current_request['mark_style']
-            color = self.current_request['color']
+            # 检查误差列是否存在
+            if xerr_col and xerr_col not in data.columns:
+                QMessageBox.warning(self, "错误", f"X误差列 '{xerr_col}' 不存在于数据中")
+                return
+                
+            if yerr_col and yerr_col not in data.columns:
+                QMessageBox.warning(self, "错误", f"Y误差列 '{yerr_col}' 不存在于数据中")
+                return
+                
+#           mark_style = self.mark_style_combo.currentText()
+            mark_style = self.current_request['mark_style'] 
+            mark_size = self.mark_size_spin.value()
+            line_style = self.line_style_combo.currentText() if plot_type == "线图" else None
+            histtype = self.histtype_combo.currentText()
+            bins = self.bins_spin.value()
+            colormap = self.colorbar_combo.currentText() if plot_type == "2D密度图" else None
+            
+            # 获取颜色 - 确保是有效的颜色值
+            color = self.color_button.property("color")
+            if not color or not isinstance(color, str):
+                color = "blue"  # 默认颜色
                 
             print(f"准备绘图: 类型={plot_type}, X={x_col}, Y={y_col}, 颜色={color}, 标记样式={mark_style}")
             
-            # 启动定时器，防抖动处理
+#           # 存储当前请求参数
+#           self.current_request = {
+#               'plot_type': plot_type,
+#               'x_col': x_col,
+#               'y_col': y_col,
+#               'color': color,
+#               'xerr_col': xerr_col,
+#               'yerr_col': yerr_col,
+#               'mark_style': mark_style,
+#               'mark_size': mark_size,
+#               'histtype': histtype,
+#               'bins': bins,
+#               'colormap': colormap,
+#               'line_style': line_style
+#           }
+            
+            # 重置定时器，实现防抖动
+            self.debounce_timer.stop()
             self.debounce_timer.start()
             
         except Exception as e:
@@ -1163,8 +1056,65 @@ class PlotView(QWidget):
 
     def _prepare_plot_request(self):
         """准备绘图请求参数"""
-        # 使用PlotHelper获取绘图参数
-        self.current_request = PlotHelper.get_plot_params(self)
+        # 从控件获取当前值
+        plot_type = self.plot_type_combo.currentText()
+        x_col = self.x_combo.currentText()
+        y_col = self.y_combo.currentText()
+        
+        # 获取其他参数
+        xerr_col = self.xerr_combo.currentText() if self.xerr_combo.currentText() != "无" else None
+        yerr_col = self.yerr_combo.currentText() if self.yerr_combo.currentText() != "无" else None
+        
+        # 获取标记样式并转换为matplotlib兼容格式
+        mark_style = self.mark_style_combo.currentText()
+        # 添加标记样式映射
+        marker_style_map = {
+            "无标记": '',
+            "圆形": 'o',
+            "点": '.',
+            "方形": 's',
+            "三角形": '^',
+            "星形": '*',
+            "菱形": 'D',
+            "十字": 'x',
+            "加号": '+',
+            "叉号": 'X'
+        }
+        # 获取matplotlib兼容的标记样式
+        matplotlib_marker = marker_style_map.get(mark_style, 'o')  # 默认使用圆形
+        
+        mark_size = self.mark_size_spin.value()
+        histtype = self.histtype_combo.currentText()
+        bins = self.bins_spin.value()
+        colormap = self.colorbar_combo.currentText() if plot_type == "2D密度图" else None
+        
+        # 获取线型
+        line_style = self.line_style_combo.currentText() if hasattr(self, 'line_style_combo') else '-'
+        line_width = self.line_width_spin.value() if hasattr(self, 'line_width_spin') else 2
+        
+        # 获取颜色
+        color = self.color_button.property("color")
+        if not color or not isinstance(color, str):
+            color = "blue"  # 默认颜色
+        alpha = self.alpha_spin.value()
+        
+        # 存储当前请求参数
+        self.current_request = {
+            'plot_type': plot_type,
+            'x_col': x_col,
+            'y_col': y_col,
+            'color': color,
+            'alpha': alpha,
+            'xerr_col': xerr_col,
+            'yerr_col': yerr_col,
+            'mark_style': matplotlib_marker,  # 使用转换后的标记样式
+            'mark_size': mark_size,
+            'histtype': histtype,
+            'bins': bins,
+            'colormap': colormap,
+            'line_style': line_style,
+            'line_width': line_width
+        }
 
     def _execute_plot_request(self):
         """实际执行绘图请求，由防抖动定时器触发"""
@@ -1179,25 +1129,27 @@ class PlotView(QWidget):
                 
             self._is_plotting = True
             
-            # 从当前请求中获取所有参数
-            params = self.current_request
-            
+            # 从当前请求中获取参数
+            plot_type = self.current_request['plot_type']
+            x_col = self.current_request['x_col']
+            y_col = self.current_request['y_col']
+            color = self.current_request['color']
+            alpha = self.current_request.get('alpha', 0.7) 
+            xerr_col = self.current_request['xerr_col']
+            yerr_col = self.current_request['yerr_col']
+            mark_style = self.current_request['mark_style']
+            mark_size = self.current_request['mark_size']
+            histtype = self.current_request['histtype']
+            bins = self.current_request['bins']
+            colormap = self.current_request['colormap']
+            line_style = self.current_request.get('line_style', '-')            
+            line_width = self.current_request.get('line_width', 2)
             # 调用绘图方法
             self.handle_plot_request(
-                params['plot_type'], 
-                params['x_col'], 
-                params['y_col'], 
-                params['color'], 
-                params['xerr_col'], 
-                params['yerr_col'], 
-                params['mark_style'], 
-                params['mark_size'], 
-                params['histtype'], 
-                params['bins'], 
-                params['colormap'],
-                params['line_style'], 
-                params['line_width'], 
-                params['alpha']
+                plot_type, x_col, y_col, color, 
+                xerr_col, yerr_col, mark_style, 
+                mark_size, histtype, bins, colormap,
+                line_style, line_width, alpha
             )
             
             print(f"绘图请求处理完成")
@@ -1211,3 +1163,4 @@ class PlotView(QWidget):
             # 无论成功还是失败，都重置绘图状态
             self._is_plotting = False
 
+    # 确保方法名称与信号连接中使用的名称一致
