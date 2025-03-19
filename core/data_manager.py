@@ -21,16 +21,29 @@ class DataManager:
                 # 自动检测分隔符（多个空格、逗号、竖线）
                 if sep is None:
                     sep = r'\s+|,|\|'  # 正则表达式匹配多个空格/逗号/竖线
+<<<<<<< HEAD
                 self.data = pd.read_csv(file_path, 
                 delimiter=sep, 
                 engine='python',
+=======
+                sep = r'\s+|,|\|'  # 正则表达式匹配多个空格/逗号/竖线
+                self.data = pd.read_csv(file_path, 
+                delimiter=sep, 
+                engine='python',
+#               comment="*",
+>>>>>>> py312
                 skip_blank_lines=True,
                 quotechar='"',  # 添加引号处理
                 quoting=0,     # 0=QUOTE_MINIMAL
                 on_bad_lines='skip', # 跳过格式错误行
                 keep_default_na=False
                 )  # 添加engine参数
+<<<<<<< HEAD
 
+=======
+                # 添加星号注释过滤
+#               self.data = self.data[~self.data.iloc[:, 0].astype(str).str.startswith('*')]
+>>>>>>> py312
             elif file_path.endswith(('.xlsx', '.xls')):
                 self.data = pd.read_excel(file_path)
             elif file_path.endswith('.json'):
