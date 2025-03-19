@@ -229,3 +229,7 @@
 2025-03-18 21:28:08,217 - PlotData.PlotWorker - INFO - 开始执行绘图任务: 散点图
 2025-03-18 21:29:12,622 - PlotData.ConfigManager - INFO - 配置已保存
 2025-03-18 21:29:30,870 - PlotData.ConfigManager - INFO - 配置已保存
+2025-03-19 08:58:23,505 - PlotData - INFO - 启动应用程序
+2025-03-19 08:58:23,612 - PlotData.ConfigManager - INFO - 配置文件加载成功
+2025-03-19 08:58:24,064 - PlotData - INFO - 应用程序界面已加载
+2025-03-19 08:58:27,822 - PlotData.ConfigManager - INFO - 配置已保存
