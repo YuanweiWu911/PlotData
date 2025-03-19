@@ -77,9 +77,7 @@ class MainWindow(QMainWindow):
         
         # 设置分割器初始大小
         splitter.setSizes([450, 550])
-        # 自动平分窗口宽度
-#       splitter.setStretchFactor(0, 1)
-#       splitter.setStretchFactor(1, 1)
+
         # 添加分割器到主布局
         main_layout.addWidget(splitter)
 
