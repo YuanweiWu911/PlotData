@@ -234,3 +234,7 @@
 >>>>>>> py312
 2025-03-19 08:55:17,723 - PlotData - INFO - 启动应用程序
 2025-03-19 08:55:18,227 - PlotData.ConfigManager - INFO - 配置文件加载成功
+2025-03-19 09:03:55,134 - PlotData - INFO - 启动应用程序
+2025-03-19 09:03:55,363 - PlotData.ConfigManager - INFO - 配置文件加载成功
+2025-03-19 09:05:36,828 - PlotData - INFO - 启动应用程序
+2025-03-19 09:05:37,032 - PlotData.ConfigManager - INFO - 配置文件加载成功
