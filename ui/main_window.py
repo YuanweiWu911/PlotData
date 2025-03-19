@@ -32,9 +32,6 @@ class MainWindow(QMainWindow):
         # 创建菜单
         self.create_menu()
         
-        # 创建工具栏
-#       self.create_toolbar()
-        
         # 创建状态栏
         self.create_statusbar()
         
@@ -79,8 +76,10 @@ class MainWindow(QMainWindow):
         splitter.addWidget(self.plot_view)
         
         # 设置分割器初始大小
-        splitter.setSizes([500, 500])
-
+        splitter.setSizes([450, 550])
+        # 自动平分窗口宽度
+#       splitter.setStretchFactor(0, 1)
+#       splitter.setStretchFactor(1, 1)
         # 添加分割器到主布局
         main_layout.addWidget(splitter)
 
