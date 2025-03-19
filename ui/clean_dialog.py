@@ -1,8 +1,6 @@
-from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QPushButton, 
-                            QLabel, QCheckBox, QComboBox, QSpinBox, QFormLayout,
-                            QGroupBox, QLineEdit, QMessageBox)
-from PyQt6.QtCore import Qt
-from core.data_manager import DataManager
+from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout,
+                            QLabel, QCheckBox, QComboBox, QSpinBox, 
+                            QPushButton, QGroupBox, QLineEdit, QMessageBox)
 
 class DataCleanDialog(QDialog):
     """数据清洗对话框"""

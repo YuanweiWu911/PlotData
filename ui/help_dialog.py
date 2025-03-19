@@ -1,8 +1,5 @@
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QPushButton, 
-                            QLabel, QTabWidget, QTextBrowser, QWidget)
-from PyQt6.QtCore import Qt
-import pandas as pd
-import numpy as np
+                            QTabWidget, QTextBrowser, QWidget)
 
 class HelpDialog(QDialog):
     """帮助对话框"""

@@ -1,18 +1,14 @@
 import os
-from PyQt6 import sip  # 新增导入
+from PyQt6 import sip
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
                             QSplitter, QFileDialog, QMessageBox, QTabWidget, 
                             QStatusBar, QLabel, QDialog, QApplication, 
-                            QPushButton, QGroupBox, QInputDialog)
-from PyQt6.QtCore import Qt, QSize  # 添加 QSize 导入
-from PyQt6.QtGui import QIcon, QPalette, QColor, QAction  # 从 QtGui 导入 QAction
+                            QInputDialog)
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPalette, QColor, QAction
 from .plot_view import PlotView
-from core.config_manager import ConfigManager
-from core.data_manager import DataManager
-from core import visualization
 from ui.data_view import DataView
 from ui.plot_view import PlotView
-from ui.stats_view import StatsView
 
 class MainWindow(QMainWindow):
     def __init__(self, data_manager, visualizer, config_manager=None):
@@ -84,9 +80,7 @@ class MainWindow(QMainWindow):
         
         # 设置分割器初始大小
         splitter.setSizes([500, 500])
-        # 自动平分窗口宽度
-#       splitter.setStretchFactor(0, 1)
-#       splitter.setStretchFactor(1, 1) 
+
         # 添加分割器到主布局
         main_layout.addWidget(splitter)
 
@@ -160,7 +154,7 @@ class MainWindow(QMainWindow):
             action.triggered.connect(self.open_recent_file)
             self.recent_file_actions.append(action)
 
-                # 添加保存图表操作
+            # 添加保存图表操作
             self.save_plot_action = QAction("保存图表", self)
             self.save_plot_action.setShortcut("Ctrl+S")
             self.save_plot_action.triggered.connect(self.save_current_plot)
@@ -201,16 +195,6 @@ class MainWindow(QMainWindow):
         help_menu.addAction(self.help_action)
         help_menu.addAction(self.about_action)
         
-#   def create_toolbar(self):
-#       # 创建工具栏
-#       toolbar = QToolBar("主工具栏")
-#       toolbar.setIconSize(QSize(16, 16))
-#       self.addToolBar(toolbar)
-#       
-#       toolbar.addAction(self.open_action)
-#       toolbar.addAction(self.export_action)
-#       toolbar.addAction(self.save_plot_action)  
-
     def save_current_plot(self):
         """保存当前图表"""
         if hasattr(self, 'plot_view') and self.plot_view:
@@ -486,18 +470,6 @@ class MainWindow(QMainWindow):
         left_toolbar = QHBoxLayout()
         return left_toolbar
 
-#   # 移除以下方法（功能已迁移至data_view.py）
-#   # def toggle_data_preview(self):
-#   #     """切换数据预览和筛选区域的显示状态"""
-#   #     ...原有实现...
-#       self.preview_toggle_button.setCheckable(True)  # 设置为可切换状态
-#       self.preview_toggle_button.setChecked(True)    # 默认为显示状态
-#       self.preview_toggle_button.clicked.connect(self.toggle_data_preview)
-#       left_toolbar.addWidget(self.preview_toggle_button)
-#       
-#       # 返回布局以便添加到主布局
-#       return left_toolbar
-
     def toggle_data_preview(self):
         """切换数据预览和筛选区域的显示状态"""
         # 确保按钮已创建
@@ -545,29 +517,6 @@ class MainWindow(QMainWindow):
                 self.data_view.setVisible(True)
             if hasattr(self, 'plot_settings_container'):
                 self.plot_settings_container.setVisible(False)
-
-#   def toggle_plot_settings(self, visible):
-#       # 如果需要显示绘图设置，请隐藏数据预览
-#       if visible:
-#           self.data_view.setVisible(False)
-#           self.plot_settings_container.setVisible(True)
-#           
-#           # 如果绘图设置容器中没有控件，则将绘图设置控件移动到容器中
-#           if not self.plot_settings_container.layout().count():
-#               # 获取绘图设置控件
-#               settings_group = self.plot_view.settings_group
-#               # 将控件从原位置移除并添加到新容器
-#               if settings_group.parent():
-#                   settings_group.parent().layout().removeWidget(settings_group)
-#               self.plot_settings_container.layout().addWidget(settings_group)
-#       else:
-#           # 显示数据预览，隐藏绘图设置
-#           self.data_view.setVisible(True)
-#           self.plot_settings_container.setVisible(False)
-#       
-#       # 确保数据预览toggle按钮状态与绘图设置toggle按钮状态相反
-#       if hasattr(self, 'preview_toggle_button'):
-#           self.preview_toggle_button.setChecked(not visible)
 
     def closeEvent(self, event):
         """窗口关闭事件"""

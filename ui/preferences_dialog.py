@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QPushButton, 
-                            QLabel, QTabWidget, QWidget, QCheckBox, 
+                            QTabWidget, QWidget, QCheckBox, 
                             QComboBox, QSpinBox, QFormLayout, QGroupBox,
                             QMessageBox, QColorDialog)
 from PyQt6.QtCore import Qt

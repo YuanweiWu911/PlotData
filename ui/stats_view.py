@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
                             QLabel, QTableWidget, QTableWidgetItem, QComboBox,
-                            QGroupBox, QHeaderView)
+                            QHeaderView)
 from PyQt6.QtCore import Qt
 
 class StatsView(QWidget):

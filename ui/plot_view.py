@@ -30,7 +30,6 @@ class PlotView(QWidget):
         self.thread_pool.setMaxThreadCount(4)  # 设置最大线程数
         
         # 初始化防抖动定时器
-        from PyQt6.QtCore import QTimer
         self.debounce_timer = QTimer()
         self.debounce_timer.setSingleShot(True)  # 设置为单次触发
         self.debounce_timer.setInterval(300)    # 设置防抖动间隔为300毫秒
@@ -78,7 +77,6 @@ class PlotView(QWidget):
         self.settings_group = QGroupBox("")
         settings_layout = QFormLayout(self.settings_group)
         
-        # 从data_view.py移动过来的绘图控制区域
         # 创建绘图控制区域
         plot_control_layout = QVBoxLayout()
         
@@ -109,7 +107,6 @@ class PlotView(QWidget):
         style_layout = QHBoxLayout()
 
          # 绘图类型选择
-#       plot_type_layout = QHBoxLayout()
         style_layout.addWidget(QLabel("绘图类型:"))
         
         self.plot_type_combo = QComboBox()
@@ -175,7 +172,6 @@ class PlotView(QWidget):
         marker_layout = QHBoxLayout()
         marker_layout.addWidget(QLabel("Marker样式"))
         self.mark_style_combo = QComboBox()
-#       self.mark_style_combo.addItems([".", "o", "s", "^", "v", "D", "*", "+", "x"])
         self.mark_style_combo.addItems(["圆形", "点", "方形", "三角形", "星形", "菱形", "十字", "加号", "叉号"])
         marker_layout.addWidget(self.mark_style_combo)
         
@@ -199,7 +195,6 @@ class PlotView(QWidget):
         self.line_width_spin = QSpinBox()
         self.line_width_spin.setRange(1, 10)
         self.line_width_spin.setValue(2)  # 默认线宽为2
-#       self.line_width_spin.setToolTip("设置线图的线宽")
         linestyle_layout.addWidget(self.line_width_spin)        
 
         plot_control_layout.addLayout(linestyle_layout)
@@ -241,7 +236,7 @@ class PlotView(QWidget):
         self.density_bins_spin.setValue(100)
         density_layout.addWidget(self.density_bins_spin)
         
-        self.density_settings.setVisible(False)  # 默认隐藏
+        self.density_settings.setVisible(False)
         plot_control_layout.addWidget(self.density_settings)
         settings_layout.addRow("", plot_control_layout)
         
@@ -295,11 +290,7 @@ class PlotView(QWidget):
 
         settings_layout.addRow("", y_label_layout)
 
-        # 添加刻度数量设置
-        ticks_layout = QHBoxLayout()
-
         # X轴刻度设置
-#       x_ticks_group = QGroupBox("X轴刻度设置")
         x_ticks_layout = QHBoxLayout()
         
         self.x_major_ticks_spin = QSpinBox()
@@ -318,12 +309,9 @@ class PlotView(QWidget):
         self.x_grid_checkbox.setChecked(True)
         x_ticks_layout.addWidget(self.x_grid_checkbox)
         
-#       x_ticks_group.setLayout(x_ticks_layout)
-#       ticks_layout.addWidget(x_ticks_group)
         settings_layout.addRow("", x_ticks_layout)
 
         # Y轴刻度设置
-#       y_ticks_group = QGroupBox("Y轴刻度设置")
         y_ticks_layout = QHBoxLayout()
         
         self.y_major_ticks_spin = QSpinBox()
@@ -341,9 +329,6 @@ class PlotView(QWidget):
         self.y_grid_checkbox = QCheckBox("显示网格线")
         self.y_grid_checkbox.setChecked(True)
         y_ticks_layout.addWidget(self.y_grid_checkbox)
-        
-#       y_ticks_group.setLayout(y_ticks_layout)
-#       ticks_layout.addWidget(y_ticks_group)
         
         settings_layout.addRow("", y_ticks_layout)
 
@@ -1013,7 +998,6 @@ class PlotView(QWidget):
                 QMessageBox.warning(self, "错误", f"Y误差列 '{yerr_col}' 不存在于数据中")
                 return
                 
-#           mark_style = self.mark_style_combo.currentText()
             mark_style = self.current_request['mark_style'] 
             mark_size = self.mark_size_spin.value()
             line_style = self.line_style_combo.currentText() if plot_type == "线图" else None
@@ -1027,22 +1011,6 @@ class PlotView(QWidget):
                 color = "blue"  # 默认颜色
                 
             print(f"准备绘图: 类型={plot_type}, X={x_col}, Y={y_col}, 颜色={color}, 标记样式={mark_style}")
-            
-#           # 存储当前请求参数
-#           self.current_request = {
-#               'plot_type': plot_type,
-#               'x_col': x_col,
-#               'y_col': y_col,
-#               'color': color,
-#               'xerr_col': xerr_col,
-#               'yerr_col': yerr_col,
-#               'mark_style': mark_style,
-#               'mark_size': mark_size,
-#               'histtype': histtype,
-#               'bins': bins,
-#               'colormap': colormap,
-#               'line_style': line_style
-#           }
             
             # 重置定时器，实现防抖动
             self.debounce_timer.stop()
@@ -1162,5 +1130,3 @@ class PlotView(QWidget):
         finally:
             # 无论成功还是失败，都重置绘图状态
             self._is_plotting = False
-
-    # 确保方法名称与信号连接中使用的名称一致

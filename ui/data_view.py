@@ -1,17 +1,12 @@
 import pandas as pd
 import numpy as np
+from PyQt6 import sip
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
                             QLabel, QTableView, QHeaderView, QComboBox, 
-                            QGroupBox, QFormLayout, QSpinBox, 
-                            QColorDialog, QMessageBox, QTextEdit,
-                            QDialog, QListWidget, QListWidgetItem)  # 添加缺失的QLineEdit导入
-from PyQt6.QtCore import Qt, QAbstractTableModel, QModelIndex, pyqtSignal
-from PyQt6.QtGui import QColor
-from PyQt6 import sip
-from PyQt6.QtCore import QMetaObject, Qt, QThread
-from PyQt6.QtWidgets import QApplication
-from PyQt6.QtCore import pyqtSignal, QObject
-from core.data_manager import DataManager
+                            QGroupBox, QMessageBox, QTextEdit,QApplication,
+                            QDialog, QListWidget, QListWidgetItem)
+from PyQt6.QtCore import (Qt, QAbstractTableModel, QModelIndex, pyqtSignal,
+                          QMetaObject, Qt, QThread, pyqtSignal)
 
 class PandasModel(QAbstractTableModel):
     """用于在QTableView中显示pandas DataFrame的模型"""
@@ -60,8 +55,6 @@ class PandasModel(QAbstractTableModel):
 class DataView(QWidget):
     """数据视图组件"""
     
-    # 修改信号定义，使其与实际使用匹配
-    # 图表类型, x轴列, y轴列, 颜色, xerr, yerr, markstyle, marksize
     plot_requested = pyqtSignal(str, str, str, str, str, str, str, int, str, int, str)
     
     def __init__(self, data_manager):
@@ -110,7 +103,6 @@ class DataView(QWidget):
         main_layout.addWidget(self.table_view)
         
         # 添加数据筛选区域 - 移到绘图控制前面
-        # 添加数据筛选区域 - 减小高度
         filter_group = QGroupBox("数据筛选")
         filter_group.setStyleSheet("QGroupBox { max-height: 120px; }")
         filter_layout = QVBoxLayout(filter_group)
@@ -120,8 +112,6 @@ class DataView(QWidget):
         # 添加筛选表达式区域 - 使用更紧凑的布局
         filter_expr_layout = QHBoxLayout()
         self.filter_expr_edit = QTextEdit()
-#       self.filter_expr_edit.setMaximumHeight(50)
-#       self.filter_expr_edit.setMinimumHeight(40)
         self.filter_expr_edit.setPlaceholderText("示例: `列名` > 10 & `列名` < 100")
         filter_expr_layout.addWidget(self.filter_expr_edit)
         filter_layout.addLayout(filter_expr_layout)
@@ -153,134 +143,6 @@ class DataView(QWidget):
         # 添加筛选区域到主布局
         main_layout.addWidget(filter_group)
         
-        # 移除绘图控制组，因为已经移动到独立的标签页中
-        
-#       # 创建绘图类型选择
-#       plot_type_layout = QHBoxLayout()
-#       plot_type_layout.addWidget(QLabel("绘图类型:"))
-#       self.plot_type_combo = QComboBox()
-#       self.plot_type_combo.addItems(["散点图", "带误差棒的散点图", "直方图", "2D密度图"])
-#       self.plot_type_combo.currentIndexChanged.connect(self.on_plot_type_changed)
-#       plot_type_layout.addWidget(self.plot_type_combo)
-
-#       # 添加颜色选择组件
-#       plot_type_layout.addWidget(QLabel(""))
-#       self.color_button = QPushButton("选择颜色")
-#       self.color_button.clicked.connect(self.choose_color)
-#       self.selected_color = "blue"  # 默认颜色
-#       self.color_button.setStyleSheet(f"background-color: {self.selected_color};")
-#       plot_type_layout.addWidget(self.color_button)
-
-#       # 标记Marker样式设置
-#       self.mark_style_label = QLabel("标记样式:")
-#       self.mark_style_combo = QComboBox()
-#       self.mark_style_combo.addItems(["圆形", "点", "方形", "三角", "星形"])
-#       plot_type_layout.addWidget(self.mark_style_label)
-#       plot_type_layout.addWidget(self.mark_style_combo)
-#       
-#       # 标记大小设置
-#       self.mark_size_label = QLabel("标记大小:")
-#       self.mark_size_spin = QSpinBox()
-#       self.mark_size_spin.setRange(5, 50)
-#       self.mark_size_spin.setValue(20)
-#       plot_type_layout.addWidget(self.mark_size_label)
-#       plot_type_layout.addWidget(self.mark_size_spin)
-
-#       plot_layout.addLayout(plot_type_layout)
-
-#       # 创建数据选择表单
-#       form_layout = QFormLayout()
-#       
-#       # X轴数据选择
-#       self.x_combo = QComboBox()
-#       form_layout.addRow("X轴数据:", self.x_combo)
-#       
-#       # Y轴数据选择
-#       self.y_combo = QComboBox()
-#       form_layout.addRow("Y轴数据:", self.y_combo)
-#       
-#       # X轴误差数据选择（初始隐藏）
-#       self.xerr_combo = QComboBox()
-#       self.xerr_combo.addItem("无")
-#       self.xerr_label = QLabel("X轴误差:")
-#       form_layout.addRow(self.xerr_label, self.xerr_combo)
-#       
-#       # Y轴误差数据选择（初始隐藏）
-#       self.yerr_combo = QComboBox()
-#       self.yerr_combo.addItem("无")
-#       self.yerr_label = QLabel("Y轴误差:")
-#       form_layout.addRow(self.yerr_label, self.yerr_combo)
-#       
-#       # 直方图的bins设置
-#       self.bins_spin = QSpinBox()
-#       self.bins_spin.setRange(2, 100)
-#       self.bins_spin.setValue(10)
-#       self.bins_label = QLabel("分箱数量:")
-#       form_layout.addRow(self.bins_label, self.bins_spin)
-
-#       # 直方图类型设置
-#       self.histtype_label = QLabel("直方图类型:")
-#       self.histtype_combo = QComboBox()
-#       self.histtype_combo.addItems(["bar", "barstacked", "step", "stepfilled"])
-#       form_layout.addRow(self.histtype_label, self.histtype_combo)        
-#       
-#       plot_layout.addLayout(form_layout)
-
-#       # 绘图按钮
-#       self.plot_button = QPushButton("生成图")
-#       self.plot_button.clicked.connect(self.request_plot)
-#       plot_layout.addWidget(self.plot_button)
-
-#       # 添加绘图控制组到主布局
-#       main_layout.addWidget(plot_group)
-#       
-#       # 初始化UI状态
-#       self.on_plot_type_changed(0)  # 默认为散点图
-
-#       # 添加colorbar样式选择（初始隐藏）
-#       self.colorbar_label = QLabel("Colorbar样式:")
-#       self.colorbar_combo = QComboBox()
-#       self.colorbar_combo.addItems(["viridis", "plasma", "inferno", "magma", "cividis", "jet", "rainbow", "coolwarm", "RdBu", "hot"])
-#       self.colorbar_label.setVisible(False)
-#       self.colorbar_combo.setVisible(False)
-#       form_layout.addRow(self.colorbar_label, self.colorbar_combo)
-
-#       # 在主布局的最下方添加绘图按钮
-#       self.plot_button = QPushButton("生成图")
-#       self.plot_button.setMinimumHeight(30)  # 设置更大的高度
-#       self.plot_button.setStyleSheet("""
-#           QPushButton {
-#               background-color: #4CAF50;  /* 绿色 */
-#               color: white;
-#               font-weight: bold;
-#               border-radius: 5px;
-#               padding: 5px;
-#           }
-#           QPushButton:hover {
-#               background-color: #45a049;  /* 鼠标悬停时的深绿色 */
-#           }
-#       """)
-#       self.plot_button.clicked.connect(self.request_plot)
-#       main_layout.addWidget(self.plot_button)
-
-    # 确保on_plot_clicked是类方法（删除嵌套定义）
-#   def on_plot_clicked(self):
-#       """处理绘图按钮点击事件 - 现在只转发到 PlotView"""
-#       try:
-#           # 获取主窗口
-#           main_window = self.window()
-#           if hasattr(main_window, 'plot_view') and main_window.plot_view:
-#               # 调用 PlotView 的绘图方法
-#               main_window.plot_view.request_plot()
-#               print("已将绘图请求转发到 PlotView")
-#           else:
-#               print("无法找到 PlotView 对象")
-#               QMessageBox.warning(self, "错误", "无法找到绘图视图组件")
-#       except Exception as e:
-#           print(f"绘图请求转发失败: {str(e)}")
-#           import traceback
-#           traceback.print_exc()
-
     def safe_update_combobox(self):
         """安全更新下拉框的方法"""
         # 检查控件是否被删除，需要同时检查父级布局
@@ -391,118 +253,6 @@ class DataView(QWidget):
             import traceback
             traceback.print_exc()
     
-#   def on_plot_type_changed(self, index):
-#       """绘图类型改变时的处理"""
-#       plot_type = self.plot_type_combo.currentText()
-#       
-#       # 根据绘图类型显示/隐藏相关控件
-#       is_scatter = plot_type == "散点图" or plot_type == "带误差棒的散点图"
-#       is_error_scatter = plot_type == "带误差棒的散点图"
-#       is_histogram = plot_type == "直方图"
-#       is_density = plot_type == "2D密度图"
-#       
-#       # 显示/隐藏Y轴选择
-#       self.y_combo.setEnabled(not is_histogram)  # 直方图不需要Y轴
-#       self.y_combo.setVisible(not is_histogram)
-#       
-#       # 显示/隐藏误差棒选择
-#       self.xerr_label.setVisible(is_error_scatter)
-#       self.xerr_combo.setVisible(is_error_scatter)
-#       self.yerr_label.setVisible(is_error_scatter)
-#       self.yerr_combo.setVisible(is_error_scatter)
-#       
-#       # 显示/隐藏分箱数量
-#       self.bins_label.setVisible(is_histogram or is_density)
-#       self.bins_spin.setVisible(is_histogram or is_density)
-#       
-#       # 显示/隐藏直方图类型选择
-#       if hasattr(self, 'histtype_label'):
-#           self.histtype_label.setVisible(is_histogram)
-#           self.histtype_combo.setVisible(is_histogram)
-#       
-#       # 显示/隐藏标记样式和大小
-#       self.mark_style_label.setVisible(is_scatter)
-#       self.mark_style_combo.setVisible(is_scatter)
-#       self.mark_size_label.setVisible(is_scatter)
-#       self.mark_size_spin.setVisible(is_scatter)
-#       
-#       # 显示/隐藏颜色选择按钮和Colorbar样式
-#       # 对于散点图、带误差棒散点图和直方图，显示颜色选择按钮，隐藏Colorbar样式
-#       # 对于2D密度图，隐藏颜色选择按钮，显示Colorbar样式
-#       self.color_button.setVisible(not is_density)  # 非2D密度图时显示颜色选择按钮
-#       
-#       # 确保colorbar相关控件存在
-#       if hasattr(self, 'colorbar_label') and hasattr(self, 'colorbar_combo'):
-#           self.colorbar_label.setVisible(is_density)  # 仅2D密度图时显示Colorbar样式
-#           self.colorbar_combo.setVisible(is_density)
-
-#       if plot_type == "散点图":
-#           self.y_combo.setEnabled(True)
-#           self.xerr_label.setVisible(False)
-#           self.xerr_combo.setVisible(False)
-#           self.yerr_label.setVisible(False)
-#           self.yerr_combo.setVisible(False)
-#           self.bins_label.setVisible(False)
-#           self.bins_spin.setVisible(False)
-#           
-#       elif plot_type == "带误差棒的散点图":
-#           self.y_combo.setEnabled(True)
-#           self.xerr_label.setVisible(True)
-#           self.xerr_combo.setVisible(True)
-#           self.yerr_label.setVisible(True)
-#           self.yerr_combo.setVisible(True)
-#           self.bins_label.setVisible(False)
-#           self.bins_spin.setVisible(False)
-#           
-#       elif plot_type == "直方图":
-#           self.y_combo.setEnabled(False)
-#           self.xerr_label.setVisible(False)
-#           self.xerr_combo.setVisible(False)
-#           self.yerr_label.setVisible(False)
-#           self.yerr_combo.setVisible(False)
-#           self.bins_label.setVisible(True)
-#           self.bins_spin.setVisible(True)
-#           
-#       elif plot_type == "2D密度图":
-#           self.y_combo.setEnabled(True)
-#           self.xerr_label.setVisible(False)
-#           self.xerr_combo.setVisible(False)
-#           self.yerr_label.setVisible(False)
-#           self.yerr_combo.setVisible(False)
-#           self.color_button.setVisible(False)
-#           self.bins_label.setVisible(True)
-#           self.bins_spin.setVisible(True)
-#           show_colorbar_controls = (plot_type == "2D密度图")
-#           self.colorbar_label.setVisible(show_colorbar_controls)
-#           self.colorbar_combo.setVisible(show_colorbar_controls)
-#           
-#           # 显示/隐藏颜色选择（2D密度图不需要）
-#   
-#   def choose_color(self):
-#       """打开颜色选择对话框"""
-#       color = QColorDialog.getColor(initial=QColor(self.selected_color))
-#       if color.isValid():
-#           self.selected_color = color.name()
-#           self.color_button.setStyleSheet(f"background-color: {self.selected_color};")
-
-    # 在触发绘图的代码处传递颜色参数
-#   def trigger_plot_action(self):
-#       """触发绘图动作 - 现在只转发到 PlotView"""
-#       try:
-#           # 获取主窗口
-#           main_window = self.window()
-#           if hasattr(main_window, 'plot_view') and main_window.plot_view:
-#               # 调用 PlotView 的绘图方法
-#               main_window.plot_view.request_plot()
-#               print("已将绘图请求转发到 PlotView")
-#           else:
-#               print("无法找到 PlotView 对象")
-#               QMessageBox.warning(self, "错误", "无法找到绘图视图组件")
-#       except Exception as e:
-#           print(f"绘图请求转发失败: {str(e)}")
-#           import traceback
-#           traceback.print_exc()        
- 
     def request_plot(self):
         """请求绘图 - 将请求转发到 PlotView"""
         try:
@@ -687,7 +437,7 @@ class DataView(QWidget):
     def create_buttons(self):
         button_layout = QHBoxLayout()
         
-        # 载入数据按钮 (已存在)
+        # 载入数据按钮
         self.load_button = QPushButton("载入数据")
         button_layout.addWidget(self.load_button)
 
@@ -698,7 +448,7 @@ class DataView(QWidget):
         self.preview_toggle_button.clicked.connect(self.toggle_preview)
         button_layout.addWidget(self.preview_toggle_button)
 
-        # 导出数据按钮 (已存在)
+        # 导出数据按钮
         self.export_button = QPushButton("导出数据") 
         button_layout.addWidget(self.export_button)
 
