@@ -304,41 +304,6 @@ class PlotView(QWidget):
         
         # 创建工具栏（空的，因为按钮已移动到绘图设置区域）
         toolbar_layout = QHBoxLayout()
-<<<<<<< HEAD
-        
-        # 使用辅助方法创建工具栏按钮
-        self.toggle_settings_button = UIHelper.create_button(
-            "Plot Settings", 
-            icon=self.style().standardIcon(self.style().StandardPixmap.SP_FileDialogDetailedView),
-            slot=self.toggle_settings_visibility,
-            checkable=True,
-            checked=True
-        )
-        toolbar_layout.addWidget(self.toggle_settings_button)
-        
-        self.save_settings_toolbar_button = UIHelper.create_button(
-            "保存设置", 
-            icon=self.style().standardIcon(self.style().StandardPixmap.SP_DialogSaveButton),
-            slot=self.save_plot_settings
-        )
-        toolbar_layout.addWidget(self.save_settings_toolbar_button)
-        
-        self.load_settings_toolbar_button = UIHelper.create_button(
-            "加载设置", 
-            icon=self.style().standardIcon(self.style().StandardPixmap.SP_DialogOpenButton),
-            slot=self.load_plot_settings
-        )
-        toolbar_layout.addWidget(self.load_settings_toolbar_button)
-        
-        self.save_plot_toolbar_button = UIHelper.create_button(
-            "保存图表", 
-            icon=self.style().standardIcon(self.style().StandardPixmap.SP_DialogSaveButton),
-            slot=self.save_plot
-        )
-        toolbar_layout.addWidget(self.save_plot_toolbar_button)
-        
-=======
->>>>>>> py312
         toolbar_layout.addStretch()
         main_layout.addLayout(toolbar_layout)
         
@@ -358,13 +323,8 @@ class PlotView(QWidget):
         
         main_layout.addWidget(plot_group)
         
-<<<<<<< HEAD
-        # 创建图表设置区域
-        self.settings_group = QGroupBox("Plot Settings")
-=======
         # 创建图表设置区域 - 作为独立组件
         self.settings_group = QGroupBox("")
->>>>>>> py312
         settings_layout = QFormLayout(self.settings_group)
         
         # 创建绘图控制区域
@@ -396,50 +356,6 @@ class PlotView(QWidget):
         # 样式设置
         style_layout = QHBoxLayout()
 
-<<<<<<< HEAD
-        # 绘图类型选择
-        self.plot_type_combo = UIHelper.create_combo_box(
-            ["散点图", "带误差棒的散点图", "直方图", "2D密度图", "线图"],
-            slot=self.on_plot_type_changed
-        )
-        UIHelper.add_widgets_to_layout(style_layout, [("绘图类型:", self.plot_type_combo)])
-        
-        # 颜色选择
-        self.color_button = UIHelper.create_button(
-            "颜色选择", 
-            slot=self.choose_color, 
-            fixed_width=60
-        )
-        self.color_button.setStyleSheet("background-color: blue;")
-        self.color_button.setProperty("color", "blue")  # 存储颜色值
-        UIHelper.add_widgets_to_layout(style_layout, [("", self.color_button)])
-
-        # 添加透明度设置控件
-        self.alpha_spin = UIHelper.create_double_spin_box(
-            0.1, 1.0, 0.7, 0.1, 1, 
-            tooltip="设置图形的透明度"
-        )
-        UIHelper.add_widgets_to_layout(style_layout, [("透明度", self.alpha_spin)])
-
-        # 标记样式
-        self.mark_style_combo = UIHelper.create_combo_box(
-            ["圆形", "点", "方形", "三角形", "星形", "菱形", "十字", "加号", "叉号"]
-        )
-        UIHelper.add_widgets_to_layout(style_layout, [("Marker样式", self.mark_style_combo)])
-        
-        # 标记大小
-        self.mark_size_spin = UIHelper.create_spin_box(1, 30, 10)
-        UIHelper.add_widgets_to_layout(style_layout, [("Marker大小", self.mark_size_spin)])
-        
-        # 线型设置
-        self.line_style_combo = UIHelper.create_combo_box(["-", "--", ":", "-."])
-        UIHelper.add_widgets_to_layout(style_layout, [("线型", self.line_style_combo)])
-
-        # 添加线宽设置
-        self.line_width_spin = UIHelper.create_spin_box(1, 10, 2)
-        UIHelper.add_widgets_to_layout(style_layout, [("线宽", self.line_width_spin)])
-
-=======
          # 绘图类型选择
 #       plot_type_layout = QHBoxLayout()
         style_layout.addWidget(QLabel("绘图类型:"))
@@ -448,7 +364,6 @@ class PlotView(QWidget):
         self.plot_type_combo.addItems(["散点图", "带误差棒的散点图", "直方图", "2D密度图", "线图"])
         self.plot_type_combo.currentIndexChanged.connect(self.on_plot_type_changed)
         style_layout.addWidget(self.plot_type_combo)
->>>>>>> py312
         plot_control_layout.addLayout(style_layout)
 
       
@@ -564,27 +479,6 @@ class PlotView(QWidget):
         settings_layout.addRow("", self.title_edit)
         
         # 添加X轴刻度设置
-<<<<<<< HEAD
-        x_ticks_layout = QHBoxLayout()
-       
-        # X轴标签设置
-        self.x_label_edit = UIHelper.create_line_edit(placeholder="X轴标签:")
-        self.x_ticks_min = UIHelper.create_line_edit(
-            placeholder="X轴最小值（支持科学计数法）",
-            validator=QDoubleValidator(notation=QDoubleValidator.Notation.ScientificNotation)
-        )
-        
-        x_ticks_layout.addWidget(self.x_label_edit)
-        x_ticks_layout.addWidget(QLabel("X轴范围:"))
-        x_ticks_layout.addWidget(self.x_ticks_min)
-
-        self.x_ticks_max = UIHelper.create_line_edit(
-            placeholder="X轴最大值",
-            validator=QDoubleValidator(notation=QDoubleValidator.Notation.ScientificNotation)
-        )
-        x_ticks_layout.addWidget(QLabel("-"))
-        x_ticks_layout.addWidget(self.x_ticks_max)
-=======
         x_label_layout = QHBoxLayout()
         
         # X轴标签设置
@@ -604,7 +498,6 @@ class PlotView(QWidget):
         self.x_ticks_max.setValidator(QDoubleValidator(notation=QDoubleValidator.Notation.ScientificNotation))
         x_label_layout.addWidget(QLabel("-"))
         x_label_layout.addWidget(self.x_ticks_max)
->>>>>>> py312
         
         settings_layout.addRow("", x_label_layout)
         
@@ -612,26 +505,6 @@ class PlotView(QWidget):
         y_label_layout = QHBoxLayout()
         
         # Y轴标签设置
-<<<<<<< HEAD
-        self.y_label_edit = UIHelper.create_line_edit(placeholder="Y轴标签:")
-        self.y_ticks_min = UIHelper.create_line_edit(
-            placeholder="Y轴最小值（支持科学计数法）",
-            validator=QDoubleValidator(notation=QDoubleValidator.Notation.ScientificNotation)
-        )
-        
-        y_ticks_layout.addWidget(self.y_label_edit)
-        y_ticks_layout.addWidget(QLabel("Y轴范围:"))
-        y_ticks_layout.addWidget(self.y_ticks_min)
-
-        self.y_ticks_max = UIHelper.create_line_edit(
-            placeholder="Y轴最大值",
-            validator=QDoubleValidator(notation=QDoubleValidator.Notation.ScientificNotation)
-        )
-        y_ticks_layout.addWidget(QLabel("-"))
-        y_ticks_layout.addWidget(self.y_ticks_max)
- 
-        settings_layout.addRow("", y_ticks_layout)
-=======
         self.y_label_edit = QLineEdit()
         self.y_label_edit.setPlaceholderText("Y轴标签:")
 
@@ -649,38 +522,17 @@ class PlotView(QWidget):
         y_label_layout.addWidget(self.y_ticks_max)
 
         settings_layout.addRow("", y_label_layout)
->>>>>>> py312
 
         # 坐标轴刻度设置
         ticks_layout = QHBoxLayout()
 
-<<<<<<< HEAD
-        ticks_layout.addWidget(QLabel("x_majorticks:"))
-=======
         # X轴刻度设置
 #       x_ticks_group = QGroupBox("X轴刻度设置")
         x_ticks_layout = QHBoxLayout()
         
->>>>>>> py312
         self.x_major_ticks_spin = QSpinBox()
         self.x_major_ticks_spin.setRange(0, 20)
         self.x_major_ticks_spin.setValue(5)
-<<<<<<< HEAD
-        ticks_layout.addWidget(self.x_major_ticks_spin)
-
-        ticks_layout.addWidget(QLabel("x_minorticks:"))
-        self.x_minor_ticks_spin = QSpinBox()
-        self.x_minor_ticks_spin.setRange(0, 10)
-        self.x_minor_ticks_spin.setValue(1)
-        ticks_layout.addWidget(self.x_minor_ticks_spin)
-
-                # 添加X轴网格线复选框
-        self.x_grid_checkbox = QCheckBox("X轴网格")
-        self.x_grid_checkbox.setChecked(True)
-        ticks_layout.addWidget(self.x_grid_checkbox)
-
-        ticks_layout.addWidget(QLabel("y_majorticks:"))
-=======
         x_ticks_layout.addWidget(QLabel("X主刻度数:"))
         x_ticks_layout.addWidget(self.x_major_ticks_spin)
         
@@ -702,25 +554,9 @@ class PlotView(QWidget):
 #       y_ticks_group = QGroupBox("Y轴刻度设置")
         y_ticks_layout = QHBoxLayout()
         
->>>>>>> py312
         self.y_major_ticks_spin = QSpinBox()
         self.y_major_ticks_spin.setRange(0, 20)
         self.y_major_ticks_spin.setValue(5)
-<<<<<<< HEAD
-        ticks_layout.addWidget(self.y_major_ticks_spin)
-#       UIHelper.add_widgets_to_layout(ticks_layout,[("Y轴主刻度:", self.y_major_ticks_spin)])
-
-        ticks_layout.addWidget(QLabel("y_minorticks:"))
-        self.y_minor_ticks_spin = QSpinBox()
-        self.y_minor_ticks_spin.setRange(0, 10)
-        self.y_minor_ticks_spin.setValue(1)
-        ticks_layout.addWidget(self.y_minor_ticks_spin)
-
-        # 添加Y轴网格线复选框
-        self.y_grid_checkbox = QCheckBox("Y轴网格")
-        self.y_grid_checkbox.setChecked(True)
-        ticks_layout.addWidget(self.y_grid_checkbox)
-=======
         y_ticks_layout.addWidget(QLabel("Y主刻度数:"))
         y_ticks_layout.addWidget(self.y_major_ticks_spin)
         
@@ -763,7 +599,6 @@ class PlotView(QWidget):
 
         # 存储当前绘图参数
         self.current_plot_params = None
->>>>>>> py312
 
         settings_layout.addRow("",ticks_layout)
 
@@ -1376,68 +1211,3 @@ class PlotView(QWidget):
             # 无论成功还是失败，都重置绘图状态
             self._is_plotting = False
 
-<<<<<<< HEAD
-    @pyqtSlot(bool)
-    def toggle_settings_visibility(self, checked=None):
-        """切换设置区域的显示状态"""
-        if checked is None:
-            checked = not self.toggle_settings_button.isChecked()
-            self.toggle_settings_button.setChecked(checked)
-        
-        # 直接控制设置区域的可见性
-        if hasattr(self, 'settings_group'):
-            self.settings_group.setVisible(checked)
-        
-        # 发出信号通知主窗口
-        self.settings_visibility_changed.emit(checked)
-        
-        # 更新按钮文本
-        if checked:
-            self.toggle_settings_button.setText("Plot Settings ✓")
-            self.toggle_settings_button.setStyleSheet("background-color: #4CAF50;")
-        else:
-            self.toggle_settings_button.setText("Plot Settings")
-            self.toggle_settings_button.setStyleSheet("")
-        
-        # 调整窗口大小以适应内容变化
-        self.adjustSize()
-        if self.parent():
-            self.parent().adjustSize()
-
-    def on_plot_type_changed(self, index):
-       """处理绘图类型变更"""
-       plot_type = self.plot_type_combo.currentText()
-       
-       # 隐藏所有特殊设置
-       self.error_settings.setVisible(False)
-       self.hist_settings.setVisible(False)
-       self.density_settings.setVisible(False)
-       
-       # 根据绘图类型显示相应设置
-       if plot_type == "直方图":
-           self.hist_settings.setVisible(True)
-           # 隐藏Y轴数据选择控件，但保留Y轴标签
-           self.y_combo.setVisible(False)
-           # 找到Y轴数据标签并保持其可见
-           for i in range(self.y_combo.parentWidget().layout().count()):
-               item = self.y_combo.parentWidget().layout().itemAt(i)
-               if item.widget() and isinstance(item.widget(), QLabel) and item.widget().text() == "Y轴数据:":
-                   item.widget().setVisible(False)
-                   break
-       else:
-           # 对于其他图表类型，显示Y轴数据选择控件
-           self.y_combo.setVisible(True)
-           # 显示Y轴数据标签
-           for i in range(self.y_combo.parentWidget().layout().count()):
-               item = self.y_combo.parentWidget().layout().itemAt(i)
-               if item.widget() and isinstance(item.widget(), QLabel) and item.widget().text() == "Y轴数据:":
-                   item.widget().setVisible(True)
-                   break
-           
-       if plot_type == "2D密度图":
-           self.density_settings.setVisible(True)
-       elif plot_type == "带误差棒的散点图":
-           self.error_settings.setVisible(True)
-=======
-    # 确保方法名称与信号连接中使用的名称一致
->>>>>>> py312

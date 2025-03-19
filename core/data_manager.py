@@ -21,29 +21,16 @@ class DataManager:
                 # 自动检测分隔符（多个空格、逗号、竖线）
                 if sep is None:
                     sep = r'\s+|,|\|'  # 正则表达式匹配多个空格/逗号/竖线
-<<<<<<< HEAD
-                self.data = pd.read_csv(file_path, 
-                delimiter=sep, 
-                engine='python',
-=======
                 sep = r'\s+|,|\|'  # 正则表达式匹配多个空格/逗号/竖线
                 self.data = pd.read_csv(file_path, 
                 delimiter=sep, 
                 engine='python',
-#               comment="*",
->>>>>>> py312
                 skip_blank_lines=True,
                 quotechar='"',  # 添加引号处理
                 quoting=0,     # 0=QUOTE_MINIMAL
                 on_bad_lines='skip', # 跳过格式错误行
                 keep_default_na=False
                 )  # 添加engine参数
-<<<<<<< HEAD
-
-=======
-                # 添加星号注释过滤
-#               self.data = self.data[~self.data.iloc[:, 0].astype(str).str.startswith('*')]
->>>>>>> py312
             elif file_path.endswith(('.xlsx', '.xls')):
                 self.data = pd.read_excel(file_path)
             elif file_path.endswith('.json'):
@@ -428,19 +415,6 @@ class DataManager:
             referenced_cols = [col.strip('`') for col in re.findall(r'`([^`]+)`', expr)]
             missing_cols = [col for col in referenced_cols if col not in raw_data.columns]
 
-#           # 新增列名存在性检查（带空值保护）
-#           if not hasattr(raw_data, 'columns'):
-#               return False, "数据格式错误，无法获取列信息"
-
-#          
-#           # 修改列名存在性验证逻辑
-#           used_columns = re.findall(r'`([^`]+)`|\b([a-zA-Z_]\w*)\b', expr)
-#           used_columns = [col[0] or col[1] for col in used_columns]
-#           missing_cols = [col for col in used_columns if col not in raw_data.columns]
-
-#           # 添加列名存在性验证
-#           missing_cols = [col.strip('`') for col in re.findall(r'`([^`]+)`', expr) 
-#                          if col.strip('`') not in raw_data.columns]
             if missing_cols:
                 return False, f"列名不存在: {', '.join(missing_cols)}"
 
