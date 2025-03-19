@@ -83,7 +83,7 @@ class MainWindow(QMainWindow):
         splitter.addWidget(self.plot_view)
         
         # 设置分割器初始大小
-        splitter.setSizes([500, 500])
+        splitter.setSizes([450, 550])
         # 自动平分窗口宽度
 #       splitter.setStretchFactor(0, 1)
 #       splitter.setStretchFactor(1, 1) 
@@ -199,16 +199,6 @@ class MainWindow(QMainWindow):
         help_menu.addAction(self.help_action)
         help_menu.addAction(self.about_action)
         
-#   def create_toolbar(self):
-#       # 创建工具栏
-#       toolbar = QToolBar("主工具栏")
-#       toolbar.setIconSize(QSize(16, 16))
-#       self.addToolBar(toolbar)
-#       
-#       toolbar.addAction(self.open_action)
-#       toolbar.addAction(self.export_action)
-#       toolbar.addAction(self.save_plot_action)  
-
     def save_current_plot(self):
         """保存当前图表"""
         if hasattr(self, 'plot_view') and self.plot_view:
@@ -483,18 +473,6 @@ class MainWindow(QMainWindow):
         """创建左侧工具栏（已移除预览按钮）"""
         left_toolbar = QHBoxLayout()
         return left_toolbar
-
-#   # 移除以下方法（功能已迁移至data_view.py）
-#   # def toggle_data_preview(self):
-#   #     """切换数据预览和筛选区域的显示状态"""
-#   #     ...原有实现...
-#       self.preview_toggle_button.setCheckable(True)  # 设置为可切换状态
-#       self.preview_toggle_button.setChecked(True)    # 默认为显示状态
-#       self.preview_toggle_button.clicked.connect(self.toggle_data_preview)
-#       left_toolbar.addWidget(self.preview_toggle_button)
-#       
-#       # 返回布局以便添加到主布局
-#       return left_toolbar
 
     def toggle_data_preview(self):
         """切换数据预览和筛选区域的显示状态"""
