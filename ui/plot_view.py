@@ -917,7 +917,7 @@ class PlotView(QWidget):
         self.mark_style_combo.clear()
         
         # 添加标记样式选项
-        marker_styles = ["无标记","点", "圆形", "方形", "三角形", "星形", "菱形", "十字", "加号"]
+        marker_styles = ["无标记","点", "圆形", "方形", "三角形", "星形", "菱形", "十字", "加号", "叉号"]
         self.mark_style_combo.addItems(marker_styles)
         
         # 尝试恢复之前的选择

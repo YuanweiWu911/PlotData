@@ -48,8 +48,8 @@ class Visualizer:
         y_label=None,
         color='blue',
         alpha=0.7,
-        mark_size=10,
         mark_style='o',
+        mark_size=10,
         x_major_ticks=5,
         x_minor_ticks=1,
         x_show_grid=True,
@@ -73,10 +73,13 @@ class Visualizer:
             "圆形": 'o',
             "点": '.',
             "方形": 's',
-            "三角": '^',
-            "星形": '*'
+            "三角形": '^',
+            "星形": '*',
+            "菱形": 'D',
+            "十字": 'x',
+            "加号": '+',
+            "叉号": 'x'
         }
-        marker = style_map.get(mark_style, 'o')  # 默认圆形
         
         try:
             x = data[x_col]
@@ -84,7 +87,7 @@ class Visualizer:
             
             self.canvas.axes.clear()
             self.canvas.axes.scatter(x, y,
-                marker=marker,
+                marker=mark_style,
                 c=color,
                 s=mark_size,
                 alpha=alpha)
@@ -157,10 +160,13 @@ class Visualizer:
             "圆形": 'o',
             "点": '.',
             "方形": 's',
-            "三角": '^',
-            "星形": '*'
+            "三角形": '^',
+            "星形": '*',
+            "菱形": 'D',
+            "十字": 'x',
+            "加号": '+',
+            "叉号": 'x'
         }
-        marker = style_map.get(mark_style, 'o')  # 默认圆形
         
         try:
             x = data[x_col]
@@ -171,11 +177,12 @@ class Visualizer:
             
             self.canvas.axes.clear()
             # 修改为正确的errorbar参数设置
-            self.canvas.axes.errorbar(x, y, 
+            self.canvas.axes.errorbar(x, y,
                                     xerr=xerr,
                                     yerr=yerr,
-                                    fmt=marker,         # 设置点标记形状
-                                    markersize=mark_size,  # 单独设置点大小
+                                    fmt=mark_style,        
+                                    linestyle='',       # 改为空字符串确保完全禁用线条
+                                    markersize=mark_size,
                                     color=color,
                                     alpha=alpha,
                                     ecolor=color,    # 误差棒颜色
