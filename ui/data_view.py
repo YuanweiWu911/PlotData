@@ -82,7 +82,13 @@ class DataView(QWidget):
         self.export_data_button.setIcon(self.style().standardIcon(self.style().StandardPixmap.SP_DialogSaveButton))
         self.export_data_button.clicked.connect(self.export_data)
         toolbar_layout.addWidget(self.export_data_button)
-        
+
+        # 在工具栏中添加清除数据按钮
+        self.clear_button = QPushButton("清除数据")
+        self.clear_button.setToolTip("清除当前数据以便加载新数据")
+        self.clear_button.clicked.connect(self.clear_data)
+        toolbar_layout.addWidget(self.clear_button)
+
         toolbar_layout.addStretch()
         main_layout.addLayout(toolbar_layout)
         
@@ -485,3 +491,30 @@ class DataView(QWidget):
         button_layout.addWidget(self.export_button)
 
         return button_layout
+
+    def clear_data(self):
+        """清除当前数据"""
+        # 确认操作
+        reply = QMessageBox.question(
+            self, 
+            "确认清除", 
+            "确定要清除当前数据吗？这将重置所有设置。",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            # 清除数据管理器中的数据
+            self.data_manager.data = None
+            self.data_manager.filtered_data = None
+            self.data_manager.current_file = None
+            
+            # 更新数据视图
+            self.update_data_view()
+            
+            # 清除筛选条件
+            self.clear_filter()
+            
+            # 通知主窗口更新状态
+            parent = self.window()
+            if hasattr(parent, 'update_status'):
+                parent.update_status("数据已清除")
