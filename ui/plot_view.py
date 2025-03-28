@@ -17,7 +17,7 @@ class PlotView(QWidget):
     settings_visibility_changed = pyqtSignal(bool)
     
     # 添加从data_view.py移动过来的信号
-    plot_requested = pyqtSignal(str, str, str, str, str, str, str, int, str, int, str)
+    plot_requested = pyqtSignal(str, str, str, str, str, str, str, int, str, int, str, str, int, float, str)
     
     def __init__(self, data_manager, visualizer):
         super().__init__()
@@ -229,7 +229,14 @@ class PlotView(QWidget):
                                      "GnBu", "PuBu", "YlGnBu", "PuBuGn", "BuGn", "YlGn",
                                      "jet", "turbo", "rainbow", "coolwarm", "bwr", "seismic"])
         density_layout.addWidget(self.colorbar_combo)
-        
+
+        # 添加 colorbar 比例选择
+        density_layout.addWidget(QLabel("Colorbar比例:"))
+        self.colorbar_scale_combo = QComboBox()
+        self.colorbar_scale_combo.addItems(["线性", "对数"])
+        self.colorbar_scale_combo.setToolTip("选择colorbar的比例类型")
+        density_layout.addWidget(self.colorbar_scale_combo)
+
         density_layout.addWidget(QLabel("分辨率:"))
         self.density_bins_spin = QSpinBox()
         self.density_bins_spin.setRange(10, 500)
@@ -536,14 +543,24 @@ class PlotView(QWidget):
                     progress = QProgressDialog("正在加载数据文件...", "取消", 0, 100, self)
                     progress.setWindowTitle("加载中")
                     progress.setWindowModality(Qt.WindowModality.WindowModal)
+                    progress.setMinimumDuration(0)  # 立即显示
                     progress.show()
                     progress.setValue(10)
                     
-                    # 加载文件
+                    # 修改：直接调用open_file，不处理返回值
                     main_window.open_file(data_file_path)
                     progress.setValue(50)
                     QApplication.processEvents()  # 等待数据加载完成
+                    
+                    # 修改：使用empty属性验证数据是否加载成功
+                    data = self.data_manager.get_data()
+                    if data is None or data.empty:
+                        progress.close()
+                        QMessageBox.warning(self, "数据加载失败", "数据加载后为空")
+                        return
+                        
                     progress.setValue(100)
+                    progress.close()
                 else:
                     QMessageBox.warning(
                         self, 
@@ -680,12 +697,12 @@ class PlotView(QWidget):
             except Exception as e:
                 QMessageBox.critical(self, "错误", f"保存图表失败: {str(e)}")
 
-    @pyqtSlot(str, str, str, str, str, str, str, int, str, int)
+    @pyqtSlot(str, str, str, str, str, str, str, int, str, int, str, str, int, float, str)
     def handle_plot_request(self, plot_type, 
         x_col, y_col, color, xerr_col=None, yerr_col=None, 
         mark_style='o', mark_size=10, histtype='bar', 
         bins=50, colormap='viridis', line_style='-',
-        line_width=2, alpha=0.7):
+        line_width=2, alpha=0.7, colorbar_scale='线性'):
         """处理绘图请求，使用工作线程进行绘图操作"""
         # 保存当前绘图参数
         self.current_plot_params = {
@@ -701,6 +718,7 @@ class PlotView(QWidget):
             'histtype': histtype,
             'bins': bins,
             'colormap': colormap,
+            'colorbar_scale': colorbar_scale,
             'line_style': line_style,
             'line_width': line_width
         }
@@ -771,6 +789,7 @@ class PlotView(QWidget):
                 histtype=histtype,
                 bins=bins,
                 colormap=colormap,
+                colorbar_scale=colorbar_scale,
                 title=title,
                 x_label=x_label,
                 y_label=y_label,
@@ -1065,6 +1084,16 @@ class PlotView(QWidget):
         if not color or not isinstance(color, str):
             color = "blue"  # 默认颜色
         alpha = self.alpha_spin.value()
+
+        # 获取2D密度图特有参数
+        if plot_type == "2D密度图":
+            colormap = self.colorbar_combo.currentText()
+            # 添加 colorbar 比例参数获取
+            colorbar_scale = self.colorbar_scale_combo.currentText()
+#           if hasattr(self, 'colorbar_scale_combo') else "线性"
+        else:
+            colormap = "viridis"
+            colorbar_scale = "线性"        
         
         # 存储当前请求参数
         self.current_request = {
@@ -1080,10 +1109,18 @@ class PlotView(QWidget):
             'histtype': histtype,
             'bins': bins,
             'colormap': colormap,
+            'colorbar_scale': colorbar_scale,
             'line_style': line_style,
             'line_width': line_width
         }
-
+        # 发送绘图请求信号，确保包含所有参数
+        self.plot_requested.emit(
+            plot_type, x_col, y_col, color, 
+            xerr_col, yerr_col,
+            mark_style, mark_size, 
+            histtype, bins, colormap, line_style, 
+            line_width, alpha, colorbar_scale
+        )
     def _execute_plot_request(self):
         """实际执行绘图请求，由防抖动定时器触发"""
         if not self.current_request:
@@ -1112,13 +1149,13 @@ class PlotView(QWidget):
             colormap = self.current_request['colormap']
             line_style = self.current_request.get('line_style', '-')            
             line_width = self.current_request.get('line_width', 2)
+            colorbar_scale = self.current_request.get('colorbar_scale', '线性')
             # 调用绘图方法
             self.handle_plot_request(
                 plot_type, x_col, y_col, color, 
                 xerr_col, yerr_col, mark_style, 
                 mark_size, histtype, bins, colormap,
-                line_style, line_width, alpha
-            )
+                line_style, line_width, alpha, colorbar_scale)
             
             print(f"绘图请求处理完成")
             

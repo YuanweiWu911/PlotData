@@ -18,6 +18,11 @@ class MainWindow(QMainWindow):
         self.visualizer = visualizer
         self.config_manager = config_manager
         
+        self.data_manager.data_loaded.connect(
+            lambda: self.data_view.update_data_view(),
+            Qt.ConnectionType.QueuedConnection
+        )        
+        
         # 初始化UI
         self.init_ui()
         
@@ -97,9 +102,9 @@ class MainWindow(QMainWindow):
 
         # 修正信号连接，确保接收所有11个参数
         self.data_view.plot_requested.connect(
-            lambda p,x,y,c,xe,ye,ms,msz,ht,b,cm: 
+            lambda p,x,y,c,xe,ye,ms,msz,ht,b,cm, ls, lw, a, cs: 
             self.plot_view.handle_plot_request(
-                p,x,y,c,xe,ye,ms,msz,ht,b,cm
+                p,x,y,c,xe,ye,ms,msz,ht,b,cm, ls, lw, a, cs
             )
         )
 
@@ -238,11 +243,11 @@ class MainWindow(QMainWindow):
                 "", 
                 "文本文件 (*.txt);;CSV文件 (*.csv);;Excel文件 (*.xlsx *.xls);;JSON文件 (*.json);;所有文件 (*.*)"
             )
-        
+            
         if file_path:
             try:
-                # 修正类名拼写（注意Q大写）
-                sep, ok = QInputDialog.getText(  # 修正为QInputDialog
+                # 获取分隔符
+                sep, ok = QInputDialog.getText(
                     self,
                     "分隔符设置",
                     "请输入列分隔符（留空使用默认）:", 
@@ -250,38 +255,17 @@ class MainWindow(QMainWindow):
                 )
                 sep = sep.strip() if sep.strip() else None
                 
-                # 加载数据前检查视图对象
-                if not sip.isdeleted(self.data_view):
-                    # 修改加载方法调用，添加分隔符参数
-                    success, message = self.data_manager.load_data(file_path, sep=sep)
+                # 加载数据
+                success, message = self.data_manager.load_data(file_path, sep)
+                if not success:
+                    QMessageBox.critical(self, "错误", message)
+                    return False
                     
-                    if success:
-                        # 更新数据视图
-                        self.data_view.update_data_view()
-                        
-                        # 更新状态栏
-                        file_info = self.data_manager.get_file_info()
-                        if file_info:
-                            self.status_label.setText(
-                                f"当前文件: {file_info['file_name']} | "
-                                f"行数: {file_info['rows']} | "
-                                f"列数: {file_info['columns']}"
-                            )
-                        
-                        # 添加到最近文件列表
-                        if self.config_manager is not None:
-                            self.config_manager.add_recent_file(file_path)
-                            self.update_recent_file_actions()
-                        
-                        QMessageBox.information(self, "成功", message)
-                    else:
-                        QMessageBox.critical(self, "错误", message)
-                else:
-                    QMessageBox.critical(self, "错误", "视图组件已失效，请重启应用")
+                return True
             except Exception as e:
-                QMessageBox.critical(self, "错误", f"加载文件失败: {str(e)}")
-#       else:
-#           QMessageBox.information(self, "提示", "已取消文件选择")
+                QMessageBox.critical(self, "错误", f"文件打开失败: {str(e)}")
+                return False
+        return False
 
     def open_recent_file(self):
         """打开最近文件"""

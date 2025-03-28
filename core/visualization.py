@@ -1,6 +1,13 @@
+import numpy as np
+import traceback
+import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm, Normalize, ListedColormap
 import matplotlib.ticker as ticker
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
+import matplotlib
+matplotlib.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei', 'DejaVu Sans']  # First try Microsoft YaHei, then SimHei
+matplotlib.rcParams['axes.unicode_minus'] = False  # Fix minus sign display issue
 
 class PlotCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=4, dpi=100):
@@ -305,6 +312,7 @@ class Visualizer:
         x_label=None, 
         y_label=None, 
         colormap='viridis',
+        colorbar_scale='线性',
         x_major_ticks=5,  # 修改为X轴主刻度
         x_minor_ticks=1,  # 修改为X轴次刻度
         x_show_grid=True, # 修改为X轴网格线
@@ -347,22 +355,78 @@ class Visualizer:
             x_data = x_data[:min_len]
             y_data = y_data[:min_len]
             
-            # 绘制2D密度图
-            h, xedges, yedges, im = self.canvas.axes.hist2d(x_data, y_data, bins=bins, cmap=colormap)
+            # 计算2D直方图数据
+            h, xedges, yedges = np.histogram2d(x_data, y_data, bins=bins)
             
-            # 创建新的colorbar - 简化处理方式
-            try:
-                # 使用简单的colorbar创建方式，避免set_subplotspec
-                self.colorbar = self.canvas.fig.colorbar(
-                    im, 
-                    ax=self.canvas.axes,
-                    fraction=0.046,  # 控制colorbar宽度
-                    pad=0.04         # 控制colorbar与图的间距
+            # 创建网格
+            X, Y = np.meshgrid(xedges[:-1] + 0.5 * (xedges[1] - xedges[0]), 
+                              yedges[:-1] + 0.5 * (yedges[1] - yedges[0]))
+            
+            # 创建掩码数组，标记零值区域
+            mask = h == 0
+            
+            # 获取原始colormap
+            cmap = plt.cm.get_cmap(colormap)
+            
+            if colorbar_scale == '对数':
+                # 清除当前图形
+                self.canvas.axes.clear()
+                
+                # 创建自定义colormap，将零值设为黑色
+                # 复制原始colormap的颜色
+                colors = cmap(np.linspace(0, 1, 256))
+                # 创建新的colormap，保持原始颜色
+                new_cmap = ListedColormap(colors)
+                
+                # 对非零值进行对数变换
+                h_masked = np.ma.masked_where(mask, h)
+                
+                # 使用LogNorm绘制非零区域
+                im = self.canvas.axes.pcolormesh(
+                    xedges, yedges, h_masked.T,
+                    norm=LogNorm(vmin=max(1, h_masked.min())),
+                    cmap=new_cmap
                 )
-                self.colorbar.ax.set_label("colorbar")
-            except Exception as e:
-                print(f"创建colorbar失败: {str(e)}")
-                self.colorbar = None
+                
+                # 判断colormap的类型并设置零值区域颜色
+                # 获取colormap的第一个和最后一个颜色的亮度
+                first_color = colors[0]
+                last_color = colors[-1]
+                first_brightness = np.mean(first_color[:3])  # RGB平均值作为亮度
+                last_brightness = np.mean(last_color[:3])
+                
+                # 根据亮度变化选择零值区域颜色
+                if first_brightness > last_brightness:  # 由亮到暗
+                    zero_color = 'white'
+                else:  # 由暗到亮
+                    zero_color = 'black'
+                
+                # 单独绘制零值区域
+                self.canvas.axes.pcolormesh(
+                    xedges, yedges, 
+                    np.ma.masked_where(~mask, np.ones_like(h)).T,
+                    cmap=ListedColormap([zero_color]),
+                    alpha=0.9  # 调整透明度
+                )
+            else:
+                # 线性比例，使用标准hist2d
+                h, xedges, yedges, im = self.canvas.axes.hist2d(
+                    x_data, y_data, 
+                    bins=bins, 
+                    cmap=colormap
+                )
+            
+            # 使用简单的colorbar创建方式
+            self.colorbar = self.canvas.fig.colorbar(
+                im, 
+                ax=self.canvas.axes,
+                fraction=0.046,  # 控制colorbar宽度
+                pad=0.04         # 控制colorbar与图的间距
+            )
+            
+            # 设置colorbar标签
+            scale_label = "密度 (对数比例)" if colorbar_scale == '对数' else "密度"
+            self.colorbar.ax.set_ylabel(scale_label)
             
             # 设置标题和标签
             if title:
@@ -398,7 +462,6 @@ class Visualizer:
             return True, "2D密度图绘制成功"
         
         except Exception as e:
-            import traceback
             traceback.print_exc()  # 打印详细错误堆栈
             return False, f"绘制2D密度图时发生错误: {str(e)}"
 

@@ -2,9 +2,12 @@ import pandas as pd
 import numpy as np
 import os
 import re
+from PyQt6.QtCore import pyqtSignal, QObject
 
-class DataManager:
+class DataManager(QObject):
+    data_loaded = pyqtSignal()
     def __init__(self):
+        super().__init__()
         self.current_file = None
         self.data = None
         self.filtered_data = None
@@ -17,20 +20,50 @@ class DataManager:
 
     def load_data(self, file_path, sep=None):
         try:
+            # 验证文件路径
+            if not file_path or not isinstance(file_path, str):
+                return False, "无效的文件路径"
+                
+            if not os.path.exists(file_path):
+                return False, f"文件不存在: {file_path}"
+                
+            if not os.access(file_path, os.R_OK):
+                return False, f"没有读取文件的权限: {file_path}"
+                
+            # 根据文件类型处理
             if file_path.endswith('.csv') or file_path.endswith('.txt'):
-                # 自动检测分隔符（多个空格、逗号、竖线）
+                # 优化分隔符处理
                 if sep is None:
-                    sep = r'\s+|,|\|'  # 正则表达式匹配多个空格/逗号/竖线
-#               sep = r'\s+|,|\|'  # 正则表达式匹配多个空格/逗号/竖线
-                self.data = pd.read_csv(file_path, 
-                delimiter=sep, 
-                engine='python',
-                skip_blank_lines=True,
-                quotechar='"',  # 添加引号处理
-                quoting=0,     # 0=QUOTE_MINIMAL
-                on_bad_lines='skip', # 跳过格式错误行
-                keep_default_na=False
-                )  # 添加engine参数
+                    # 默认使用单个空格作为分隔符，并将多个空格合并为1个
+                    sep = r'\s+'
+                    try:
+                        self.data = pd.read_csv(file_path, delimiter=sep, engine='python')
+                    except pd.errors.ParserError:
+                        # 如果空格分隔失败，尝试常见分隔符
+                        for test_sep in [',', '\t', '|', ';']:
+                            try:
+                                self.data = pd.read_csv(file_path, delimiter=test_sep, engine='python')
+                                break
+                            except pd.errors.ParserError:
+                                continue
+
+                else:
+                    # 如果指定了分隔符，直接使用
+                    self.data = pd.read_csv(file_path, delimiter=sep, engine='python')
+                    
+                    # 添加更多读取参数
+                    self.data = pd.read_csv(
+                        file_path,
+                        delimiter=sep,
+                        engine='python',
+                        skip_blank_lines=True,
+                        quotechar='"',
+                        quoting=0,
+                        on_bad_lines='skip',
+                        keep_default_na=False,
+                        encoding='utf-8'  # 显式指定编码
+                    )
+                    
             elif file_path.endswith(('.xlsx', '.xls')):
                 self.data = pd.read_excel(file_path)
             elif file_path.endswith('.json'):
@@ -38,27 +71,33 @@ class DataManager:
             else:
                 return False, "不支持的格式"
 
-            # 新增列名清理
-            if not self.data.empty:
-                self.data.columns = self.data.columns.str.replace(' ', '')
+            # 数据有效性检查
+            if self.data is None or self.data.empty:
+                return False, "加载的数据为空"
+                
+            # 清理列名
+            self.data.columns = self.data.columns.str.strip()
             
-            # 保存文件信息（保持原有逻辑）
+            # 保存文件信息
             self.file_path = file_path
             self.file_name = os.path.basename(file_path)
-            
-            # 创建文件信息字典
             self.file_info = {
                 'file_name': self.file_name,
                 'file_path': self.file_path,
-                'rows': len(self.data) if self.data is not None else 0,
-                'columns': len(self.data.columns) if self.data is not None else 0
+                'rows': len(self.data),
+                'columns': len(self.data.columns)
             }
-            self.current_file = file_path
-            return True, "加载成功"
-
+            
+            # 发出信号
+            self.data_loaded.emit()
+            return True, "数据加载成功"
+            
+        except pd.errors.EmptyDataError:
+            return False, "文件为空或格式不正确"
+        except pd.errors.ParserError:
+            return False, "文件解析错误，请检查文件格式"
         except Exception as e:
-            self.current_file = None
-            return False, f"数据加载失败：{str(e)}"
+            return False, f"数据加载失败: {str(e)}"
     
     def get_data(self, filtered=True):
         """获取数据，可选择是否返回筛选后的数据"""
@@ -103,7 +142,7 @@ class DataManager:
             }
         return None
     
-    def preprocess_data(self):
+    def preprocess_data(self, options=None):
         """预处理数据，处理缺失值和异常值"""
         if self.data is None:
             return False, "没有数据可处理"
@@ -460,3 +499,10 @@ class DataManager:
         if self.filtered_data is not None:
             return self.filtered_data
         return self.data
+
+    def reset(self):
+        """重置数据管理器状态"""
+        self.data = None
+        self.filtered_data = None
+        self.display_data = None
+        print("数据管理器已重置")

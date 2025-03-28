@@ -402,6 +402,10 @@ class DataView(QWidget):
     def on_data_loaded(self):
         """数据加载后的处理"""
         try:
+            # 检查数据是否有效
+            if self.data_manager.get_data() is None:
+                raise ValueError("加载的数据为空")            
+
             # 更新数据视图
             self.update_data_view()
 
@@ -409,19 +413,47 @@ class DataView(QWidget):
             filter_group = self.findChild(QGroupBox, "数据筛选")
             if filter_group:
                 filter_group.setEnabled(True)
+            
+            # 启用UI
+            self.setEnabled(True)
 
         except Exception as e:
             print(f"数据加载后处理出错: {str(e)}")
+            self.setEnabled(True)
 
     def load_data(self):
         """载入数据按钮点击事件处理"""
-        # 这里需要调用主窗口的打开文件方法
-        # 由于这是在子组件中，我们需要通过信号将请求传递给主窗口
-        # 可以发射一个自定义信号，或者通过父窗口引用调用方法
-        parent = self.window()
-        if hasattr(parent, 'open_file'):
-            parent.open_file()
-    
+        try:
+            parent = self.window()
+            if hasattr(parent, 'open_file'):
+                # 新增：先禁用UI防止重复操作
+                self.setEnabled(False)  
+                QApplication.processEvents()
+
+                # 先断开之前的连接，避免重复连接
+                try:
+                    self.data_manager.data_loaded.disconnect()
+                except TypeError:
+                    pass
+                # 连接信号
+                self.data_manager.data_loaded.connect(
+                    self.on_data_loaded, 
+                    Qt.ConnectionType.QueuedConnection
+                )
+            
+                # 调用主窗口的打开文件方法
+                success = parent.open_file()
+                if not success:
+                    self.setEnabled(True)
+                    return False, "文件打开失败"
+                
+                return True, "数据加载成功"
+            else:
+                return False, "无法找到主窗口"
+        except Exception as e:
+            self.setEnabled(True)
+            return False, f"数据加载出错: {str(e)}"
+
     def export_data(self):
         """导出数据按钮点击事件处理"""
         # 同样，这里需要调用主窗口的导出文件方法

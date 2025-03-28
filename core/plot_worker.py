@@ -160,7 +160,7 @@ class PlotWorker(QRunnable):
         y_major_ticks = self.kwargs.get('y_major_ticks', 5)
         y_minor_ticks = self.kwargs.get('y_minor_ticks', 1)
         y_show_grid = self.kwargs.get('y_show_grid', True)
-        
+         
         return self.visualizer.scatter_plot_with_error(
             self.data, x_col, y_col, 
             xerr_col=xerr_col, 
@@ -232,7 +232,7 @@ class PlotWorker(QRunnable):
         y_col = self.kwargs.get('y_col')
         bins = self.kwargs.get('bins', 50)
         colormap = self.kwargs.get('colormap', 'viridis')
-#       alpha = self.kwargs.get('alpha', 0.7)
+        colorbar_scale = self.kwargs.get('colorbar_scale', '线性')
         title = self.kwargs.get('title')
         x_label = self.kwargs.get('x_label')
         y_label = self.kwargs.get('y_label')
@@ -254,7 +254,7 @@ class PlotWorker(QRunnable):
             x_label=x_label, 
             y_label=y_label, 
             colormap=colormap,
-#           alpha=alpha,
+            colorbar_scale=colorbar_scale,
             x_major_ticks=x_major_ticks,
             x_minor_ticks=x_minor_ticks,
             x_show_grid=x_show_grid,
