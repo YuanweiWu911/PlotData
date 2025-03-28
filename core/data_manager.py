@@ -21,7 +21,7 @@ class DataManager:
                 # 自动检测分隔符（多个空格、逗号、竖线）
                 if sep is None:
                     sep = r'\s+|,|\|'  # 正则表达式匹配多个空格/逗号/竖线
-                sep = r'\s+|,|\|'  # 正则表达式匹配多个空格/逗号/竖线
+#               sep = r'\s+|,|\|'  # 正则表达式匹配多个空格/逗号/竖线
                 self.data = pd.read_csv(file_path, 
                 delimiter=sep, 
                 engine='python',

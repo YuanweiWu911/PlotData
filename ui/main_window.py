@@ -280,8 +280,8 @@ class MainWindow(QMainWindow):
                     QMessageBox.critical(self, "错误", "视图组件已失效，请重启应用")
             except Exception as e:
                 QMessageBox.critical(self, "错误", f"加载文件失败: {str(e)}")
-        else:
-            QMessageBox.information(self, "提示", "已取消文件选择")
+#       else:
+#           QMessageBox.information(self, "提示", "已取消文件选择")
 
     def open_recent_file(self):
         """打开最近文件"""

@@ -1,5 +1,8 @@
 venv/
 __pycache__/
+ui/plot_view_settings.py
+ui/plot_view_ui.py
+ui/plot_view_utils.py
 PlotData.egg-info
 plotdata.log
 .gitignore
